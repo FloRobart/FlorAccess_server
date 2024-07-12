@@ -1,0 +1,5 @@
+/* Permet une animation fluide lors du scroll vers le haut de la page */
+html
+{
+    scroll-behavior: smooth;
+}

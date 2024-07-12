@@ -1,0 +1,114 @@
+:root {
+    /* Couleur */
+    --bleuLogo        : #3232FF;
+    --bleuFonce       : #0000CC;
+    --bleuFonce2      : #111165;
+    --bleuSombre      : #0A0A2A;
+    --textColor       : var(--bleuSombre);
+    --textColorReverse: #FFFFFF;
+    --colorPage       : #F0F0F0;
+    --placeholderColor: #656565;
+    --errorDarkenColor: #CC0000;
+
+    /* Validation, alerte, erreur */
+    --colorValid: #00AA00;
+    --colorAlert: #FFAA00;
+    --colorError: #EE0000;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@tailwind forms;
+
+@layer components {
+    /*-----------------------------------*/
+    /* Définition des variables de style */
+    /*-----------------------------------*/
+    /* Base du style du texte */
+    .font                   { @apply font-sans; }
+    .fontSizeTitre          { @apply text-[24px] min-[380px]:text-[28px] min-[500px]:text-[34px] lg:text-[52px] xl:text-[64px]; }
+    .fontSizeBig            { @apply text-[20px] min-[380px]:text-[24px] min-[500px]:text-[26px] lg:text-[32px] xl:text-[38px]; }
+    .fontSizeNormal         { @apply text-[14px] min-[380px]:text-[18px] min-[500px]:text-[20px] lg:text-[26px] xl:text-[32px]; }
+    .fontSizeSmall          { @apply text-[12px] min-[380px]:text-[14px] min-[500px]:text-[16px] lg:text-[20px] xl:text-[24px]; }
+    .fontSizeTiny           { @apply text-[8px]  min-[380px]:text-[10px] min-[500px]:text-[12px] lg:text-[14px] xl:text-[16px]; }
+    .colorFont              { @apply text-[var(--textColor)]; }
+    .colorFontReverse       { @apply text-[var(--textColorReverse)]; }
+    .colorFontBleuLogo      { @apply text-[var(--bleuLogo)]; }
+    .colorFontBleuFonce     { @apply text-[var(--bleuFonce)]; }
+    .colorFontPage          { @apply text-[var(--colorPage)]; }
+    /* Validation, alerte, erreur */
+    .fontColorValid         { @apply text-[var(--colorValid)]; }
+    .fontColorAlert         { @apply text-[var(--colorAlert)]; }
+    .fontColorError         { @apply text-[var(--colorError)]; }
+
+    /* Style complet du texte */
+    .titleText              { @apply font fontSizeTitre  colorFont        ; }
+    .titleTextReverse       { @apply font fontSizeTitre  colorFontReverse ; }
+    .bigText                { @apply font fontSizeBig    colorFont        ; }
+    .bigTextReverse         { @apply font fontSizeBig    colorFontReverse ; }
+    .bigTextBleuLogo        { @apply font fontSizeBig    colorFontBleuLogo; }
+    .normalText             { @apply font fontSizeNormal colorFont        ; }
+    .normalTextReverse      { @apply font fontSizeNormal colorFontReverse ; }
+    .normalTextValid        { @apply font fontSizeNormal fontColorValid   ; }
+    .normalTextAlert        { @apply font fontSizeNormal fontColorAlert   ; }
+    .normalTextError        { @apply font fontSizeNormal fontColorError   ; }
+    .smallText              { @apply font fontSizeSmall  colorFont        ; }
+    .smallTextReverse       { @apply font fontSizeSmall  colorFontReverse ; }
+    .tinyText               { @apply font fontSizeTiny   colorFont        ; }
+    .tinyTextReverse        { @apply font fontSizeTiny   colorFontReverse ; }
+    .hoverText              { @apply hover:text-[var(--bleuLogo)] hover:underline; }
+
+    /* Placeholder */
+    .PlaceholderText        { @apply placeholder-[var(--placeholderColor)] placeholder:font-light; }
+
+    /* Icônes */
+    .bigIcons               { @apply w-36 h-36 lg:w-48 lg:h-48 xl:w-60 xl:h-60; }
+    .normalIcons            { @apply w-12 h-12 lg:w-16 lg:h-16 xl:w-20 xl:h-20; }
+    .fontSizeIcons          { @apply w-8 h-8 min-[500px]:w-10 min-[500px]:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14; }
+
+    /* Scale */
+    .bigScale               { @apply scale-110; }
+    .normalScale            { @apply scale-105; }
+
+    /* Composant */
+    .inputForm              { @apply bgElement normalText PlaceholderText focus:outline focus:outline-[var(--bleuLogo)] focus:outline-2 focus:border-white w-full border-solid border-2 rounded-xl py-2 pl-3 pr-5; }
+    .hiddenInputForm        { @apply font fontSizeNormal colorFontBleuLogo PlaceholderText font-bold w-full rounded-lg min-[400px]:rounded-xl px-2 bgPage hover:underline focus:hover:no-underline focus:text-black focus:bg-white focus:outline focus:outline-[var(--bleuLogo)] focus:outline-2 cursor-pointer focus:cursor-text; }
+    .buttonForm             { @apply normalTextReverse font-bold bgBleuLogo hover:bgBleuFonce focus:normalScale rounded-xl py-2 px-5; }
+    .alertButtonForm        { @apply normalTextReverse font-bold bgError hover:bg-[var(--errorDarkenColor)] focus:normalScale rounded-xl py-2 px-5; }
+    .labelForm              { @apply normalText font-medium; }
+
+    /* Background */
+    .bgBleuLogo             { @apply bg-[var(--bleuLogo)]; }
+    .bgBleuFonce            { @apply bg-[var(--bleuFonce)]; }
+    .bgBleuFonce2           { @apply bg-[var(--bleuFonce2)]; }
+    .bgBleuSombre           { @apply bg-[var(--bleuSombre)]; }
+    .bgPage                 { @apply bg-[var(--colorPage)]; }
+    .bgElement              { @apply bg-white; }
+    /* Validation, alerte, erreur */
+    .bgValid                { @apply bg-[var(--colorValid)]; }
+    .bgAlert                { @apply bg-[var(--colorAlert)]; }
+    .bgError                { @apply bg-[var(--colorError)]; }
+
+    /* Border */
+    .borderBleuLogo         { @apply border-[var(--bleuLogo)]; }
+    .borderBleuSombre       { @apply border-[var(--bleuSombre)]; }
+    .tableRow               { @apply border-solid border-y border-[var(--bleuSombre)]; }
+
+    /* Container */
+    .myContainer            { @apply flex items-center w-full; }
+    .smallRowStartContainer { @apply flex flex-row justify-start items-center; }
+    .smallColStartContainer { @apply flex flex-col justify-start items-center; }
+    .smallRowCenterContainer{ @apply flex flex-row justify-center items-center; }
+    .smallColCenterContainer{ @apply flex flex-col justify-center items-center; }
+    .smallRowEndContainer   { @apply flex flex-row justify-end items-center; }
+    .smallColEndContainer   { @apply flex flex-col justify-end items-center; }
+    .rowCenterContainer     { @apply myContainer flex-row justify-center ; }
+    .colCenterContainer     { @apply myContainer flex-col justify-center ; }
+    .rowBetweenContainer    { @apply myContainer flex-row justify-between; }
+    .colBetweenContainer    { @apply myContainer flex-col justify-between; }
+    .rowStartContainer      { @apply myContainer flex-row justify-start  ; }
+    .colStartContainer      { @apply myContainer flex-col justify-start  ; }
+    .rowEndContainer        { @apply myContainer flex-row justify-end    ; }
+    .colEndContainer        { @apply myContainer flex-col justify-end    ; }
+}
