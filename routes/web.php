@@ -34,10 +34,6 @@ Route::post('/profil', [ProfilController::class, 'profilSave'])->middleware('aut
 Route::post('/connexion', [ProfilController::class, 'connexionSave'])->middleware('throttle:5,1')->name('connexionSave'); // 5 tentatives de connexion par minute, puis blocage pendant 1 minute
 Route::post('/connexionPost', [ProfilController::class, 'connexionPost'])->name('connexionPost');
 
-/* Changement de mot de passe */
-Route::get('/changePassword', [ProfilController::class, 'changePassword'])->middleware('auth')->name('changePassword');
-Route::post('/changePassword', [ProfilController::class, 'changePasswordSave'])->middleware('auth')->name('changePasswordSave');
-
 /* Déconnexion */
 Route::get('/deconnexion', [ProfilController::class, 'deconnexion'])->middleware('auth')->name('deconnexion');
 
