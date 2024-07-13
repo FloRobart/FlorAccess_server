@@ -27,11 +27,11 @@
     /*-----------------------------------*/
     /* Base du style du texte */
     .font                   { @apply font-sans; }
-    .fontSizeTitre          { @apply text-[24px] min-[380px]:text-[28px] min-[500px]:text-[34px] lg:text-[52px] xl:text-[64px]; }
-    .fontSizeBig            { @apply text-[20px] min-[380px]:text-[24px] min-[500px]:text-[26px] lg:text-[32px] xl:text-[38px]; }
-    .fontSizeNormal         { @apply text-[14px] min-[380px]:text-[18px] min-[500px]:text-[20px] lg:text-[26px] xl:text-[32px]; }
-    .fontSizeSmall          { @apply text-[12px] min-[380px]:text-[14px] min-[500px]:text-[16px] lg:text-[20px] xl:text-[24px]; }
-    .fontSizeTiny           { @apply text-[8px]  min-[380px]:text-[10px] min-[500px]:text-[12px] lg:text-[14px] xl:text-[16px]; }
+    .fontSizeTitre          { @apply text-[20px] min-[350px]:text-[24px] min-[400px]:text-[28px] min-[500px]:text-[34px] lg:text-[52px] xl:text-[64px]; }
+    .fontSizeBig            { @apply text-[18px] min-[350px]:text-[20px] min-[400px]:text-[24px] min-[500px]:text-[26px] lg:text-[32px] xl:text-[38px]; }
+    .fontSizeNormal         { @apply text-[14px] min-[350px]:text-[14px] min-[400px]:text-[18px] min-[500px]:text-[20px] lg:text-[26px] xl:text-[32px]; }
+    .fontSizeSmall          { @apply text-[10px] min-[350px]:text-[12px] min-[400px]:text-[14px] min-[500px]:text-[16px] lg:text-[20px] xl:text-[24px]; }
+    .fontSizeTiny           { @apply text-[8px]  min-[350px]:text-[8px]  min-[400px]:text-[10px] min-[500px]:text-[12px] lg:text-[14px] xl:text-[16px]; }
     .colorFont              { @apply text-[var(--textColor)]; }
     .colorFontReverse       { @apply text-[var(--textColorReverse)]; }
     .colorFontBleuLogo      { @apply text-[var(--bleuLogo)]; }
@@ -44,12 +44,14 @@
 
     /* Style complet du texte */
     .titleText              { @apply font fontSizeTitre  colorFont        ; }
+    .titleTextBleuLogo      { @apply font fontSizeTitre  colorFontBleuLogo; }
     .titleTextReverse       { @apply font fontSizeTitre  colorFontReverse ; }
     .bigText                { @apply font fontSizeBig    colorFont        ; }
     .bigTextReverse         { @apply font fontSizeBig    colorFontReverse ; }
     .bigTextBleuLogo        { @apply font fontSizeBig    colorFontBleuLogo; }
     .normalText             { @apply font fontSizeNormal colorFont        ; }
     .normalTextReverse      { @apply font fontSizeNormal colorFontReverse ; }
+    .normalTextBleuLogo     { @apply font fontSizeNormal colorFontBleuLogo; }
     .normalTextValid        { @apply font fontSizeNormal fontColorValid   ; }
     .normalTextAlert        { @apply font fontSizeNormal fontColorAlert   ; }
     .normalTextError        { @apply font fontSizeNormal fontColorError   ; }
@@ -66,6 +68,8 @@
     .bigIcons               { @apply w-36 h-36 lg:w-48 lg:h-48 xl:w-60 xl:h-60; }
     .normalIcons            { @apply w-12 h-12 lg:w-16 lg:h-16 xl:w-20 xl:h-20; }
     .fontSizeIcons          { @apply w-8 h-8 min-[500px]:w-10 min-[500px]:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14; }
+    .smallSizeIcons         { @apply w-6 h-6 min-[500px]:w-8 min-[500px]:h-8 lg:w-10 lg:h-10 xl:w-12 xl:h-12; }
+    .tinySizeIcons          { @apply w-4 h-4 min-[500px]:w-6 min-[500px]:h-6 lg:w-8 lg:h-8 xl:w-10 xl:h-10; }
 
     /* Scale */
     .bigScale               { @apply scale-110; }
@@ -89,11 +93,14 @@
     .bgValid                { @apply bg-[var(--colorValid)]; }
     .bgAlert                { @apply bg-[var(--colorAlert)]; }
     .bgError                { @apply bg-[var(--colorError)]; }
+    .bgErrorFonce           { @apply bg-[var(--errorDarkenColor)]; }
 
     /* Border */
     .borderBleuLogo         { @apply border-[var(--bleuLogo)]; }
     .borderBleuSombre       { @apply border-[var(--bleuSombre)]; }
     .tableRow               { @apply border-solid border-y border-[var(--bleuSombre)]; }
+    .tableRowTop            { @apply border-solid border-t border-[var(--bleuSombre)]; }
+    .tableCell              { @apply w-fit px-1 min-[600px]:px-3 }
 
     /* Container */
     .myContainer            { @apply flex items-center w-full; }
