@@ -1,3 +1,8 @@
+{{--
+ * Ce fichier fait partie du projet Home Server Maison
+ * Copyright (C) 2024 Floris Robart <florisrobart.pro@gmail.com>
+--}}
+
 <a href="{{ route('public.ajouterProduit') }}" class="colBetweenContainer bgElement rounded-xl shadow-lg pt-2 cursor-pointer group" title="Proposer un produit">
     <!------------------------------------------------------------------------------->
     <!-- Carte de produit, affiché sur la page d'accueil et les pages de catégorie -->

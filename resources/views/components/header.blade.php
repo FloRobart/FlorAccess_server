@@ -1,3 +1,8 @@
+{{--
+ * Ce fichier fait partie du projet Home Server Maison
+ * Copyright (C) 2024 Floris Robart <florisrobart.pro@gmail.com>
+--}}
+
 <header id="top" class="colCenterContainer space-y-6 pt-4 bgBleuSombre">
     <!-- Partie haute du header -->
     <div class="rowBetweenContainer">

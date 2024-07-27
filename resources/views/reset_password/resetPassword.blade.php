@@ -1,3 +1,8 @@
+{{--
+ * Ce fichier fait partie du projet Home Server Maison
+ * Copyright (C) 2024 Floris Robart <florisrobart.pro@gmail.com>
+--}}
+
 <!-- Page de réinitialisation de mot de passe -->
 @extends('layouts.page_template')
 @section('title')

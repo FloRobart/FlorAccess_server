@@ -1,4 +1,10 @@
 <?php
+
+/*
+ * Ce fichier fait partie du projet Home Server Maison
+ * Copyright (C) 2024 Floris Robart <florisrobart.pro@gmail.com>
+ */
+
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PrivateController;

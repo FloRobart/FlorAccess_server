@@ -1,3 +1,8 @@
+{{--
+ * Ce fichier fait partie du projet Home Server Maison
+ * Copyright (C) 2024 Floris Robart <florisrobart.pro@gmail.com>
+--}}
+
 <div class="colBetweenContainer bgElement rounded-xl shadow-lg pt-2 group cursor-pointer" @if (isset($produit)) title="Détails du produit {{ $produit->nomProduit }}" @endif>
     <!------------------------------------------------------------------------------->
     <!-- Carte de produit, affiché sur la page d'accueil et les pages de catégorie -->

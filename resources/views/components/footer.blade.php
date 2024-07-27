@@ -1,3 +1,8 @@
+{{--
+ * Ce fichier fait partie du projet Home Server Maison
+ * Copyright (C) 2024 Floris Robart <florisrobart.pro@gmail.com>
+--}}
+
 <footer class="colCenterContainer bgBleuSombre w-full">
     <!-- Lien de retour en haut de la page -->
     <div class="colCenterContainer">

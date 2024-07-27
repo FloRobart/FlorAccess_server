@@ -1,3 +1,8 @@
+{{--
+ * Ce fichier fait partie du projet Home Server Maison
+ * Copyright (C) 2024 Floris Robart <florisrobart.pro@gmail.com>
+--}}
+
 <dialog id="password_modal" class="modal rounded-xl p-6">
     <div class="modal-box">
         <form method="dialog" class="flex justify-end items-center w-full">

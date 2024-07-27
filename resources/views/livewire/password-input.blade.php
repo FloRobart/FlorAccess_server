@@ -1,3 +1,8 @@
+{{--
+ * Ce fichier fait partie du projet Home Server Maison
+ * Copyright (C) 2024 Floris Robart <florisrobart.pro@gmail.com>
+--}}
+
 <div>
     <label for="password" class="labelForm">@if ($confirmation == "true") Confirmation du @endif Mot de passe <livewire:asterisque /></label>
     <div class="relative">
