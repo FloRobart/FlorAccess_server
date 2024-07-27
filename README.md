@@ -8,9 +8,7 @@
   - [Fonctionnalités](#fonctionnalités)
   - [Images](#images)
     - [Format mobile](#format-mobile)
-      - [Page du Home Serveur Maison en format mobile (en cas d'installation complète de l'écosystème)](#page-du-home-serveur-maison-en-format-mobile-en-cas-dinstallation-complète-de-lécosystème)
     - [Format ordinateur](#format-ordinateur)
-      - [Page du Home Serveur Maison en format desktop (en cas d'installation complète de l'écosystème)](#page-du-home-serveur-maison-en-format-desktop-en-cas-dinstallation-complète-de-lécosystème)
   - [Technologies utilisées](#technologies-utilisées)
   - [Installation](#installation)
     - [Prérequis](#prérequis)
@@ -42,8 +40,6 @@ Home Server Maison à été conçue pour être utilisé par plusieurs personnes,
 
 ### Format mobile
 
-#### Page du Home Serveur Maison en format mobile (en cas d'installation complète de l'écosystème)
-
 <div style="display: flex; justify-content: space-between;">
   <img src="./documentation/img/mobile/connexion.png" alt="" width="45%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
   <img src="./documentation/img/mobile/connexion_password.png" alt="" width="45%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
@@ -55,8 +51,6 @@ Home Server Maison à été conçue pour être utilisé par plusieurs personnes,
 </div>
 
 ### Format ordinateur
-
-#### Page du Home Serveur Maison en format desktop (en cas d'installation complète de l'écosystème)
 
 <img src="./documentation/img/desktop/connexion.png" alt="" width="100%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
 <img src="./documentation/img/desktop/connexion_password.png" alt="" width="100%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
@@ -88,9 +82,7 @@ Pour installer **Home Server Maison** sur votre serveur, vous avez deux options 
   - [Fonctionnalités](#fonctionnalités)
   - [Images](#images)
     - [Format mobile](#format-mobile)
-      - [Page du Home Serveur Maison en format mobile (en cas d'installation complète de l'écosystème)](#page-du-home-serveur-maison-en-format-mobile-en-cas-dinstallation-complète-de-lécosystème)
     - [Format ordinateur](#format-ordinateur)
-      - [Page du Home Serveur Maison en format desktop (en cas d'installation complète de l'écosystème)](#page-du-home-serveur-maison-en-format-desktop-en-cas-dinstallation-complète-de-lécosystème)
   - [Technologies utilisées](#technologies-utilisées)
   - [Installation](#installation)
     - [Prérequis](#prérequis)
