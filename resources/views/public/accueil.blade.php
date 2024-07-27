@@ -33,7 +33,6 @@
                         <div class="smallColCenterContainer bg-white rounded-xl overflow-hidden shadow-lg w-36 h-36 min-[400px]:w-44 min-[400px]:h-44 lg:w-52 lg:h-52 xl:w-72 xl:h-72">
                             <div class="flex justify-center items-center group-hover:bigScale">
                                 @if ($profil->imgProfil != null)
-                                    <!-- Affichage de l'image de profil depuis une image stockée en base64 -->
                                     <img class="w-full h-full object-cover" src="data:image/png;base64,{{ $profil->imgProfil }}" alt="Image de profil">
                                 @else
                                     <svg class="w-full colorFontBleuFonce" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
