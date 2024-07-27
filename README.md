@@ -20,11 +20,9 @@
 
 ## Présentation
 
-**Home Server Maison** est une application web de gestion de finances personnelles. Elle permet de suivre ses dépenses, ses revenus, ses investissements et bien d'autre chose.
+**Home Server Maison** est une application web de gestion de comptes personnels. Elle à créée pour servir d'entré à votre serveur personnel. C'est à dire que c'est cette application qui va gérer les comptes utilisateurs et qui affichera toutes les autres applications de votre serveur personnel. Par exemple j'ai créé une [application de gestion des finances](https://github.com/FloRobart/FinanceDashboard) qui se rattache à **Home Server Maison**.
 
-Toute-fois, cette application n'est pas déstinée à remplacer un logiciel de comptabilité professionel ni même l'application de votre banque. Elle est plutôt déstinée à vous aider à mieux gérer vos finances personnelles, à suivre vos dépenses, vos revenus, vos abonnements, vos investissements et autres.
-
-Home Server Maison à été conçue pour être utilisé par plusieurs personnes, c'est pourquoi elle permet de créer plusieurs comptes utilisateurs. Chaque utilisateur peut donc avoir son propre compte et gérer ses finances personnelles de manière indépendante. Si vous êtes seul à utiliser l'application et que vous ne voulez pas créer de compte utilisateur, vous devrez modifier le code source (ce qui est tout à fait possible).
+Home Server Maison à été conçue pour être utilisé par plusieurs personnes, c'est pourquoi elle permet de créer plusieurs comptes utilisateurs. Chaque utilisateur aura donc son propre profil et ne pourra pas accéder à celui des autres sans leur mot de passe. Si vous êtes seul à utiliser l'application et que vous ne voulez pas créer de compte utilisateur cette application ne vous sera pas utile.
 
 **Home Server Maison** n'est pas disponible en ligne, si vous voulez l'utiliser, vous devrez l'installer sur votre propre serveur. Si vous voulez créer un serveur personnel vous pouvez suivre les instructions de ma documentation sur la [création d'un serveur personnel](https://florobart.github.io/Documentations/src/doc_creation_serveur_local.html). Si vous avez déjà un serveur personnel, vous pouvez suivre les [instructions d'installation de **Home Server Maison**](#installation).
 
@@ -32,9 +30,18 @@ Home Server Maison à été conçue pour être utilisé par plusieurs personnes,
 
 **Grâce à cette application vous pourrez :**
 
-- Créer un compte utilisateur
+- Créer un compte utilisateur avec un nom d'utilisateur, un mot de passe, une adresse email et une image de profil.
+- Se connecter à un compte utilisateur avec un mot de passe seulement.
+  - Le système de connexion est basé sur le modèle de connexion de Netflix, c'est à dire que tout les comptes sont affichés à l'écran et qu'il suffit de cliquer sur le compte pour lequel on veut se connecter pour afficher le formulaire de mot de passe.
+- Afficher la liste des comptes utilisateurs.
+- Se déconnecter d'un compte utilisateur.
+- Réinitialiser le mot de passe d'un compte utilisateur.
+- Modifier les informations d'un compte utilisateur. (Nom d'utilisateur, adresse email, mot de passe et image de profil)
+- Supprimer un compte utilisateur.
+- Afficher le profil de l'utilisateur connecté.
+- Afficher la page d'accueil de l'application qui regroupe les liens vers les autres applications de votre serveur personnel.
 
-**Home Server Maison** est une application web open-source, elle est donc gratuite et libre d'utilisation. Vous pouvez l'utiliser, la modifier, la distribuer, la partager, etc. comme bon vous semble. Par contre, vous ne pouvez pas la vendre, ni la commercialiser, ni la distribuer sans en donner l'accès gratuit.
+**Home Server Maison** est une application web open-source, elle est donc gratuite et libre d'utilisation. Vous pouvez l'utiliser, la modifier, la distribuer, la partager, etc. comme bon vous semble. Par contre, vous ne pouvez pas la vendre, ni la commercialiser, ni la distribuer sans en donner l'accès gratuit. [Voir la licence](#license).
 
 ## Images
 
@@ -108,15 +115,43 @@ Pour installer **Home Server Maison** sur votre serveur, vous devez avoir les pr
 
 ### Installation de Home Server Maison
 
+- [Télécharger le code source]() de **Home Server Maison** sur votre serveur.
+- Ouvrir un terminal et se placer dans le dossier de **Home Server Maison**.
+- Installer les dépendances PHP
+
+  ```bash
+  composer install
+  ```
+
+- Installer les dépendances NPM
+
+  ```bash
+  npm install
+  ```
+
+- Compiler les assets
+
+  ```bash
+  npm run build
+  ```
+
+- Créer la base de données
+
+  ```bash
+  php artisan migrate
+  ```
+
 ### Lancement Home Server Maison
 
 - Lancer le serveur
 
   ```bash
-  php artisan serve --host=0.0.0.0 --port=2000
+  php artisan serve --host=0.0.0.0 --port=3000
   ```
 
-- Vous pouvez maintenant accéder à l'application à l'adresse `http://<IP Serveur>:2000` (remplacer `<IP Serveur>` par l'adresse IP de votre serveur sur lequel vous avez installé **Home Server Maison**).
+  - Vous pouvez remplacer le port `3000` par un autre si vous le souhaitez.
+
+- Vous pouvez maintenant accéder à l'application à l'adresse `http://<IP Serveur>:3000` (remplacer `<IP Serveur>` par l'adresse IP de votre serveur sur lequel vous avez installé **Home Server Maison**).
   - Notez qu'en suivant ces instructions, vous aurez accès à **Home Server Maison** uniquement si vous êtes connecté au même réseau que votre serveur. Si vous voulez accéder à **Home Server Maison** depuis un autre réseau, vous devrez configurer votre serveur pour qu'il soit accessible depuis l'extérieur. Mais **ATTENTION** je ne recommande pas de le faire si vous n'avez pas les compétences, car cela peut poser des problèmes de sécurité.
 
 ## Autheur
