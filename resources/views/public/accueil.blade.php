@@ -32,7 +32,14 @@
                     <button onclick="password_modal('{{ $profil->email }}')" id="profil_{{ $profil->id }}" class="smallColCenterContainer group gap-y-2">
                         <div class="smallColCenterContainer bg-white rounded-xl overflow-hidden shadow-lg w-36 h-36 min-[400px]:w-44 min-[400px]:h-44 lg:w-52 lg:h-52 xl:w-72 xl:h-72">
                             <div class="flex justify-center items-center group-hover:bigScale">
-                                <img class="rounded-xl" src="{{ asset('storage/profil_image/profil_image_' . $profil->id . '.' . $profil->image_extention) }}" alt="Photo de profil">
+                                @if ($profil->imgProfil != null)
+                                    <!-- Affichage de l'image de profil depuis une image stockée en base64 -->
+                                    <img class="w-full h-full object-cover" src="data:image/png;base64,{{ $profil->imgProfil }}" alt="Image de profil">
+                                @else
+                                    <svg class="w-full colorFontBleuFonce" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0a8.966 8.966 0 0 1 12 0 8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                    </svg>
+                                @endif
                             </div>
                         </div>
                         <span class="w-full smallText text-center group-hover:text-[#5B1010] font-bold">{{ $profil == null ? 'Ajouter un profil' : $profil->name }}</span>

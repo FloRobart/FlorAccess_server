@@ -57,22 +57,18 @@ class ProfilController extends Controller
         $name = $request->name;
         $email = $request->email;
         $password = Hash::make($request->password);
-        $extension = $request->profil_image->getClientOriginalExtension();
+        $imgProfil = base64_encode(file_get_contents($request->profil_image));
 
         /* Enregistrement des informations dans la base de données */
         User::create([
             'name' => $name,
             'email' => $email,
             'password' => $password,
-            'image_extention' => $extension,
+            'imgProfil' => $imgProfil,
             'last_login_at' => now(),
         ]);
 
         if (Auth::attempt($request->only('email', 'password'))) {
-            $id = Auth::user()->id;
-            $imageName = 'profil_image_' . $id . '.' . $extension;
-            Storage::disk('public')->put('profil_image/' . $imageName, file_get_contents($request->profil_image));
-
             return redirect()->route('accueil')->with('success', 'Inscription réussie 👍');
         } else {
             return back()->with(['error' => 'Erreur lors de l\'inscription réessayez plus tard ou envoyez un mail à l\'administrateur à l\'adresse suivante : ', 'name' => $name, 'email' => $email]); // TODO : Ajouter l'adresse mail de l'administrateur
@@ -171,6 +167,7 @@ class ProfilController extends Controller
         $name = $request->name;
         $email = $request->email;
 
+        $modif = false;
         /* Enregistrement des informations dans la base de données */
         if (auth()->user()->name != $name || auth()->user()->email != $email || $request->password != null)
         {
@@ -181,30 +178,19 @@ class ProfilController extends Controller
             if ($request->password != null) { $user->password = Hash::make($request->password); }
 
             $user->save();
+            $modif = true;
         }
 
         /* Enregistrement de l'image de profil */
         if ($request->profil_image != null)
         {
-            $extension = $request->profil_image->getClientOriginalExtension();
-            $oldImageName = 'profil_image_' . Auth::user()->id . '.' . Auth::user()->image_extention;
-            $newImageName = 'profil_image_' . Auth::user()->id . '.' . $extension;
-
-            /* Suppression de l'ancienne image de profil */
-            if (Storage::disk('public')->exists('profil_image/' . $oldImageName)) {
-                Storage::disk('public')->delete('profil_image/' . $oldImageName);
-            }
-
-            /* Enregistrement de la nouvelle image de profil */
-            Storage::disk('public')->put('profil_image/' . $newImageName, file_get_contents($request->profil_image));
-
-            /* Mise à jour de l'extension de l'image de profil */
             $user = User::find(Auth::user()->id);
-            $user->image_extention = $extension;
+            $user->imgProfil = base64_encode(file_get_contents($request->profil_image));
             $user->save();
+            $modif = true;
         }
 
-        if ((auth()->user()->name != $name || auth()->user()->email != $email || $request->password != null) || $request->profil_image != null)
+        if ($modif)
         {
             /* Redirection vers la page du profil */
             return back()->with('success', 'Votre profil à bien été mis à jour 👍');

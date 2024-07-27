@@ -23,8 +23,7 @@ class User extends Authenticatable
         'email',
         'email_verified_at',
         'password',
-        'image_extention',
-        'pathImgProfil',
+        'imgProfil',
         'last_login_at',
     ];
 
