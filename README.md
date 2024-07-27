@@ -34,14 +34,7 @@ Home Server Maison à été conçue pour être utilisé par plusieurs personnes,
 
 **Grâce à cette application vous pourrez :**
 
-- Suivre vos revenus (même si vous avez plusieurs sources de revenus)
-- Suivre vos épargnes (l'argent que vous avez mis de côté)
-- Suivre vos dépenses
-- Suivre vos abonnements (téléphonie, internet, électricité, eau, gaz, etc.)
-- Suivre vos emprunts (l'argent que vous avez emprunté)
-- Suivre vos prêts (l'argent que vous avez prêté)
-- Suivre vos investissements (quelque soit leur nature [immobilier, bourse, cryptomonnaie, etc.])
-  - En se qui concerne les investissements le logiciel vous permet de créer des catégories d'investissements et donc de suivre vos investissements dans chaque catégorie même les plus inatendus.
+- Créer un compte utilisateur
 
 **Home Server Maison** est une application web open-source, elle est donc gratuite et libre d'utilisation. Vous pouvez l'utiliser, la modifier, la distribuer, la partager, etc. comme bon vous semble. Par contre, vous ne pouvez pas la vendre, ni la commercialiser, ni la distribuer sans en donner l'accès gratuit.
 
