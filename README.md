@@ -40,6 +40,9 @@ Home Server Maison à été conçue pour être utilisé par plusieurs personnes,
 - Supprimer un compte utilisateur.
 - Afficher le profil de l'utilisateur connecté.
 - Afficher la page d'accueil de l'application qui regroupe les liens vers les autres applications de votre serveur personnel.
+- Modifier les liens (lien et nom) des applications présentes sur la page d'accueil.
+- Ajouter un lien d'une application sur la page d'accueil.
+- Supprimer un lien d'une application sur la page d'accueil.
 
 **Home Server Maison** est une application web open-source, elle est donc gratuite et libre d'utilisation. Vous pouvez l'utiliser, la modifier, la distribuer, la partager, etc. comme bon vous semble. Par contre, vous ne pouvez pas la vendre, ni la commercialiser, ni la distribuer sans en donner l'accès gratuit. [Voir la licence](#license).
 
