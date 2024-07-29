@@ -20,7 +20,7 @@
 
 ## Présentation
 
-**Home Server Maison** est une application web de gestion de comptes personnels. Elle à créée pour servir d'entré à votre serveur personnel. C'est à dire que c'est cette application qui va gérer les comptes utilisateurs et qui affichera toutes les autres applications de votre serveur personnel. Par exemple j'ai créé une [application de gestion des finances](https://github.com/FloRobart/FinanceDashboard) qui se rattache à **Home Server Maison**.
+**Home Server Maison** est une application web de gestion de comptes personnels. Elle à créée pour servir d'entré à votre serveur personnel. C'est à dire que c'est cette application qui va gérer les comptes utilisateurs et qui affichera toutes les autres applications disponible sur votre serveur personnel. Par exemple j'ai créé une [application de gestion des finances](https://github.com/FloRobart/FinanceDashboard) qui se rattache à **Home Server Maison**.
 
 Home Server Maison à été conçue pour être utilisé par plusieurs personnes, c'est pourquoi elle permet de créer plusieurs comptes utilisateurs. Chaque utilisateur aura donc son propre profil et ne pourra pas accéder à celui des autres sans leur mot de passe. Si vous êtes seul à utiliser l'application et que vous ne voulez pas créer de compte utilisateur cette application ne vous sera pas utile.
 
