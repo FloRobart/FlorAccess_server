@@ -1,6 +1,6 @@
 {{--
  * Ce fichier fait partie du projet Home Server Maison
- * Copyright (C) 2024 Floris Robart <florisrobart.pro@gmail.com>
+ * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
 --}}
 
 <div class="rowCenterContainer mt-4 px-4">

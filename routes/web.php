@@ -2,7 +2,7 @@
 
 /*
  * Ce fichier fait partie du projet Home Server Maison
- * Copyright (C) 2024 Floris Robart <florisrobart.pro@gmail.com>
+ * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
  */
 
 use App\Http\Controllers\ProfilController;
