@@ -53,10 +53,12 @@ Route::get('/supprimerCompte', [ProfilController::class, 'supprimerCompte'])->mi
 /*            ResetPasswordController             */
 /*------------------------------------------------*/
 /* Réinitialisation du mot de passe */
-Route::get('/resetPassword/emailRequest', [ResetPasswordController::class, 'emailRequest'])->middleware('guest')->name('resetPassword.emailRequest');
-Route::post('/resetPassword/emailRequest', [ResetPasswordController::class, 'emailRequestSave'])->middleware('guest')->name('resetPassword.emailRequestSave');
-Route::get('/resetPasswordSave/{token}', [ResetPasswordController::class, 'resetPassword'])->middleware('guest')->name('password.reset'); // Ne surtout pas changer le nom ni l'URL de cette route
-Route::post('/resetPasswordSave', [ResetPasswordController::class, 'resetPasswordSave'])->middleware('guest')->name('password.reset.save');
+Route::middleware(['guest'])->group(function () {
+    Route::get('/resetPassword/emailRequest', [ResetPasswordController::class, 'emailRequest'])->name('resetPassword.emailRequest');
+    Route::post('/resetPassword/emailRequest', [ResetPasswordController::class, 'emailRequestSave'])->name('resetPassword.emailRequestSave');
+    Route::get('/resetPasswordSave/{token}', [ResetPasswordController::class, 'resetPassword'])->name('password.reset'); // Ne surtout pas changer le nom ni l'URL de cette route
+    Route::post('/resetPasswordSave', [ResetPasswordController::class, 'resetPasswordSave'])->name('password.reset.save');
+});
 
 
 
