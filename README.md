@@ -84,24 +84,6 @@ Home Server Maison à été conçue pour être utilisé par plusieurs personnes,
 
 ## Installation
 
-Pour installer **Home Server Maison** sur votre serveur, vous avez deux options :
-
-- [Home Server Maison](#home-server-maison)
-  - [Table des matières](#table-des-matières)
-  - [Présentation](#présentation)
-  - [Fonctionnalités](#fonctionnalités)
-  - [Images](#images)
-    - [Format mobile](#format-mobile)
-    - [Format ordinateur](#format-ordinateur)
-  - [Technologies utilisées](#technologies-utilisées)
-  - [Installation](#installation)
-    - [Prérequis](#prérequis)
-    - [Installation de Home Server Maison](#installation-de-home-server-maison)
-    - [Lancement Home Server Maison](#lancement-home-server-maison)
-  - [Autheur](#autheur)
-  - [Report de bug et suggestions](#report-de-bug-et-suggestions)
-  - [License](#license)
-
 ### Prérequis
 
 Pour installer **Home Server Maison** sur votre serveur, vous devez avoir les prérequis suivants :
