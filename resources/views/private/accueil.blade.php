@@ -148,6 +148,9 @@
         document.getElementById('name').value = name;
         document.getElementById('link').value = link;
 
+        if (document.getElementById('id') != null) {
+            document.getElementById('id').remove();
+        }
         form.insertAdjacentHTML('beforeend', '<input type="hidden" id="id" name="id" value="' + id + '">');
     }
 </script>
