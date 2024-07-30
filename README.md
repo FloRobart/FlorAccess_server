@@ -118,7 +118,7 @@ Pour installer **Home Server Maison** sur votre serveur, vous devez avoir les pr
 
 ### Installation de Home Server Maison
 
-- [Télécharger le code source]() de **Home Server Maison** sur votre serveur.
+- [Télécharger le code source](https://github.com/FloRobart/HomeServerMaison/archive/refs/tags/v1.0.0.zip) de **Home Server Maison** sur votre serveur.
 - Ouvrir un terminal et se placer dans le dossier de **Home Server Maison**.
 - Installer les dépendances PHP
 
