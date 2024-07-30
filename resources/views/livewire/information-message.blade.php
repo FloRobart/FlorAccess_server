@@ -15,4 +15,10 @@
             <span class="normalTextValid text-center">{{ session()->get('success') }}</span>
         </div>
     @endif
+
+    @if (session()->has('message'))
+        <div class="rowCenterContainer">
+            <span class="normalTextAlert text-center">{{ session()->get('message') }}</span>
+        </div>
+    @endif
 </div>

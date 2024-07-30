@@ -64,4 +64,13 @@ Route::post('/resetPasswordSave', [ResetPasswordController::class, 'resetPasswor
 /* Route pour les utilisateurs */
 /*      PrivateController      */
 /*-----------------------------*/
-Route::get('/private/accueil', [PrivateController::class, 'accueil'])->middleware('auth')->name('private.accueil');
+Route::middleware(['auth'])->group(function () {
+    /* Affichage de la page d'accueil */
+    Route::get('/private/accueil', [PrivateController::class, 'accueil'])->name('private.accueil');
+
+    /* Gestion des outils */
+    Route::post('/private/tool/add', [PrivateController::class, 'addTool'])->name('private.tool.add');
+    Route::post('/private/tool/edit', [PrivateController::class, 'editTool'])->name('private.tool.edit');
+    Route::get('/private/tool/move/{id}/{new_position}', [PrivateController::class, 'moveTool'])->name('private.tool.move');
+    Route::get('/private/tool/remove/{id}', [PrivateController::class, 'deleteTool'])->name('private.tool.remove');
+});

@@ -14,7 +14,7 @@ class Tools extends Model
     use HasFactory;
 
     protected $connection = 'mysql';
-    protected $table = 'users';
+    protected $table = 'tools';
 
     /**
      * The attributes that are mass assignable.
@@ -22,7 +22,10 @@ class Tools extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'id',
+        'user_id',
         'name',
         'link',
+        'position',
     ];
 }

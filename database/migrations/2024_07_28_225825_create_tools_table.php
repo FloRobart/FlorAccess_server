@@ -18,8 +18,10 @@ return new class extends Migration
     {
         Schema::create('tools', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('name');
             $table->string('link');
+            $table->unsignedBigInteger('position')->default(0);
             $table->timestamps();
         });
     }
