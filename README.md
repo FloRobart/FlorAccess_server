@@ -55,6 +55,8 @@ Home Server Maison à été conçue pour être utilisé par plusieurs personnes,
   <img src="./documentation/img/mobile/connexion_password.png" alt="" width="45%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
 </div>
 
+<br>
+
 <div style="display: flex; justify-content: space-between;">
   <img src="./documentation/img/mobile/home_accueil.png" alt="" width="45%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
   <img src="./documentation/img/mobile/profil.png" alt="" width="45%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
@@ -62,10 +64,17 @@ Home Server Maison à été conçue pour être utilisé par plusieurs personnes,
 
 ### Format ordinateur
 
-<img src="./documentation/img/desktop/connexion.png" alt="" width="100%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
-<img src="./documentation/img/desktop/connexion_password.png" alt="" width="100%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
-<img src="./documentation/img/desktop/home_accueil.png" alt="" width="100%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
-<img src="./documentation/img/desktop/profil.png" alt="" width="100%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
+<div style="display: flex; justify-content: space-between;">
+  <img src="./documentation/img/desktop/connexion.png" alt="" width="100%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
+  <img src="./documentation/img/desktop/connexion_password.png" alt="" width="100%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
+</div>
+
+<br>
+
+<div style="display: flex; justify-content: space-between;">
+  <img src="./documentation/img/desktop/home_accueil.png" alt="" width="100%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
+  <img src="./documentation/img/desktop/profil.png" alt="" width="100%" style="display: block; margin-left: auto; margin-right: auto;" border="1" />
+</div>
 
 ## Technologies utilisées
 
