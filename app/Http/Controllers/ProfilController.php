@@ -38,7 +38,7 @@ class ProfilController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:4|max:20',
             'password_confirmation' => 'required|same:password',
-            'profil_image' => 'required|image|mimes:jpeg,png,jpg|max:50000',
+            'profil_image' => 'required|image|mimes:jpeg,png,jpg',
         ], [
             'name.required' => 'Le nom est obligatoire',
             'name.min' => 'Le nom doit contenir au moins 3 caractères',
@@ -54,7 +54,6 @@ class ProfilController extends Controller
             'profil_image.required' => 'L\'image de profil est obligatoire',
             'profil_image.image' => 'Votre image de profil doit être une image',
             'profil_image.mimes' => 'Votre image de profil doit être au format jpeg, jpg ou png',
-            'profil_image.max' => 'Votre image de profil est trop volumineuse (max 50Mo)',
         ]);
 
         /* Récupération des informations du formulaire */
@@ -152,7 +151,7 @@ class ProfilController extends Controller
             'name' => 'required|min:3|max:18',
             'email' => 'required|email|unique:users,email,' . Auth::user()->id,
             'password' => 'nullable|min:4|max:20',
-            'profil_image' => 'nullable|image|mimes:jpeg,png,jpg|max:50000',
+            'profil_image' => 'nullable|image|mimes:jpeg,png,jpg',
         ], [
             'name.required' => 'Le nom est obligatoire',
             'name.min' => 'Le nom doit contenir au moins 3 caractères',
@@ -164,7 +163,6 @@ class ProfilController extends Controller
             'password.max' => 'Le mot de passe ne peux pas contenir plus de 20 caractères',
             'profil_image.image' => 'Votre image de profil doit être une image',
             'profil_image.mimes' => 'Votre image de profil doit être au format jpeg, jpg ou png',
-            'profil_image.max' => 'Votre image de profil est trop volumineuse (max 50Mo)',
         ]);
 
         /* Vérification des informations du formulaire */

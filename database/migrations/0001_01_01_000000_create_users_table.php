@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->text('imgProfil');
+            $table->longText('imgProfil');
 
             $table->rememberToken();
             $table->timestamp('last_login_at')->nullable();
