@@ -46,7 +46,7 @@ class PrivateController extends Controller
         ]);
 
         /* Message de confirmation */
-        $exist = Tools::where('link', $request->input('link'))->first();
+        $exist = Tools::where('link', $request->input('link'))->where('user_id', Auth::id())->first();
         if ($exist != null) {
             $message = 'Attention, un outil avec le même lien existe déjà sous le nom ' . $exist->name . '. 🤔';
         } else {
