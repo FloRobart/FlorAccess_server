@@ -72,7 +72,7 @@ class ProfilController extends Controller
         ]);
 
         if (Auth::attempt($request->only('email', 'password'))) {
-            return redirect()->route('accueil')->with('success', 'Inscription réussie 👍');
+            return redirect()->route('private.accueil')->with('success', 'Inscription réussie 👍');
         } else {
             return back()->with(['error' => 'Erreur lors de l\'inscription réessayez plus tard ou envoyez un mail à l\'administrateur à l\'adresse suivante : ', 'name' => $name, 'email' => $email]); // TODO : Ajouter l'adresse mail de l'administrateur
         }
