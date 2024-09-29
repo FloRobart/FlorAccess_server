@@ -32,13 +32,16 @@ Route::get('/accueil', [PublicController::class, 'accueil'])->name('login');
 Route::get('/inscription', [ProfilController::class, 'inscription'])->name('inscription');
 Route::post('/inscription', [ProfilController::class, 'inscriptionSave'])->name('inscriptionSave');
 
+/* Connexion */
+Route::post('/connexion', [ProfilController::class, 'connexionSave'])->middleware('throttle:5,1')->name('connexionSave'); // 5 tentatives de connexion par minute, puis blocage pendant 1 minute
+Route::get('/add/ip/{token}/{ip}', [ProfilController::class, 'addIp'])->name('addIp'); // Ajout d'une adresse IP à la liste blanche
+
+/* Adresse IP */
+
+
 /* Profil */
 Route::get('/profil', [ProfilController::class, 'profil'])->middleware('auth')->name('profil');
 Route::post('/profil', [ProfilController::class, 'profilSave'])->middleware('auth')->name('profilSave');
-
-/* Connexion */
-Route::post('/connexion', [ProfilController::class, 'connexionSave'])->middleware('throttle:5,1')->name('connexionSave'); // 5 tentatives de connexion par minute, puis blocage pendant 1 minute
-Route::post('/connexionPost', [ProfilController::class, 'connexionPost'])->name('connexionPost');
 
 /* Déconnexion */
 Route::get('/deconnexion', [ProfilController::class, 'deconnexion'])->middleware('auth')->name('deconnexion');

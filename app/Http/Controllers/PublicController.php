@@ -15,6 +15,8 @@ class PublicController extends Controller
     /*---------*/
     /**
      * Affiche la page d'accueil
+     * @return \Illuminate\View\View Vue de la page d'accueil
+     * @method GET
      */
     public function accueil()
     {
