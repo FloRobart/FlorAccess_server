@@ -6,12 +6,14 @@ namespace App\Http\Controllers;
  * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
  */
 
+use App\Mail\addIpMail;
+use App\Models\AdresseIP;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Mail;
 
 class ProfilController extends Controller
 {
@@ -71,6 +73,15 @@ class ProfilController extends Controller
             'last_login_at' => now(),
         ]);
 
+        /* Enregistrement de l'adresse IP de l'utilisateur */
+        $adresseIP = request()->ip();
+        DB::table('adresse_ips')->insert([
+            'user_id' => User::where('email', $email)->first()->id,
+            'adresse_ip' => $adresseIP,
+            'est_bannie' => false,
+        ]);
+
+        /* Connexion de l'utilisateur */
         if (Auth::attempt($request->only('email', 'password'))) {
             return redirect()->route('private.accueil')->with('success', 'Inscription réussie 👍');
         } else {
@@ -111,6 +122,12 @@ class ProfilController extends Controller
             return back()->with(['error' => 'Mot de passe incorrect', 'email' => $email]);
         }
 
+        /* Vérification de l'adresse IP */
+        $ipFound = $this->verifIp($user, request()->ip());
+        if (!$ipFound) {
+            return back()->with(['error' => "C'est la première fois que vous vous connectez depuis cet endroit, veuillez certifier qu'il s'agit bien de vous en cliquant sur le lien envoyé par mail à l'adresse suivante : $email", 'email' => $email]);
+        }
+
         /* Connexion de l'utilisateur */
         if (Auth::check()) { Auth::logout(); }
         Auth::login($user);
@@ -121,6 +138,161 @@ class ProfilController extends Controller
 
         /* Redirection vers la page d'accueil */
         return redirect()->route('private.accueil');
+    }
+
+
+
+    /*------------*/
+    /* Adresse IP */
+    /*------------*/
+    /**
+     * Vérifie l'adresse IP de l'utilisateur. Si l'adresse IP n'est pas autorisée, un mail est envoyé à l'utilisateur pour l'ajouter à la liste blanche
+     * @param User $user l'utilisateur qui veut se connecter
+     * @param string $ip l'adresse IP de l'utilisateur
+     * @return bool true si l'adresse IP est autorisée sinon false
+     */
+    public function verifIp(User $user, string $ip)
+    {
+        $adresseIPBannie = AdresseIP::where('user_id', $user->id)->where('adresse_ip', $ip)->where('est_bannie', true)->first();
+        if ($adresseIPBannie) {
+            return back()->with(['error' => 'Vous êtes bannie ! Cet évènement serait rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !', 'email' => $email]);
+        }
+
+        $authorisedIps = AdresseIP::where('user_id', $user->id)->where('est_bannie', false)->get();
+        $ipFound = false;
+        foreach ($authorisedIps as $authorisedIp) {
+            if ($authorisedIp->adresse_ip == $ip) {
+                $ipFound = true;
+                break;
+            }
+        }
+
+        if (!$ipFound)
+        {
+            /* Génération d'un token de connexion */
+            $token = bin2hex(random_bytes(64));
+
+            /* Enregistrement du token de connexion */
+            DB::table('adresse_ips_tokens')->insert([
+                'email' => $user->email,
+                'token' => $token,
+                'created_at' => now(),
+            ]);
+
+            /* Envoi du mail de vérification */
+            $data = [
+                'email' => $user->email,
+                'token' => $token,
+                'ip' => $ip,
+            ];
+
+            Mail::to($user->email)->send(new addIpMail($data));
+        }
+
+        return $ipFound;
+    }
+
+    /**
+     * Ajoute une adresse IP à la liste blanche
+     * @param string $token le token de connexion
+     * @param string $ip l'adresse IP à ajouter
+     * @return Route accueil | avec un message de succès ou d'erreur
+     * @method GET
+     */
+    public function addIp(string $token, string $ip)
+    {
+        /*-------------------------------*/
+        /* Récupération des informations */
+        /*-------------------------------*/
+        $tokenDB = DB::table('adresse_ips_tokens')->where('token', $token)->first();
+        $email = $tokenDB->email;
+        $user = User::where('email', $email)->first();
+        $adresseIpDB = DB::table('adresse_ips_tokens')->where('token', $token)->first();
+        $adresseIp = request()->ip();
+
+
+        /*--------------------------------------*/
+        /* Vérification de la validité du token */
+        /*--------------------------------------*/
+        if ($tokenDB == null)
+        {
+            /* Bannissement de l'adresse IP */
+            $this->banIp($email, $adresseIp);
+
+            return redirect()->route('accueil')->with('error', 'Vous avez été bannie !');
+        }
+
+
+        /*---------------------------------------------*/
+        /* Vérification de la validité de l'adresse IP */
+        /*---------------------------------------------*/
+        if ($ip != $adresseIp || $ip != $adresseIpDB || $adresseIp != $adresseIpDB)
+        {
+            /* Bannissement de l'adresse IP */
+            $this->banIp($email, $adresseIp);
+
+            return redirect()->route('accueil')->with('error', 'Vous avez changer d\'endroit entre le moment où vous avez demander à vérifier votre email et le moment ou vous avez cliqué sur le lien dans le mail, par mesure de sécurité vous avez été bannie. Si c\'est bien vous qui avez demander à vérifier votre email, veuillez contacter l\'administrateur');
+        }
+        else
+        {
+            $adresseIPBannie = AdresseIP::where('user_id', $user->id)->where('adresse_ip', $ip)->where('est_bannie', true)->first();
+            if ($adresseIPBannie)
+            {
+                return redirect()->route('accueil')->with(['error' => 'Vous êtes bannie ! Cet évènement serait rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !', 'email' => $email]);
+            }
+        }
+
+
+        /*----------------------------------*/
+        /* Ajout de l'adresse IP à la liste */
+        /*----------------------------------*/
+        $builder = DB::table('adresse_ips')->insert([
+            'user_id' => $user->id,
+            'adresse_ip' => $ip,
+            'est_bannie' => false,
+        ]);
+
+        if ($builder != null)
+        {
+            /* Suppression du token */
+            DB::table('adresse_ips_tokens')->where('token', $token)->delete();
+
+            return redirect()->route('accueil')->with('success', 'Vous pouvez maintenant vous connecter depuis cette endroit 👍');
+        }
+
+        return redirect()->route('accueil')->with('error', 'Une erreur est survenue, si le problème persiste veuillez contacter l\'administrateur');
+    }
+
+    /**
+     * Bannit l'adresse IP
+     * @param string $email
+     * @param string $ip à bannir
+     * @return bool true si l'adresse IP est bannie sinon false
+     */
+    private function banIp(string $email, string $ip)
+    {
+        /* Récupération de l'utilisateur */
+        $user = User::where('email', $email)->first();
+        if ($user == null) { return false; }
+
+        /* Vérification si l'adresse IP est déjà bannie */
+        $adresseIp = AdresseIP::where('user_id', $user->id)->where('adresse_ip', $ip)->first();
+        if ($adresseIp != null)
+        {
+            $adresseIp->est_bannie = true;
+            $adresseIp->save();
+
+            return true;
+        }
+
+        /* Bannissement de l'adresse IP */
+        $builder = DB::table('adresse_ips')->insert([
+            'user_id' => $user->id,
+            'adresse_ip' => $ip,
+            'est_bannie' => true,
+        ]);
+
+        return $builder != null;
     }
 
 
