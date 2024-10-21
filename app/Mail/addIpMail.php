@@ -45,9 +45,10 @@ class addIpMail extends Mailable
                 </head>
                 <body>
                     <h1>Validation de l'email</h1>
-                    <p>".route('addIp', ['token' => $this->data['token'], 'ip' => $this->data['ip']])."</p>
+                    <a href=\"".route('addIp', ['token' => $this->data['token'], 'ip' => $this->data['ip']])."\">Cliquez ici</a>
                 </body>
                 </html>";
+
         return new Content(
             htmlString: $view,
         );
