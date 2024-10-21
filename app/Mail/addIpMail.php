@@ -3,7 +3,7 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\View\View;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -38,8 +38,18 @@ class addIpMail extends Mailable
      */
     public function content(): Content
     {
+        $view = "<!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Email personnalisé</title>
+                </head>
+                <body>
+                    <h1>Validation de l'email</h1>
+                    <p>".route('addIp', ['token' => $this->data['token'], 'ip' => $this->data['ip']])."</p>
+                </body>
+                </html>";
         return new Content(
-            view: 'mail.add_ip_mail',
+            htmlString: $view,
         );
     }
 

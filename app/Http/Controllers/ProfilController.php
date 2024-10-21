@@ -155,7 +155,7 @@ class ProfilController extends Controller
     {
         $adresseIPBannie = AdresseIP::where('user_id', $user->id)->where('adresse_ip', $ip)->where('est_bannie', true)->first();
         if ($adresseIPBannie) {
-            return back()->with(['error' => 'Vous êtes bannie ! Cet évènement serait rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !', 'email' => $email]);
+            return back()->with(['error' => 'Vous êtes bannie ! Cet évènement serait rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !']);
         }
 
         $authorisedIps = AdresseIP::where('user_id', $user->id)->where('est_bannie', false)->get();
@@ -175,6 +175,7 @@ class ProfilController extends Controller
             /* Enregistrement du token de connexion */
             DB::table('adresse_ips_tokens')->insert([
                 'email' => $user->email,
+                'adresse_ip' => $ip,
                 'token' => $token,
                 'created_at' => now(),
             ]);
@@ -207,7 +208,6 @@ class ProfilController extends Controller
         $tokenDB = DB::table('adresse_ips_tokens')->where('token', $token)->first();
         $email = $tokenDB->email;
         $user = User::where('email', $email)->first();
-        $adresseIpDB = DB::table('adresse_ips_tokens')->where('token', $token)->first();
         $adresseIp = request()->ip();
 
 
@@ -226,7 +226,7 @@ class ProfilController extends Controller
         /*---------------------------------------------*/
         /* Vérification de la validité de l'adresse IP */
         /*---------------------------------------------*/
-        if ($ip != $adresseIp || $ip != $adresseIpDB || $adresseIp != $adresseIpDB)
+        if ($ip != $adresseIp || $ip != $tokenDB->adresse_ip || $adresseIp != $tokenDB->adresse_ip)
         {
             /* Bannissement de l'adresse IP */
             $this->banIp($email, $adresseIp);
@@ -291,6 +291,12 @@ class ProfilController extends Controller
             'adresse_ip' => $ip,
             'est_bannie' => true,
         ]);
+
+        if ($builder != null)
+        {
+            /* Suppression du token */
+            DB::table('adresse_ips_tokens')->where('email', $email)->where('adresse_ip', $ip)->delete();
+        }
 
         return $builder != null;
     }

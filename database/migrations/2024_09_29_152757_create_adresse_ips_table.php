@@ -20,11 +20,12 @@ return new class extends Migration
         });
 
         Schema::create('adresse_ips_tokens', function (Blueprint $table) {
-            $table->id();
-            $table->string('email')->primary();
+            $table->string('email');
             $table->string('adresse_ip');
             $table->string('token');
             $table->timestamp('created_at')->nullable();
+
+            $table->primary(['email', 'adresse_ip']);
         });
     }
 
