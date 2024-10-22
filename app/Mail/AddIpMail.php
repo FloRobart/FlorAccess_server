@@ -3,11 +3,12 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\View\View;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Mail\Mailables\Address;
+
 
 class addIpMail extends Mailable
 {
@@ -29,7 +30,8 @@ class addIpMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Vérification de votre compte - Home Server Maison',
+            from: new Address(env('MAIL_FROM_ADDRESS'), env('MAIL_NAME')),
+            subject: 'Verification de votre compte - Home Server Maison',
         );
     }
 
@@ -38,19 +40,9 @@ class addIpMail extends Mailable
      */
     public function content(): Content
     {
-        $view = "<!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Email personnalisé</title>
-                </head>
-                <body>
-                    <h1>Validation de l'email</h1>
-                    <a href=\"".route('addIp', ['token' => $this->data['token'], 'ip' => $this->data['ip']])."\">Cliquez ici</a>
-                </body>
-                </html>";
-
         return new Content(
-            htmlString: $view,
+            // view: 'mail.addIpMail',
+            htmlString: "<h1><a href=". route('addIp', ['token' => $this->data['token'], 'ip' => $this->data['ip']]) . ">Cliquez pour validé qu'il s'agit bien de vous</a></h1>",
         );
     }
 

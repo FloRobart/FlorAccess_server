@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
  * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
  */
 
-use App\Mail\addIpMail;
+use App\Mail\AddIpMail;
 use App\Models\AdresseIP;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -123,9 +123,15 @@ class ProfilController extends Controller
         }
 
         /* Vérification de l'adresse IP */
+        $message = [
+            '0' => 'C\'est la première fois que vous vous connectez depuis cet endroit, veuillez certifier qu\'il s\'agit bien de vous en cliquant sur le lien envoyé par mail à l\'adresse suivante : ' . $email,
+            '2' => 'Un email vous a déjà été envoyé à l\'adresse ' . $email . ' pour vérifier qu\'il s\'agit bien de vous, veuillez vérifier votre boite mail',
+            '3' => 'Vous êtes bannie ! Cet évènement serait rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !',
+        ];
+
         $ipFound = $this->verifIp($user, request()->ip());
-        if (!$ipFound) {
-            return back()->with(['error' => "C'est la première fois que vous vous connectez depuis cet endroit, veuillez certifier qu'il s'agit bien de vous en cliquant sur le lien envoyé par mail à l'adresse suivante : $email", 'email' => $email]);
+        if ($ipFound != 1) {
+            return back()->with(['error' => $message[$ipFound], 'email' => $email]);
         }
 
         /* Connexion de l'utilisateur */
@@ -149,15 +155,21 @@ class ProfilController extends Controller
      * Vérifie l'adresse IP de l'utilisateur. Si l'adresse IP n'est pas autorisée, un mail est envoyé à l'utilisateur pour l'ajouter à la liste blanche
      * @param User $user l'utilisateur qui veut se connecter
      * @param string $ip l'adresse IP de l'utilisateur
-     * @return bool true si l'adresse IP est autorisée sinon false
+     * @return int
+     * - 0 si l'adresse IP n'est pas autorisée
+     * - 1 si l'adresse IP est autorisée
+     * - 2 si un mail a déjà été envoyé
+     * - 3 si l'adresse IP est bannie
      */
     public function verifIp(User $user, string $ip)
     {
+        /* Vérification si l'adresse IP est bannie */
         $adresseIPBannie = AdresseIP::where('user_id', $user->id)->where('adresse_ip', $ip)->where('est_bannie', true)->first();
         if ($adresseIPBannie) {
-            return back()->with(['error' => 'Vous êtes bannie ! Cet évènement serait rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !']);
+            return 3;
         }
 
+        /* Vérification si l'adresse IP est autorisée */
         $authorisedIps = AdresseIP::where('user_id', $user->id)->where('est_bannie', false)->get();
         $ipFound = false;
         foreach ($authorisedIps as $authorisedIp) {
@@ -169,6 +181,12 @@ class ProfilController extends Controller
 
         if (!$ipFound)
         {
+            /* Vérification de l'existence d'un token de connexion */
+            $tokenDB = DB::table('adresse_ips_tokens')->where('email', $user->email)->where('adresse_ip', $ip)->first();
+            if ($tokenDB != null) {
+                return 2;
+            }
+
             /* Génération d'un token de connexion */
             $token = bin2hex(random_bytes(64));
 
@@ -187,10 +205,11 @@ class ProfilController extends Controller
                 'ip' => $ip,
             ];
 
-            Mail::to($user->email)->send(new addIpMail($data));
+            /* Envoie du mail */
+            Mail::to($user->email)->send(new AddIpMail($data));
         }
 
-        return $ipFound;
+        return $ipFound ? 1 : 0;
     }
 
     /**

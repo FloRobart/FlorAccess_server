@@ -40,13 +40,13 @@
             <!-- Nom -->
             <div>
                 <label for="name" class="labelForm">Prénom <livewire:asterisque /></label>
-                <input name="name" type="text" id="name" minlength="3" maxlength="18" autofocus autocomplete="off" class="inputForm" placeholder="Nom" required value="{{ $name }}">
+                <input name="name" type="text" id="name" minlength="3" maxlength="18" autofocus autocomplete="off" class="inputForm" placeholder="Nom" required value="{{ old('name') }}">
             </div>
 
             <!-- Adresse email -->
             <div>
                 <label for="email" class="labelForm">Adresse email <livewire:asterisque /></label>
-                <input name="email" type="email" id="email" autocomplete="email" class="inputForm" placeholder="nom@mail.com" required value="{{ $email }}">
+                <input name="email" type="email" id="email" autocomplete="email" class="inputForm" placeholder="nom@mail.com" required value="{{ old('email') }}">
             </div>
 
             <!-- Mot de passe -->

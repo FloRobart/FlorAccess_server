@@ -6,7 +6,7 @@
 <div>
     <label for="password" class="labelForm">@if ($confirmation == "true") Confirmation du @endif Mot de passe <livewire:asterisque /></label>
     <div class="relative">
-        <input @if ($confirmation == "true") name="password_confirmation" id="password_confirmation" @else name="password" id="password" @endif type="password" minlength="4" maxlength="20" @if ($newPassword == "true") autocomplete="new-password" @else autocomplete="current-password" @endif class="inputForm" placeholder="Entrez votre mot de passe" value="" required>
+        <input @if ($confirmation == "true") name="password_confirmation" id="password_confirmation" @else name="password" id="password" @endif type="password" minlength="4" @if ($newPassword == "true") autocomplete="new-password" @else autocomplete="current-password" @endif class="inputForm" placeholder="Entrez votre mot de passe" value="{{ old('password') }}" required>
         <button type="button" class="absolute top-0 end-0 p-1 min-[380px]:p-2 rounded-e-md" title="Afficher le mot de passe" onclick="showPassword()">
             <!-- Icône eye fermé -->
             <svg @if ($confirmation == "true") id="svgEyeClose2" @else id="svgEyeClose1" @endif class="colorFont fontSizeIcons" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
