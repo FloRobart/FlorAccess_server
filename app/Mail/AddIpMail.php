@@ -1,6 +1,10 @@
 <?php
-
 namespace App\Mail;
+
+/*
+ * Ce fichier fait partie du projet Home Server Maison
+ * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
+ */
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
