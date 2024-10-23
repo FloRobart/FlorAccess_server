@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
+
 class ProfilController extends Controller
 {
     /*-------------*/
@@ -38,7 +39,7 @@ class ProfilController extends Controller
         $request->validate([
             'name' => 'required|min:3|max:18',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:4|max:20',
+            'password' => 'required|min:12|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/',
             'password_confirmation' => 'required|same:password',
             'profil_image' => 'required|image|mimes:jpeg,png,jpg',
         ], [
@@ -49,8 +50,8 @@ class ProfilController extends Controller
             'email.email' => 'L\'adresse mail n\'est pas valide',
             'email.unique' => 'Vous avez déjà un compte avec cette adresse mail',
             'password.required' => 'Le mot de passe est obligatoire',
-            'password.min' => 'Le mot de passe doit contenir au moins 4 caractères',
-            'password.max' => 'Le mot de passe ne peux pas contenir plus de 20 caractères',
+            'password.min' => 'Le mot de passe doit contenir au moins 12 caractères',
+            'password.regex' => 'Le mot de passe doit contenir au moins une minuscule, une majuscule, un chiffre et un caractère spécial',
             'password_confirmation.required' => 'La confirmation du mot de passe est obligatoire',
             'password_confirmation.same' => 'Les mots de passe doivent être identiques',
             'profil_image.required' => 'L\'image de profil est obligatoire',
@@ -85,7 +86,7 @@ class ProfilController extends Controller
         if (Auth::attempt($request->only('email', 'password'))) {
             return redirect()->route('private.accueil')->with('success', 'Inscription réussie 👍');
         } else {
-            return back()->with(['error' => 'Erreur lors de l\'inscription réessayez plus tard ou envoyez un mail à l\'administrateur à l\'adresse suivante : ', 'name' => $name, 'email' => $email]); // TODO : Ajouter l'adresse mail de l'administrateur
+            return back()->with(['error' => 'Erreur lors de l\'inscription réessayez plus tard ou contactez l\'administrateur.']);
         }
     }
 
@@ -119,7 +120,7 @@ class ProfilController extends Controller
         /* Vérification des informations de connexion */
         $user = User::where('email', $email)->first();
         if (!$user || !Hash::check($password, $user->password)) {
-            return back()->with(['error' => 'Mot de passe incorrect', 'email' => $email]);
+            return back()->with(['error' => 'Mot de passe incorrect']);
         }
 
         /* Vérification de l'adresse IP */
@@ -131,7 +132,7 @@ class ProfilController extends Controller
 
         $ipFound = $this->verifIp($user, request()->ip());
         if ($ipFound != 1) {
-            return back()->with(['error' => $message[$ipFound], 'email' => $email]);
+            return back()->with(['error' => $message[$ipFound]]);
         }
 
         /* Connexion de l'utilisateur */
@@ -257,7 +258,7 @@ class ProfilController extends Controller
             $adresseIPBannie = AdresseIP::where('user_id', $user->id)->where('adresse_ip', $ip)->where('est_bannie', true)->first();
             if ($adresseIPBannie)
             {
-                return redirect()->route('accueil')->with(['error' => 'Vous êtes bannie ! Cet évènement serait rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !', 'email' => $email]);
+                return redirect()->route('accueil')->with(['error' => 'Vous êtes bannie ! Cet évènement sera rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !']);
             }
         }
 
@@ -347,7 +348,7 @@ class ProfilController extends Controller
         $request->validate([
             'name' => 'required|min:3|max:18',
             'email' => 'required|email|unique:users,email,' . Auth::user()->id,
-            'password' => 'nullable|min:4|max:20',
+            'password' => 'nullable|min:12|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/',
             'profil_image' => 'nullable|image|mimes:jpeg,png,jpg',
         ], [
             'name.required' => 'Le nom est obligatoire',
@@ -356,8 +357,8 @@ class ProfilController extends Controller
             'email.required' => 'L\'adresse mail est obligatoire',
             'email.email' => 'L\'adresse mail n\'est pas valide',
             'email.unique' => 'Vous ne pouvez pas utiliser cette adresse mail',
-            'password.min' => 'Le mot de passe doit contenir au moins 4 caractères',
-            'password.max' => 'Le mot de passe ne peux pas contenir plus de 20 caractères',
+            'password.min' => 'Le mot de passe doit contenir au moins 12 caractères',
+            'password.regex' => 'Le mot de passe doit contenir au moins une minuscule, une majuscule, un chiffre et un caractère spécial',
             'profil_image.image' => 'Votre image de profil doit être une image',
             'profil_image.mimes' => 'Votre image de profil doit être au format jpeg, jpg ou png',
         ]);
