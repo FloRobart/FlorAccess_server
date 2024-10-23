@@ -23,6 +23,7 @@ class ResetPasswordController extends Controller
      */
     public function emailRequest()
     {
+        LogController::addLog('Affichage de la page de demande de réinitialisation du mot de passe');
         return view('reset_password.emailRequest');
     }
 
@@ -46,7 +47,8 @@ class ResetPasswordController extends Controller
             $request->only('email')
         );
 
-        // TODO : mettre back() à la place de redirect()->route('resetPassword.emailRequest')
+        LogController::addLog('Demande de réinitialisation du mot de passe (email envoyé) pour l\'adresse mail ' . $request->only('email'));
+
         return $status === Password::RESET_LINK_SENT
                     ? back()->with('success', 'Un mail de réinitialisation du mot de passe vous a été envoyé à l\'adresse mail' . $request->only('email') . '. Vous pouvez fermé cette page et cliquer sur le lien du mail pour réinitialiser votre mot de passe.')
                     : back()->with('error', 'Une erreur est survenue lors de l\'envoi du mail de réinitialisation du mot de passe.');
@@ -65,8 +67,10 @@ class ResetPasswordController extends Controller
 
         /* Vérification du token */
         if ($user != null && Password::tokenExists($user, $token)) {
+            LogController::addLog('Affichage de la page de réinitialisation du mot de passe pour l\'adresse mail ' . $email);
             return view('reset_password.resetPassword', ['token' => $token, 'email' => $email]);
         } else {
+            LogController::addLog('Tentative d\'accès à la page de réinitialisation du mot de passe pour l\'adresse mail ' . $email . ' avec un token invalide');
             return redirect()->route('accueil');
         }
     }
@@ -103,6 +107,7 @@ class ResetPasswordController extends Controller
         $token = $request->token;
 
         if ($user != null && !(Password::tokenExists($user, $token))) {
+            LogController::addLog('Tentative de réinitialisation du mot de passe pour l\'adresse mail ' . $email . ' avec un token invalide');
             return redirect()->route('accueil');
         }
      
@@ -118,6 +123,8 @@ class ResetPasswordController extends Controller
                 event(new PasswordReset($user));
             }
         );
+
+        LogController::addLog('Réinitialisation du mot de passe pour l\'adresse mail ' . $email);
 
         Schedule::command('auth:clear-resets')->everyFifteenMinutes();
         return $status === Password::PASSWORD_RESET

@@ -6,10 +6,11 @@ namespace App\Http\Controllers;
  * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
  */
 
+use App\Models\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use App\Models\Tools;
+
 
 class PrivateController extends Controller
 {
@@ -21,6 +22,8 @@ class PrivateController extends Controller
      */
     public function accueil()
     {
+        LogController::addLog('Affichage de la page d\'accueil privée');
+
         $tools = Tools::all()->where('user_id', Auth::id())->sortBy('position');
         return view('private.accueil', compact('tools'));
     }
@@ -61,8 +64,10 @@ class PrivateController extends Controller
         $tool->position = Tools::where('user_id', Auth::id())->max('position') + 1;
 
         if ($tool->save()) {
+            LogController::addLog('Ajout de l\'outil ' . $tool->name . ' (' . $tool->link . ')');
             return back()->with('success', 'L\'outil a été ajouté avec succès 👍')->with('message', $message);
         } else {
+            LogController::addLog('Une erreur est survenue lors de l\'ajout de l\'outil ' . $tool->name . ' (' . $tool->link . ')', null, 1);
             return back()->with('error', 'Une erreur est survenue lors de l\'ajout de l\'outil');
         }
     }
@@ -96,8 +101,10 @@ class PrivateController extends Controller
         $tool->link = $request->input('link');
 
         if ($tool->save()) {
+            LogController::addLog('Modification de l\'outil ' . $tool->name . ' (' . $tool->link . ')');
             return back()->with('success', 'L\'outil a été modifié avec succès 👍');
         } else {
+            LogController::addLog('Une erreur est survenue lors de la modification de l\'outil ' . $tool->name . ' (' . $tool->link . ')', null, 1);
             return back()->with('error', 'Une erreur est survenue lors de la modification de l\'outil');
         }
     }
@@ -133,8 +140,10 @@ class PrivateController extends Controller
 
         $tool->position = $new_position;
         if ($tool->save()) {
+            LogController::addLog('Déplacement de l\'outil ' . $tool->name . ' (' . $tool->link . ')');
             return back()->with('success', 'L\'outil a été déplacé avec succès 👍')->with('modif', 'true')->with('position', min(array($oldPosition, $new_position)) - 2);
         } else {
+            LogController::addLog('Une erreur est survenue lors du déplacement de l\'outil ' . $tool->name . ' (' . $tool->link . ')', null, 1);
             return back()->with('error', 'Une erreur est survenue lors du déplacement de l\'outil');
         }
     }
@@ -162,8 +171,10 @@ class PrivateController extends Controller
 
         /* Suppression de l'outil */
         if ($tool->delete()) {
+            LogController::addLog('Suppression de l\'outil ' . $tool->name . ' (' . $tool->link . ')');
             return back()->with('success', 'L\'outil a été supprimé avec succès 👍');
         } else {
+            LogController::addLog('Une erreur est survenue lors de la suppression de l\'outil ' . $tool->name . ' (' . $tool->link . ')', null, 1);
             return back()->with('error', 'Une erreur est survenue lors de la suppression de l\'outil');
         }
     }
