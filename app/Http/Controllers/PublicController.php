@@ -20,6 +20,8 @@ class PublicController extends Controller
      */
     public function accueil()
     {
+        LogController::addLog('Affichage de la page d\'accueil publique (pour se connecter ou s\'inscrire)');
+
         $profils = User::all();
         return view('public.accueil', ['profils' => $profils]);
     }
