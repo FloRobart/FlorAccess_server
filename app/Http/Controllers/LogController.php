@@ -32,7 +32,6 @@ class LogController extends Controller
         $sort = $request->query('sort') ?? 'created_at';
         $order = $request->query('order') ?? 'desc';
 
-        LogController::addLog('Affichage de la page des logs');
         if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
             Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError(Log::all()->sortByDesc('created_at')->first()));
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
@@ -50,7 +49,6 @@ class LogController extends Controller
      */
     public function showDetailsLog($id)
     {
-        LogController::addLog('Affichage de la page du log n°' . $id);
         if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
             Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError(Log::all()->sortByDesc('created_at')->first()));
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
@@ -90,7 +88,7 @@ class LogController extends Controller
 
         /* Vérification que le log est différent du dernier log */
         $lastLog = Log::all()->sortByDesc('created_at')->first();
-        if ($lastLog != null && $lastLog->message == $log->message && $lastLog->user_id == $log->user_id && $lastLog->ip == $log->ip && $lastLog->link_to == $log->link_to && $lastLog->method_to == $log->method_to) {
+        if ($lastLog != null && $lastLog->status == $log->status && $lastLog->user_id == $log->user_id && $lastLog->ip == $log->ip && $lastLog->link_to == $log->link_to && $lastLog->method_to == $log->method_to) {
             return;
         }
 

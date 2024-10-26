@@ -10,6 +10,9 @@
 @endsection
 
 @section('content')
+{{-- Enregistrement du log --}}
+{{ App\Http\Controllers\LogController::addLog('Affichage de la page du log n°' . $log->id); }}
+
 <!-- Titre de la page -->
 <livewire:page-title :title="'Détail du log n°' . $log->id" />
 

@@ -26,7 +26,6 @@ class ProfilController extends Controller
      */
     public function inscription()
     {
-        LogController::addLog('Affichage de la page d\'inscription');
         return view('profil.inscription');
     }
 
@@ -172,7 +171,7 @@ class ProfilController extends Controller
         /* Vérification si l'adresse IP est bannie */
         $adresseIPBannie = AdresseIP::where('user_id', $user->id)->where('adresse_ip', $ip)->where('est_bannie', true)->first();
         if ($adresseIPBannie) {
-            LogController::addLog('L\'adresse IP de l\'utilisateur ('.$ip.') est bannie', $user->id);
+            LogController::addLog('L\'adresse IP de l\'utilisateur ('.$ip.') est bannie', $user->id, 1);
             return 3;
         }
 
@@ -244,7 +243,7 @@ class ProfilController extends Controller
         /*--------------------------------------*/
         if ($tokenDB == null)
         {
-            LogController::addLog('Bannissement de l\'adresse IP : ' . $ip . ' car le token est invalide', $user->id);
+            LogController::addLog('Bannissement de l\'adresse IP : ' . $ip . ' car le token est invalide', $user->id, 1);
 
             /* Bannissement de l'adresse IP */
             $this->banIp($email, $adresseIp);
@@ -258,7 +257,7 @@ class ProfilController extends Controller
         /*---------------------------------------------*/
         if ($ip != $adresseIp || $ip != $tokenDB->adresse_ip || $adresseIp != $tokenDB->adresse_ip)
         {
-            LogController::addLog('Bannissement de l\'adresse IP : ' . $ip . ' car l\'adresse IP n\'est pas valide', $user->id);
+            LogController::addLog('Bannissement de l\'adresse IP : ' . $ip . ' car l\'adresse IP n\'est pas valide', $user->id, 1);
 
             /* Bannissement de l'adresse IP */
             $this->banIp($email, $adresseIp);
@@ -270,6 +269,7 @@ class ProfilController extends Controller
             $adresseIPBannie = AdresseIP::where('user_id', $user->id)->where('adresse_ip', $ip)->where('est_bannie', true)->first();
             if ($adresseIPBannie)
             {
+                LogController::addLog('Un utilisateur a tenté de se connecter depuis une IP bannie', $user->id, 1);
                 return redirect()->route('accueil')->with(['error' => 'Vous êtes bannie ! Cet évènement sera rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !']);
             }
         }
@@ -352,10 +352,9 @@ class ProfilController extends Controller
     public function profil()
     {
         if (auth()->check()) {
-            LogController::addLog('Affichage de la page du profil');
             return view('profil.profil');
         } else {
-            LogController::addLog('Un utilisateur non connecté a tenté d\'accéder à la page du profil');
+            LogController::addLog('Un utilisateur non connecté a tenté d\'accéder à la page du profil', null, 1);
             return redirect()->route('accueil');
         }
     }
@@ -437,10 +436,11 @@ class ProfilController extends Controller
         /* Déconnexion de l'utilisateur */
         if (Auth::check())
         {
+            $user = User::find(Auth::user()->id);
             Auth::logout();
+            
+            LogController::addLog('Déconnexion de l\'utilisateur ' . $user->name, $user->id);
         }
-
-        LogController::addLog('Déconnexion de l\'utilisateur');
 
         /* Redirection vers la page d'accueil */
         return Redirect()->route('accueil');
@@ -482,6 +482,6 @@ class ProfilController extends Controller
         LogController::addLog('Suppression du compte de l\'utilisateur', $user->id);
 
         /* Redirection vers la page d'accueil */
-        return Redirect('accueil');
+        return Redirect()->route('accueil');
     }
 }

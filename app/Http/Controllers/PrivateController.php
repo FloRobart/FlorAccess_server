@@ -6,12 +6,9 @@ namespace App\Http\Controllers;
  * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
  */
 
-use App\Models\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Tools;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\LogError;
 
 
 class PrivateController extends Controller
@@ -25,8 +22,6 @@ class PrivateController extends Controller
      */
     public function accueil()
     {
-        LogController::addLog('Affichage de la page d\'accueil privée');
-
         $tools = Tools::all()->where('user_id', Auth::id())->sortBy('position');
         return view('private.accueil', compact('tools'));
     }
