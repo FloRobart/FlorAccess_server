@@ -10,6 +10,9 @@
 @endsection
 
 @section('content')
+{{-- Enregistrement du log --}}
+{{ App\Http\Controllers\LogController::addLog('Affichage de la page de profil'); }}
+
 <!-- Titre de la page -->
 <livewire:page-title :title="'Profil'" />
 
