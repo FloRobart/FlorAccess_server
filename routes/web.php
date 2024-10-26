@@ -11,6 +11,7 @@ use App\Http\Controllers\PrivateController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\LogController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\VerifIP;
 
 
 
@@ -41,14 +42,14 @@ Route::get('/add/ip/{token}/{ip}', [ProfilController::class, 'addIp'])->name('ad
 
 
 /* Profil */
-Route::get('/profil', [ProfilController::class, 'profil'])->middleware('auth')->name('profil');
-Route::post('/profil', [ProfilController::class, 'profilSave'])->middleware('auth')->name('profilSave');
+Route::get('/profil', [ProfilController::class, 'profil'])->middleware(['auth', VerifIP::class])->name('profil');
+Route::post('/profil', [ProfilController::class, 'profilSave'])->middleware(['auth', VerifIP::class])->name('profilSave');
 
 /* Déconnexion */
-Route::get('/deconnexion', [ProfilController::class, 'deconnexion'])->middleware('auth')->name('deconnexion');
+Route::get('/deconnexion', [ProfilController::class, 'deconnexion'])->middleware(['auth', VerifIP::class])->name('deconnexion');
 
 /* Suppression de compte */
-Route::get('/supprimerCompte', [ProfilController::class, 'supprimerCompte'])->middleware('auth')->name('supprimerCompte');
+Route::get('/supprimerCompte', [ProfilController::class, 'supprimerCompte'])->middleware(['auth', VerifIP::class])->name('supprimerCompte');
 
 
 
@@ -70,7 +71,7 @@ Route::middleware(['guest'])->group(function () {
 /* Route pour les utilisateurs */
 /*      PrivateController      */
 /*-----------------------------*/
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', VerifIP::class])->group(function () {
     /* Affichage de la page d'accueil */
     Route::get('/private/accueil', [PrivateController::class, 'accueil'])->name('private.accueil');
 
