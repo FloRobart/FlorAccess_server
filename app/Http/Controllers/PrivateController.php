@@ -10,6 +10,8 @@ use App\Models\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Tools;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\LogError;
 
 
 class PrivateController extends Controller
@@ -19,6 +21,7 @@ class PrivateController extends Controller
     /*---------*/
     /**
      * Affiche la page d'accueil
+     * @return \Illuminate\View\View private.accueil
      */
     public function accueil()
     {
@@ -33,6 +36,8 @@ class PrivateController extends Controller
     /*--------------------*/
     /**
      * Ajouter un outil
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse back()
      */
     public function addTool(Request $request)
     {
@@ -74,6 +79,8 @@ class PrivateController extends Controller
 
     /**
      * Modifier un outil
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse back()
      */
     public function editTool(Request $request)
     {
@@ -109,8 +116,11 @@ class PrivateController extends Controller
         }
     }
 
-    /*
+    /**
      * Déplacer un outil
+     * @param int $id
+     * @param int $new_position
+     * @return \Illuminate\Http\RedirectResponse back()
      */
     public function moveTool($id, $new_position)
     {
@@ -150,6 +160,8 @@ class PrivateController extends Controller
 
     /**
      * Supprimer un outil
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse back()
      */
     public function deleteTool($id)
     {

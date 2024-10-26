@@ -33,7 +33,7 @@ class ResetPasswordController extends Controller
      * Génère le token et
      * Envoie le mail de réinitialisation du mot de passe
      */
-    protected function emailRequestSave(Request $request)
+    public function emailRequestSave(Request $request)
     {
         $request->validate([
             'email' => 'required|email|exists:users,email'
@@ -47,7 +47,7 @@ class ResetPasswordController extends Controller
             $request->only('email')
         );
 
-        LogController::addLog('Demande de réinitialisation du mot de passe (email envoyé) pour l\'adresse mail ' . $request->only('email'));
+        LogController::addLog('Demande de réinitialisation du mot de passe (email envoyé) pour l\'adresse mail ' . $request->email);
 
         return $status === Password::RESET_LINK_SENT
                     ? back()->with('success', 'Un mail de réinitialisation du mot de passe vous a été envoyé à l\'adresse mail' . $request->only('email') . '. Vous pouvez fermé cette page et cliquer sur le lien du mail pour réinitialiser votre mot de passe.')
