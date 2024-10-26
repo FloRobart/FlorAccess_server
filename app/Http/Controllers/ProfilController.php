@@ -106,7 +106,7 @@ class ProfilController extends Controller
         /* Validation des informations du formulaire */
         $request->validate([
             'email' => 'required|email|exists:users,email',
-            'password' => 'required|min:12',
+            'password' => 'required',
         ], [
             'email.required' => 'L\'adresse mail est obligatoire',
             'email.email' => 'L\'adresse mail n\'est pas valide',

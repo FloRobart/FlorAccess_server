@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PrivateController;
 use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\LogController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -78,4 +79,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/private/tool/edit', [PrivateController::class, 'editTool'])->name('private.tool.edit');
     Route::get('/private/tool/move/{id}/{new_position}', [PrivateController::class, 'moveTool'])->name('private.tool.move');
     Route::get('/private/tool/remove/{id}', [PrivateController::class, 'deleteTool'])->name('private.tool.remove');
+
+    /* Affichage des logs, uniquement pour l'administrateur */
+    Route::get('/private/logs', [LogController::class, 'showListeLogs'])->name('private.logs');
+    Route::get('/private/log/{id}', [LogController::class, 'showDetailsLog'])->name('private.log.details');
 });

@@ -10,10 +10,62 @@ use App\Models\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\LogError;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\Request;
+use Livewire\WithPagination;
 
 
 class LogController extends Controller
 {
+    use WithPagination;
+
+
+    /*--------------------*/
+    /* Affichage des logs */
+    /*--------------------*/
+    /**
+     * Affiche la page des logs
+     * @param Request $request
+     * @return \Illuminate\View\View private.logListe
+     */
+    public function showListeLogs(Request $request)
+    {
+        $sort = $request->query('sort') ?? 'created_at';
+        $order = $request->query('order') ?? 'desc';
+
+        LogController::addLog('Affichage de la page des logs');
+        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
+            Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError(Log::all()->sortByDesc('created_at')->first()));
+            return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
+        }
+
+        $nbLogs = Log::count();
+        $logs = Log::orderBy($sort, $order)->paginate(20);
+        return view('private.logListe', compact('logs', 'nbLogs'));
+    }
+
+    /**
+     * Affiche la page d'un log
+     * @param int $id
+     * @return \Illuminate\View\View private.logDetails
+     */
+    public function showDetailsLog($id)
+    {
+        LogController::addLog('Affichage de la page du log n°' . $id);
+        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
+            Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError(Log::all()->sortByDesc('created_at')->first()));
+            return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
+        }
+
+        $log = Log::where('id', $id)->first();
+        if ($log == null) { return back()->with('error', 'Le log n\'existe pas'); }
+        return view('private.logDetails', compact('log'));
+    }
+
+
+
+    /*-------------------------*/
+    /* Enregistrement des logs */
+    /*-------------------------*/
     /**
      * Permets d'ajouter un log
      * @param string $message
@@ -23,18 +75,24 @@ class LogController extends Controller
      */
     public static function addLog(string $message, ?string $user_id = null, ?int $error = 0): void
     {
-        $user_id = $user_id ?? Auth::check() ? Auth::user()->id : null;
+        $user_id = $user_id ?? (Auth::check() ? Auth::user()->id : null);
 
         $log = new Log();
         $log->host = $_SERVER['HTTP_HOST'];
         $log->user_id = $user_id;
         $log->ip = request()->ip();
-        $log->link_from = $_SERVER['HTTP_REFERER'];
+        $log->link_from = $_SERVER['HTTP_REFERER'] ?? null;
         $log->link_to = $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
         $log->method_to = $_SERVER['REQUEST_METHOD'];
         $log->user_agent = $_SERVER['HTTP_USER_AGENT'];
         $log->message = $message;
         $log->status = $error;
+
+        /* Vérification que le log est différent du dernier log */
+        $lastLog = Log::all()->sortByDesc('created_at')->first();
+        if ($lastLog != null && $lastLog->message == $log->message && $lastLog->user_id == $log->user_id && $lastLog->ip == $log->ip && $lastLog->link_to == $log->link_to && $lastLog->method_to == $log->method_to) {
+            return;
+        }
 
         if (!$log->save()) {
             Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError($log));
