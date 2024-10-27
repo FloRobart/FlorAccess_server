@@ -351,7 +351,7 @@ class ProfilController extends Controller
      */
     public function profil()
     {
-        if (auth()->check()) {
+        if (Auth::check()) {
             return view('profil.profil');
         } else {
             LogController::addLog('Un utilisateur non connecté a tenté d\'accéder à la page du profil', null, 1);

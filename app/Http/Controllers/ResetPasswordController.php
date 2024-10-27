@@ -65,7 +65,6 @@ class ResetPasswordController extends Controller
 
         /* Vérification du token */
         if ($user != null && Password::tokenExists($user, $token)) {
-            LogController::addLog('Affichage de la page de réinitialisation du mot de passe pour l\'adresse mail ' . $email);
             return view('reset_password.resetPassword', ['token' => $token, 'email' => $email]);
         } else {
             LogController::addLog('Tentative d\'accès à la page de réinitialisation du mot de passe pour l\'adresse mail ' . $email . ' avec un token invalide', null, 1);
