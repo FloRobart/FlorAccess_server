@@ -90,6 +90,6 @@ Route::middleware(['auth', VerifIP::class])->group(function () {
 /*---------------------*/
 Route::middleware(['auth', VerifIP::class])->group(function () {
     /* Affichage des logs, uniquement pour l'administrateur */
-    Route::get('/private/logs', [LogController::class, 'showListeLogs'])->name('log.logs');
-    Route::get('/private/log/details/{id}', [LogController::class, 'showDetailsLog'])->name('log.log.details');
+    Route::get('/logs', [LogController::class, 'showListeLogs'])->name('log.logs');
+    Route::get('/log/details/{id}', [LogController::class, 'showDetailsLog'])->name('log.log.details');
 });
