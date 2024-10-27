@@ -95,5 +95,9 @@ class LogController extends Controller
         if (!$log->save()) {
             Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError($log));
         }
+
+        if ($error == 1) {
+            Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError($log));
+        }
     }
 }
