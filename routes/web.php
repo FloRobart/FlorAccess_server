@@ -80,8 +80,16 @@ Route::middleware(['auth', VerifIP::class])->group(function () {
     Route::post('/private/tool/edit', [PrivateController::class, 'editTool'])->name('private.tool.edit');
     Route::get('/private/tool/move/{id}/{new_position}', [PrivateController::class, 'moveTool'])->name('private.tool.move');
     Route::get('/private/tool/remove/{id}', [PrivateController::class, 'deleteTool'])->name('private.tool.remove');
+});
 
+
+
+/*---------------------*/
+/* Route pour les logs */
+/*    LogController    */
+/*---------------------*/
+Route::middleware(['auth', VerifIP::class])->group(function () {
     /* Affichage des logs, uniquement pour l'administrateur */
-    Route::get('/private/logs', [LogController::class, 'showListeLogs'])->name('private.logs');
-    Route::get('/private/log/details/{id}', [LogController::class, 'showDetailsLog'])->name('private.log.details');
+    Route::get('/private/logs', [LogController::class, 'showListeLogs'])->name('log.logs');
+    Route::get('/private/log/details/{id}', [LogController::class, 'showDetailsLog'])->name('log.log.details');
 });

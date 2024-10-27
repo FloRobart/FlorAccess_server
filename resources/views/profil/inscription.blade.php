@@ -32,11 +32,6 @@
     <div class="py-6 lg:py-12 px-4 mx-auto max-w-screen-md">
         <form action="{{ route('inscriptionSave') }}" method="POST" enctype="multipart/form-data" class="space-y-10">
             @csrf
-            @php
-                $name = session()->get('name');
-                $email = session()->get('email');
-            @endphp
-
             <!-- Nom -->
             <div>
                 <label for="name" class="labelForm">Prénom <livewire:asterisque /></label>

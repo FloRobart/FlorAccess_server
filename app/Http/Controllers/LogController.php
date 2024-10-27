@@ -25,7 +25,7 @@ class LogController extends Controller
     /**
      * Affiche la page des logs
      * @param Request $request
-     * @return \Illuminate\View\View private.logListe
+     * @return \Illuminate\View\View logs.logListe
      */
     public function showListeLogs(Request $request)
     {
@@ -39,13 +39,13 @@ class LogController extends Controller
 
         $nbLogs = Log::count();
         $logs = Log::orderBy($sort, $order)->paginate(20);
-        return view('private.logListe', compact('logs', 'nbLogs'));
+        return view('logs.logListe', compact('logs', 'nbLogs'));
     }
 
     /**
      * Affiche la page d'un log
      * @param int $id
-     * @return \Illuminate\View\View private.logDetails
+     * @return \Illuminate\View\View logs.logDetails
      */
     public function showDetailsLog($id)
     {
@@ -56,7 +56,7 @@ class LogController extends Controller
 
         $log = Log::where('id', $id)->first();
         if ($log == null) { return back()->with('error', 'Le log n\'existe pas'); }
-        return view('private.logDetails', compact('log'));
+        return view('logs.logDetails', compact('log'));
     }
 
 
