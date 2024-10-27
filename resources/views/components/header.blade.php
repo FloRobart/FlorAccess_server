@@ -67,7 +67,7 @@
 
                 <!-- Logs -->
                 @if (str_contains(strtolower(URL::current()), 'log'))
-                    <livewire:breadcrumb-link name="Logs" link="{{ route('private.logs') }}" />
+                    <livewire:breadcrumb-link name="Logs" link="{{ route('log.logs') }}" />
                 @endif
 
                 <!-- log détails -->

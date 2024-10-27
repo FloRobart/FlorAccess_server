@@ -67,7 +67,7 @@
                     @foreach ($logs as $log)
                         <tr class="tableRow smallText text-center">
                             <!-- Id du log -->
-                            <td class="tableCell"><a href="{{ route('private.log.details', $log->id) }}" title="Accéder aux détails du log n°{{ $log->id }}" class="link">{{ $log->id }}</a></td>
+                            <td class="tableCell"><a href="{{ route('log.log.details', $log->id) }}" title="Accéder aux détails du log n°{{ $log->id }}" class="link">{{ $log->id }}</a></td>
 
                             <!-- Nom de l'utilisateur -->
                             <td class="tableCell">{{ $log->user_id != null ? App\Models\User::find($log->user_id)->name : 'Invité' }}</td>
