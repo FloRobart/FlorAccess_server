@@ -10,9 +10,6 @@
 @endsection
 
 @section('content')
-{{-- Enregistrement du log --}}
-{{ App\Http\Controllers\LogController::addLog('Affichage de la page de saisie d\'email pour la réinitialisation du mot de passe'); }}
-
 <!-- Titre de la page -->
 <livewire:page-title :title="'Demande de réinitialisation de mot de passe'" />
 
@@ -52,4 +49,7 @@
         <span class="smallText ml-1">Champs obligatoires</span>
     </div>
 </section>
+
+{{-- Enregistrement du log --}}
+{{ App\Http\Controllers\LogController::addLog('Affichage de la page de saisie d\'email pour la réinitialisation du mot de passe'); }}
 @endsection
