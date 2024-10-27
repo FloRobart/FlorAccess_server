@@ -10,9 +10,6 @@
 @endsection
 
 @section('content')
-{{-- Enregistrement du log --}}
-{{ App\Http\Controllers\LogController::addLog('Affichage de la page d\'inscription'); }}
-
 <!-- Titre de la page -->
 <livewire:page-title :title="'Inscription'" />
 
@@ -92,6 +89,9 @@
         </div>
     </div>
 </section>
+
+{{-- Enregistrement du log --}}
+{{ App\Http\Controllers\LogController::addLog('Affichage de la page d\'inscription'); }}
 @endsection
 
 @section('scripts')
