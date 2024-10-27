@@ -64,6 +64,16 @@
                 @if (str_contains(strtolower(URL::current()), 'profil'))
                     <livewire:breadcrumb-link name="Profil" link="{{ route('profil') }}" />
                 @endif
+
+                <!-- Logs -->
+                @if (str_contains(strtolower(URL::current()), 'log'))
+                    <livewire:breadcrumb-link name="Logs" link="{{ route('private.logs') }}" />
+                @endif
+
+                <!-- log détails -->
+                @if (str_contains(strtolower(URL::current()), 'log/details'))
+                    <livewire:breadcrumb-link name="Détails" link="#" />
+                @endif
             @else
                 <!-- Connexion -->
                 <a href="{{ route('accueil') }}" class="smallTextReverse">Connexion</a>
