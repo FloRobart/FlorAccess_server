@@ -83,5 +83,5 @@ Route::middleware(['auth', VerifIP::class])->group(function () {
 
     /* Affichage des logs, uniquement pour l'administrateur */
     Route::get('/private/logs', [LogController::class, 'showListeLogs'])->name('private.logs');
-    Route::get('/private/log/{id}', [LogController::class, 'showDetailsLog'])->name('private.log.details');
+    Route::get('/private/log/details/{id}', [LogController::class, 'showDetailsLog'])->name('private.log.details');
 });
