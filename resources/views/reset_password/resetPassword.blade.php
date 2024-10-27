@@ -65,7 +65,7 @@
 </section>
 
 {{-- Enregistrement du log --}}
-{{ App\Http\Controllers\LogController::addLog('Affichage de la page de réinitialisation de mot de passe'); }}
+{{ App\Http\Controllers\LogController::addLog('Affichage de la page de réinitialisation de mot de passe pour l\'email ' . $email); }}
 @endsection
 
 @section('scripts')
