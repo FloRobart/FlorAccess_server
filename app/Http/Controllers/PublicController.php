@@ -7,6 +7,8 @@ namespace App\Http\Controllers;
  */
 
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
 
 class PublicController extends Controller
 {
@@ -20,6 +22,8 @@ class PublicController extends Controller
      */
     public function accueil()
     {
+        if (Auth::check()) { return redirect()->route('private.accueil'); }
+
         $profils = User::all();
         return view('public.accueil', ['profils' => $profils]);
     }
