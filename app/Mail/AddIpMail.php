@@ -14,7 +14,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Address;
 
 
-class addIpMail extends Mailable
+class AddIpMail extends Mailable
 {
     use Queueable, SerializesModels;
 
