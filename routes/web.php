@@ -35,7 +35,7 @@ Route::get('/inscription', [ProfilController::class, 'inscription'])->name('insc
 Route::post('/inscription', [ProfilController::class, 'inscriptionSave'])->name('inscriptionSave');
 
 /* Connexion */
-Route::post('/connexion', [ProfilController::class, 'connexionSave'])->middleware('throttle:5,1')->name('connexionSave'); // 5 tentatives de connexion par minute, puis blocage pendant 1 minute
+Route::post('/connexion', [ProfilController::class, 'connexionSave'])->middleware('throttle:5,10')->name('connexionSave'); // 5 tentatives de connexion par minute, puis blocage pendant 10 minutes
 Route::get('/add/ip/{token}/{ip}', [ProfilController::class, 'addIp'])->name('addIp'); // Ajout d'une adresse IP à la liste blanche
 
 /* Adresse IP */

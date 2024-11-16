@@ -104,12 +104,11 @@ class ProfilController extends Controller
     {
         /* Validation des informations du formulaire */
         $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => 'required|email',
             'password' => 'required',
         ], [
             'email.required' => 'L\'adresse mail est obligatoire',
             'email.email' => 'L\'adresse mail n\'est pas valide',
-            'email.exists' => 'Aucun compte n\'est associé à cette adresse mail',
             'password.required' => 'Le mot de passe est obligatoire',
             'password.min' => 'Le mot de passe doit contenir au moins 12 caractères',
         ]);
@@ -118,11 +117,22 @@ class ProfilController extends Controller
         $email = $request->email;
         $password = $request->password;
 
-        /* Vérification des informations de connexion */
+        /* Vérification du mail de l'utilisateur */
         $user = User::where('email', $email)->first();
-        if (!$user || !Hash::check($password, $user->password)) {
-            LogController::addLog('Un utilisateur a tenté de se connecter avec des informations incorrectes', $user->id ?? null);
-            return back()->with(['error' => 'Mot de passe incorrect']);
+        if (!$user) {
+            /* Sécurité : on réalise ses actions inutiles pour éviter les attaques par analyse de temps de réponse */
+            $fakePassword = Hash::make('fakepassword');
+            Hash::check($password, $fakePassword);
+
+            LogController::addLog('Un utilisateur a tenté de se connecter avec un e-mail incorrectes', $user->id ?? null);
+            return back()->with(['error' => 'Identifiant ou mot de passe incorrect']);
+        }
+
+        /* Vérification du mot de passe de l'utilisateur */
+        if (!Hash::check($password, $user->password)) {
+            $fakePassword = Hash::make('fakepassword');
+            LogController::addLog('Un utilisateur a tenté de se connecter avec un mot de passe incorrectes', $user->id ?? null);
+            return back()->with(['error' => 'Identifiant ou mot de passe incorrect']);
         }
 
         /* Vérification de l'adresse IP */
