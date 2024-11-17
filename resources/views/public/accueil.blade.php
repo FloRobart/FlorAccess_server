@@ -11,7 +11,7 @@
 
 @section('content')
 <!-- Titre de la page -->
-<livewire:page-title :title="'Qui êtes vous ?'" />
+@include('components.page-title', ['title' => 'Qui êtes vous ?'])
 
 <!-- Messages d'erreur et de succès -->
 <div class="colCenterContainer mt-8 px-4">
@@ -24,7 +24,7 @@
             </ul>
         </div>
     @endif
-    <livewire:information-message />
+    @include('components.information-message')
 </div>
 
 
@@ -69,7 +69,7 @@
 </section>
 
 <!-- Modal -->
-<livewire:password-modal :email="'$email'" />
+@include('components.password-modal', ['email' => '$email'])
 
 {{-- Enregistrement du log --}}
 {{ App\Http\Controllers\LogController::addLog('Affichage de la page d\'accueil public (pour se connecter ou s\'inscrire)'); }}

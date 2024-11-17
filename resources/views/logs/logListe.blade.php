@@ -11,7 +11,7 @@
 
 @section('content')
 <!-- Titre de la page -->
-<livewire:page-title title="Liste des logs" />
+@include('components.page-title', ['title' => 'Liste des logs'])
 
 <!-- Messages d'erreur et de succès -->
 <div class="colCenterContainer mt-8 px-4 my-32">
@@ -24,7 +24,7 @@
             </ul>
         </div>
     @endif
-    <livewire:information-message />
+    @include('components.information-message')
 </div>
 
 
@@ -42,7 +42,7 @@
     </div>
 
     <!-- Barre de séparation -->
-    <livewire:horizontal-separation />
+    @include('components.horizontal-separation')
 
     <!-- Liste des logs -->
     <div class="colCenterContainer">

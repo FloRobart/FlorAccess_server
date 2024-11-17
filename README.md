@@ -89,7 +89,6 @@ Home Server Maison à été conçue pour être utilisé par plusieurs personnes,
 - **Frameworks et librairies :**
   - Laravel
   - Tailwind CSS
-  - Livewire
 
 ## Installation
 

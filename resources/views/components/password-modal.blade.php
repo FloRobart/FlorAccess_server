@@ -19,7 +19,7 @@
 
             <!-- Mot de passe -->
             <div>
-                <livewire:password-input :confirmation="'false'" :newPassword="'false'" />
+                @include('components.password-input', ['confirmation' => 'false', 'newPassword' => 'false'])
 
                 <!-- lien vers la page de mot de passe oublié -->
                 <div class="smallRowEndContainer">

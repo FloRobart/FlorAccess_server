@@ -55,24 +55,23 @@
     <div class="rowBetweenContainer bgBleuFonce2 py-3">
         <!-- Fil d'ariane -->
         <div id="breadcrumb" class="rowStartContainer ml-20">
-            <!-- Accueil -->
             @if (auth()->check())
                 <!-- Accueil -->
                 <a href="{{ route('private.accueil') }}" class="smallTextReverse">Accueil</a>
 
                 <!-- Profil -->
                 @if (str_contains(strtolower(URL::current()), 'profil'))
-                    <livewire:breadcrumb-link name="Profil" link="{{ route('profil') }}" />
+                    @include('components.breadcrumb-link', ['name' => 'Profil', 'link' => route('profil')])
                 @endif
 
                 <!-- Logs -->
                 @if (str_contains(strtolower(URL::current()), 'log'))
-                    <livewire:breadcrumb-link name="Logs" link="{{ route('log.logs') }}" />
+                    @include('components.breadcrumb-link', ['name' => 'Logs', 'link' => route('log.logs')])
                 @endif
 
                 <!-- log détails -->
                 @if (str_contains(strtolower(URL::current()), 'log/details'))
-                    <livewire:breadcrumb-link name="Détails" link="#" />
+                    @include('components.breadcrumb-link', ['name' => 'Détails', 'link' => '#'])
                 @endif
             @else
                 <!-- Connexion -->
@@ -80,17 +79,17 @@
 
                 <!-- Inscription -->
                 @if (str_contains(strtolower(URL::current()), 'inscription'))
-                    <livewire:breadcrumb-link name="Inscription" link="{{ route('inscription') }}" />
+                    @include('components.breadcrumb-link', ['name' => 'Inscription', 'link' => route('inscription')])
                 @endif
 
                 <!-- Réinitialisation du mot de passe -->
                 @if (str_contains(strtolower(URL::current()), 'resetPassword'))
-                    <livewire:breadcrumb-link name="Réinitialisation du mot de passe" link="{{ route('resetPassword') }}" />
+                    @include('components.breadcrumb-link', ['name' => 'Réinitialisation du mot de passe', 'link' => route('resetPassword')])
                 @endif
 
                 <!-- Nouveau mot de passe -->
                 @if (str_contains(strtolower(URL::current()), 'resetPasswordSave'))
-                    <livewire:breadcrumb-link name="Nouveau mot de passe" link="{{ route('password.reset') }}" />
+                    @include('components.breadcrumb-link', ['name' => 'Nouveau mot de passe', 'link' => route('password.reset')])
                 @endif
             @endif
         </div>

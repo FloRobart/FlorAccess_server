@@ -11,7 +11,7 @@
 
 @section('content')
 <!-- Titre de la page -->
-<livewire:page-title :title="'Demande de réinitialisation de mot de passe'" />
+@include('components.page-title', ['title' => 'Demande de réinitialisation de mot de passe'])
 
 <!-- Messages d'erreur et de succès -->
 <div class="colCenterContainer mt-8 px-4">
@@ -24,7 +24,7 @@
             </ul>
         </div>
     @endif
-    <livewire:information-message />
+    @include('components.information-message')
 </div>
 
 <!-- Formulaire de demande de réinitialisation de mot de passe -->
@@ -38,7 +38,7 @@
 
             <!-- Mot de passe -->
             <div>
-                <livewire:password-input :confirmation="'false'" :newPassword="'true'" />
+                @include('components.password-input', ['confirmation' => 'false', 'newPassword' => 'true'])
 
                 <!-- Suggestions de mot de passe -->
                 <div class="smallRowEndContainer">
@@ -48,7 +48,7 @@
 
             <!-- Confirmation du mot de passe -->
             <div>
-                <livewire:password-input :confirmation="'true'" :newPassword="'true'" />
+                @include('components.password-input', ['confirmation' => 'true', 'newPassword' => 'true'])
             </div>
 
             <!-- bouton de validation -->
@@ -59,7 +59,7 @@
 
         <!-- précision -->
         <div class="smallRowStartContainer mt-3">
-            <livewire:asterisque />
+            @include('components.asterisque')
             <span class="smallText ml-1">Champs obligatoires</span>
         </div>
 </section>
