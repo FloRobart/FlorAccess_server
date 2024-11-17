@@ -24,7 +24,7 @@
             </ul>
         </div>
     @endif
-    @include('information-message')
+    @include('components.information-message')
 </div>
 
 
