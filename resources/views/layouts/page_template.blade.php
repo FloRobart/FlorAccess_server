@@ -4,7 +4,7 @@
 --}}
 
 <!-- En-tête de la page -->
-@include('components.head')
+@include('layouts.head')
 
 @section('title')
     @yield('title', 'Maison')
@@ -21,7 +21,7 @@
     <body class="w-full bgPage">
         <!-- Header de la page -->
         <!----------------------->
-        @include('components.header')
+        @include('layouts.header')
 
         <!-- Contenu de la page -->
         <!------------------------>
@@ -31,6 +31,6 @@
 
         <!-- Pied de page de la page -->
         <!----------------------------->
-        @include('components.footer')
+        @include('layouts.footer')
     </body>
 </html>

@@ -11,7 +11,7 @@
 
 @section('content')
 <!-- Titre de la page -->
-<livewire:page-title :title="'Inscription'" />
+@include('components.page-title', ['title' => 'Inscription'])
 
 <!-- Messages d'erreur et de succès -->
 <div class="colCenterContainer mt-8 px-4">
@@ -24,7 +24,7 @@
             </ul>
         </div>
     @endif
-    <livewire:information-message />
+    @include('components.information-message')
 </div>
 
 <!-- Formulaire d'inscription -->
@@ -34,19 +34,19 @@
             @csrf
             <!-- Nom -->
             <div>
-                <label for="name" class="labelForm">Prénom <livewire:asterisque /></label>
+                <label for="name" class="labelForm">Prénom @include('components.asterisque')</label>
                 <input name="name" type="text" id="name" minlength="3" maxlength="18" autofocus autocomplete="off" class="inputForm" placeholder="Nom" required value="{{ old('name') }}">
             </div>
 
             <!-- Adresse email -->
             <div>
-                <label for="email" class="labelForm">Adresse email <livewire:asterisque /></label>
+                <label for="email" class="labelForm">Adresse email @include('components.asterisque')</label>
                 <input name="email" type="email" id="email" autocomplete="email" class="inputForm" placeholder="nom@mail.com" required value="{{ old('email') }}">
             </div>
 
             <!-- Mot de passe -->
             <div>
-                <livewire:password-input :confirmation="'false'" :newPassword="'true'" />
+                @include('components.password-input', ['confirmation' => 'false', 'newPassword' => 'true'])
 
                 <!-- Suggestions de mot de passe -->
                 <div class="flex items-center justify-end">
@@ -56,12 +56,12 @@
 
             <!-- Confirmation du mot de passe -->
             <div>
-                <livewire:password-input :confirmation="'true'" :newPassword="'true'" />
+                @include('components.password-input', ['confirmation' => 'true', 'newPassword' => 'true'])
             </div>
 
             <!-- Photo de profil -->
             <div>
-                <label for="profil_image" class="labelForm">Photo de profil <livewire:asterisque /></label>
+                <label for="profil_image" class="labelForm">Photo de profil @include('components.asterisque')</label>
                 <div class="flex flex-col md:flex-row items-center sm:items-start md:items-center md:space-x-6">
                     <div class="shrink-0">
                         <img id='preview_img' class="bigIcons object-cover rounded-xl" src="{{ asset('img/profil_image/profil_placeholder.jpg') }}" alt="Photo de profil" />
@@ -79,7 +79,7 @@
 
         <!-- précision -->
         <div class="smallRowStartContainer mt-3">
-            <livewire:asterisque />
+            @include('components.asterisque')
             <span class="smallText ml-1">Champs obligatoires</span>
         </div>
     </div>

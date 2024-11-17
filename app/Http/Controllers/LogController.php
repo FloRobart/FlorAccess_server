@@ -11,14 +11,10 @@ use Illuminate\Support\Facades\Auth;
 use App\Mail\LogError;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
-use Livewire\WithPagination;
 
 
 class LogController extends Controller
 {
-    use WithPagination;
-
-
     /*--------------------*/
     /* Affichage des logs */
     /*--------------------*/

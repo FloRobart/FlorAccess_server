@@ -11,7 +11,7 @@
 
 @section('content')
 <!-- Titre de la page -->
-<livewire:page-title :title="'Profil'" />
+@include('components.page-title', ['title' => 'Profil'])
 
 <!-- Messages d'erreur et de succès -->
 <div class="colCenterContainer mt-8 px-4">
@@ -24,11 +24,10 @@
             </ul>
         </div>
     @endif
-
-    <livewire:information-message />
+    @include('components.information-message')
 
     <div id="alert-message" class="flex justify-center items-center w-full hidden">
-        <span class="normalTextAlert text-center">Pensez à souvegarder vos modifications en appuyant sur <b class="uppercase">ENTRER</b> ou sur le <b>bouton de validation</b></span>
+        <span class="normalTextAlert text-center">Pensez à sauvegarder vos modifications en appuyant sur <b class="uppercase">ENTRER</b> ou sur le <b>bouton de validation</b></span>
     </div>
 </div>
 

@@ -11,7 +11,7 @@
 
 @section('content')
 <!-- Titre de la page -->
-<livewire:page-title :title="'Détail du log n°' . $log->id" />
+@include('components.page-title', ['title' => 'Détail du log n°' . $log->id])
 
 <!-- Messages d'erreur et de succès -->
 <div class="colCenterContainer mt-8 px-4 my-32">
@@ -24,7 +24,7 @@
             </ul>
         </div>
     @endif
-    <livewire:information-message />
+    @include('information-message')
 </div>
 
 

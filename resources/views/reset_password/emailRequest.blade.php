@@ -11,7 +11,7 @@
 
 @section('content')
 <!-- Titre de la page -->
-<livewire:page-title :title="'Demande de réinitialisation de mot de passe'" />
+@include('components.page-title', ['title' => 'Demande de réinitialisation de mot de passe'])
 
 <!-- Messages d'erreur et de succès -->
 <div class="colCenterContainer mt-8 px-4">
@@ -24,7 +24,7 @@
             </ul>
         </div>
     @endif
-    <livewire:information-message />
+    @include('components.information-message')
 </div>
 
 <!-- Formulaire de demande de réinitialisation de mot de passe -->
@@ -33,7 +33,7 @@
         @csrf
         <!-- Adresse email -->
         <div>
-            <label for="email" class="labelForm">Adresse email <livewire:asterisque /></label>
+            <label for="email" class="labelForm">Adresse email @include('components.asterisque')</label>
             <input name="email" type="email" id="email" autocomplete="email" class="inputForm" placeholder="nom@mail.com" required>
         </div>
 
@@ -45,7 +45,7 @@
 
     <!-- précision -->
     <div class="smallRowStartContainer mt-3">
-        <livewire:asterisque />
+        @include('components.asterisque')
         <span class="smallText ml-1">Champs obligatoires</span>
     </div>
 </section>
