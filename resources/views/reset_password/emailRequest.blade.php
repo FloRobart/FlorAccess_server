@@ -34,7 +34,7 @@
         <!-- Adresse email -->
         <div>
             <label for="email" class="labelForm">Adresse email @include('components.asterisque')</label>
-            <input name="email" type="email" id="email" autocomplete="email" class="inputForm" placeholder="nom@mail.com" required>
+            <input name="email" type="email" id="email" autocomplete="email" class="inputForm" placeholder="nom@mail.com" value="{{ old('email') }}" required>
         </div>
 
         <!-- bouton de validation -->

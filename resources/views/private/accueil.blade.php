@@ -76,8 +76,8 @@
     <form id="addToolForm" action="{{ route('private.tool.add') }}" method="POST" class="w-10/12 sm:w-8/12 colCenterContainer gap-y-4 hidden">
         @csrf
         <div class="rowCenterContainer gap-x-4">
-            <input type="text" name="name" id="name" class="inputForm" minlength="1" maxlength="255" placeholder="Nom de l'outil" required>
-            <input type="text" name="link" id="link" class="inputForm" minlength="1" placeholder="Lien de l'outil" required>
+            <input type="text" name="name" id="name" class="inputForm" minlength="1" maxlength="255" placeholder="Nom de l'outil" value="{{ old('name') }}" required>
+            <input type="text" name="link" id="link" class="inputForm" minlength="1" placeholder="Lien de l'outil" value="{{ old('link') }}" required>
         </div>
         <div class="rowCenterContainer gap-x-4">
             <button type="button" onclick="hideActionTool()" class="buttonForm bgError">Annuler</button>
