@@ -34,6 +34,12 @@ Route::get('/accueil', [PublicController::class, 'accueil'])->name('login');
 Route::get('/inscription', [ProfilController::class, 'inscription'])->name('inscription');
 Route::post('/inscription', [ProfilController::class, 'inscriptionSave'])->name('inscriptionSave');
 
+/* Vérification de l'adresse e-mail */
+Route::middleware(['auth', VerifIP::class])->group(function () {
+    Route::get('/verification/email', [ProfilController::class, 'showVerificationEmail'])->name('verification.email');
+    Route::post('/verification/email', [ProfilController::class, 'verificationEmailSave'])->name('verification.email.save');
+});
+
 /* Connexion */
 Route::post('/connexion', [ProfilController::class, 'connexionSave'])->middleware('throttle:5,10')->name('connexionSave'); // 5 tentatives de connexion par minute, puis blocage pendant 10 minutes
 Route::get('/add/ip/{token}/{ip}', [ProfilController::class, 'addIp'])->name('addIp'); // Ajout d'une adresse IP à la liste blanche

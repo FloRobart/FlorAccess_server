@@ -84,6 +84,13 @@
                 <button id="saveButton" type="submit" class="buttonForm hidden my-12">Valider les modifications</button>
             </div>
         </form>
+
+        <!-- Vérification du mail -->
+        @if (auth()->user()->email_verified_at === null)
+            <div class="rowStartContainer my-6 lg:my-10">
+                <a href="{{ route('verification.email') }}" class="buttonForm">Vérifier mon e-mail</a>
+            </div>
+        @endif
     </div>
 </section>
 

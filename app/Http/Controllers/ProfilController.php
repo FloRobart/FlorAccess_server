@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\VerificationEmail;
 
 
 class ProfilController extends Controller
@@ -85,11 +86,72 @@ class ProfilController extends Controller
         /* Connexion de l'utilisateur */
         if (Auth::attempt($request->only('email', 'password'))) {
             LogController::addLog('Enregistrement de l\'inscription');
-            return redirect()->route('private.accueil')->with('success', 'Inscription réussie 👍');
+            return redirect()->route('verification.email')->with('success', 'Inscription réussie 👍');
         } else {
             LogController::addLog('Erreur lors de l\'inscription', null, 1);
             return back()->with(['error' => 'Erreur lors de l\'inscription réessayez plus tard ou contactez l\'administrateur.']);
         }
+    }
+
+
+    /**
+     * Génère un code de vérification
+     * Envoie un mail de vérification
+     * Affiche la page de vérification de l'e-mail qui permet de rentrer le code de vérification
+     * @return \Illuminate\View\View profil.verificationEmail
+     */
+    public function showVerificationEmail()
+    {
+        /* Vérification de la présence du code de vérification dans la session pour éviter de renvoyer un mail à chaque rafraichissement de la page */
+        if (session('code') == null)
+        {
+            /* Génération du code de vérification */
+            $code = strval(rand(100000, 999999));
+
+            /* Enregistrement du code de vérification dans la session */
+            session(['code' => $code]);
+
+            /* Envoi du mail de vérification */
+            Mail::to(Auth::user()->email)->send(new VerificationEmail($code));
+        }
+
+        return view('profil.verificationEmail');
+    }
+
+    /**
+     * Vérifie le code de vérification
+     * Enregistre la date de vérification de l'adresse e-mail
+     * @param Request $request
+     * @return Route private.accueil | avec un message de succès ou d'erreur
+     */
+    public function verificationEmailSave(Request $request)
+    {
+        $request->validate([
+            'code1' => 'required|numeric|digits:1',
+            'code2' => 'required|numeric|digits:1',
+            'code3' => 'required|numeric|digits:1',
+            'code4' => 'required|numeric|digits:1',
+            'code5' => 'required|numeric|digits:1',
+            'code6' => 'required|numeric|digits:1',
+        ]);
+
+        $code = $request->code1 . $request->code2 . $request->code3 . $request->code4 . $request->code5 . $request->code6;
+
+        if ($code != session('code')) {
+            session()->forget('code');
+            return redirect()->route('verification.email')->with('error', 'Le code de vérification est incorrect. Un nouveau mail de vérification vous a été envoyé');
+        }
+
+        /* Suppression du code de vérification */
+        session()->forget('code');
+
+        /* Vérification de l'adresse e-mail */
+        $user = User::find(Auth::user()->id);
+        $user->email_verified_at = now();
+        $user->save();
+
+        /* Redirection vers la page d'accueil */
+        return redirect()->route('private.accueil')->with('success', 'Votre adresse e-mail a bien été vérifiée 👍');
     }
 
 
