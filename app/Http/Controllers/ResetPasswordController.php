@@ -48,8 +48,8 @@ class ResetPasswordController extends Controller
 
         LogController::addLog('Demande de réinitialisation du mot de passe (email envoyé) pour l\'adresse mail ' . $request->email);
         return $status === Password::RESET_LINK_SENT
-                    ? back()->with('success', 'Un mail de réinitialisation du mot de passe vous a été envoyé à l\'adresse mail' . $request->only('email') . '. Vous pouvez fermé cette page et cliquer sur le lien du mail pour réinitialiser votre mot de passe.')
-                    : back()->with('error', 'Une erreur est survenue lors de l\'envoi du mail de réinitialisation du mot de passe.');
+                    ? back()->with(['success' => 'Un mail de réinitialisation du mot de passe vous a été envoyé à l\'adresse mail ' . $request->email . '. Vous pouvez fermé cette page et cliquer sur le lien du mail pour réinitialiser votre mot de passe.'])
+                    : back()->with(['error' => 'Une erreur est survenue lors de l\'envoi du mail de réinitialisation du mot de passe.']);
     }
 
 
@@ -125,7 +125,7 @@ class ResetPasswordController extends Controller
 
         Schedule::command('auth:clear-resets')->everyFifteenMinutes();
         return $status === Password::PASSWORD_RESET
-                    ? redirect()->route('accueil')->with('success', 'Votre mot de passe a été réinitialisé avec succès.')
-                    : back()->with('error', 'Une erreur est survenue lors de la réinitialisation de votre mot de passe.');
+                    ? redirect()->route('accueil')->with(['success' => 'Votre mot de passe a été réinitialisé avec succès.'])
+                    : back()->with(['error' => 'Une erreur est survenue lors de la réinitialisation de votre mot de passe.']);
     }
 }
