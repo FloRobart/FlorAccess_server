@@ -13,6 +13,7 @@
 <!-- Titre de la page -->
 @include('components.page-title', ['title' => 'Qui êtes vous ?'])
 
+
 <!-- Messages d'erreur et de succès -->
 <div class="colCenterContainer mt-8 px-4">
     @if ($errors->any())

@@ -24,6 +24,10 @@ Route::get('/', [PublicController::class, 'accueil'])->name('accueil');
 Route::get('/accueil', [PublicController::class, 'accueil'])->name('public.accueil');
 Route::get('/accueil', [PublicController::class, 'accueil'])->name('login');
 
+/* Contact */
+Route::get('/contact', [PublicController::class, 'contact'])->name('contact');
+Route::post('/contact', [PublicController::class, 'contactSave'])->name('contactSave');
+
 
 
 /*---------------------------------*/

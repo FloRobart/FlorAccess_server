@@ -29,12 +29,22 @@ class AddIpMail extends Mailable
     }
 
     /**
+     * Build the message.
+     */
+    public function build()
+    {
+        return $this->from($this->data['from'], env('MAIL_NAME')) // L'expéditeur
+                    ->subject($this->data['subject']) // Le sujet
+                    ->view('mail.contactEmail', $this->data); // La vue
+    }
+
+    /**
      * Get the message envelope.
      */
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address(env('MAIL_FROM_ADDRESS'), env('MAIL_NAME')),
+            from: new Address($this->data['from'], env('MAIL_NAME')),
             subject: 'Verification de votre compte - Home Server Maison',
         );
     }
@@ -45,7 +55,7 @@ class AddIpMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            // view: 'mail.addIpMail',
+            //view: 'mail.addIpMail',
             htmlString: "<h1><a href=". route('addIp', ['token' => $this->data['token'], 'ip' => $this->data['ip']]) . ">Cliquez pour validé qu'il s'agit bien de vous</a></h1>",
         );
     }
