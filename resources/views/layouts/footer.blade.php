@@ -14,8 +14,11 @@
         </div>
     </div>
 
-    <!-- Copiright -->
-    <div class="rowCenterContainer space-x-1 mb-4">
-        <span class="tinyTextReverse">© <script>document.write(new Date().getFullYear())</script> <a href="https://florobart.github.io/" target="_blank"><b>Floris Robart</b></a></span>
+    <!-- Copyright -->
+    <div class="rowCenterContainer space-x-2 mb-4">
+        <span class="tinyTextReverse">© <script>document.write(new Date().getFullYear())</script>
+        <a href="https://florobart.github.io/" target="_blank"><b>Floris Robart</b></a> |
+        <a href="contact">Me contacter</a> |
+        <a href="contact">Signaler un bug</a></span>
     </div>
 </footer>
