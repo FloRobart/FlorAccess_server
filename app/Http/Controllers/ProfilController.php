@@ -64,14 +64,18 @@ class ProfilController extends Controller
         $name = $request->name;
         $email = $request->email;
         $password = Hash::make($request->password);
-        $imgProfil = base64_encode(file_get_contents($request->profil_image));
+
+        /* Réduction de la taille de l'image de profil */
+        $GDImage = imagecreatefromstring(file_get_contents($request->profil_image));
+        $imgProfilBase64 = $this->resizeImage($GDImage);
+
 
         /* Enregistrement des informations dans la base de données */
         User::create([
             'name' => $name,
             'email' => $email,
             'password' => $password,
-            'imgProfil' => $imgProfil,
+            'imgProfil' => $imgProfilBase64,
             'last_login_at' => now(),
         ]);
 
@@ -152,6 +156,45 @@ class ProfilController extends Controller
 
         /* Redirection vers la page d'accueil */
         return redirect()->route('private.accueil')->with('success', 'Votre adresse e-mail a bien été vérifiée 👍');
+    }
+
+    /**
+     * Redimensionne l'image de profil
+     * @param \GdImage $GDImage l'image de profil
+     * @return string l'image de profil redimensionnée en base64
+     */
+    function resizeImage(\GdImage $GDImage):string
+    {
+        if (imagesx($GDImage) > 600) {
+            /* Créer une image avec transparence pour le redimensionnement */
+            $nouvelleLargeur = 600;
+            $nouvelleHauteur = round(imagesy($GDImage) * ($nouvelleLargeur / imagesx($GDImage)));
+
+            $imageRedimensionnee = imagecreatetruecolor($nouvelleLargeur, $nouvelleHauteur);
+
+            /* Active la gestion de la transparence */
+            imagealphablending($imageRedimensionnee, false);
+            imagesavealpha($imageRedimensionnee, true);
+
+            /* Création de l'image redimensionnée */
+            imagecopyresampled(
+                $imageRedimensionnee, $GDImage,
+                0, 0, 0, 0,
+                $nouvelleLargeur, $nouvelleHauteur,
+                imagesx($GDImage), imagesy($GDImage)
+            );
+
+            $scaleImg = $imageRedimensionnee;
+        } else {
+            $scaleImg = $GDImage;
+        }
+
+        ob_start();
+            imagepng($scaleImg, null, 9);
+            $image_data = ob_get_contents();
+        ob_end_clean();
+
+        return base64_encode($image_data);
     }
 
 
