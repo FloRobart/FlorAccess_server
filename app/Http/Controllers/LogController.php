@@ -88,12 +88,14 @@ class LogController extends Controller
             return;
         }
 
-        if (!$log->save()) {
-            Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError($log));
+        if (env('APP_ENV') == 'production')
+        {
+            if (!$log->save()) { Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError($log)); }
+            if ($error == 1) { Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError($log)); }
         }
-
-        if ($error == 1) {
-            Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError($log));
+        else
+        {
+            $log->save();
         }
     }
 }
