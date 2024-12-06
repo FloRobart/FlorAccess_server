@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\VerificationEmail;
+use App\Models\Tools;
 
 
 class ProfilController extends Controller
@@ -85,6 +86,22 @@ class ProfilController extends Controller
             'adresse_ip' => $adresseIP,
             'est_bannie' => false,
         ]);
+
+        /* Ajout des outils par défaut */
+        Tools::create([
+            'user_id' => User::where('email', $email)->first()->id,
+            'name' => 'Mes finances',
+            'link' => env('FINANCE_DASHBOARD_URL'),
+            'position' => 1
+        ]);
+
+        Tools::create([
+            'user_id' => User::where('email', $email)->first()->id,
+            'name' => 'Gestionnaire de mot de passe',
+            'link' => env('ACCOUNT_MANAGER_URL'),
+            'position' => 2
+        ]);
+
 
         /* Connexion de l'utilisateur */
         if (Auth::attempt($request->only('email', 'password'))) {
