@@ -69,7 +69,6 @@ class ProfilController extends Controller
         $GDImage = imagecreatefromstring(file_get_contents($request->profil_image));
         $imgProfilBase64 = $this->resizeImage($GDImage);
 
-
         /* Enregistrement des informations dans la base de données */
         User::create([
             'name' => $name,
@@ -521,7 +520,8 @@ class ProfilController extends Controller
         if ($request->profil_image != null)
         {
             $user = User::find(Auth::user()->id);
-            $user->imgProfil = base64_encode(file_get_contents($request->profil_image));
+            $imgProfilBase64 = $this->resizeImage(imagecreatefromstring(file_get_contents($request->profil_image)));
+            $user->imgProfil = $imgProfilBase64;
             $user->save();
             $modif = true;
         }
