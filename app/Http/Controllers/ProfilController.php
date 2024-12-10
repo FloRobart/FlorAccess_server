@@ -80,28 +80,26 @@ class ProfilController extends Controller
         ]);
 
         /* Enregistrement de l'adresse IP de l'utilisateur */
+        $userId = User::where('email', $email)->first()->id;
         $adresseIP = request()->ip();
         DB::table('adresse_ips')->insert([
-            'user_id' => User::where('email', $email)->first()->id,
+            'user_id' => $userId,
             'adresse_ip' => $adresseIP,
             'est_bannie' => false,
         ]);
 
         /* Ajout des outils par défaut */
-        Tools::create([
-            'user_id' => User::where('email', $email)->first()->id,
-            'name' => 'Mes finances',
-            'link' => env('FINANCE_DASHBOARD_URL'),
-            'position' => 1
-        ]);
+        $loop = 1;
+        while(env('URL_TOOLS_'. $loop) != null) {
+            Tools::create([
+                'user_id' => $userId,
+                'name' => env('NAME_TOOLS_' . $loop, 'Outils ' . $loop),
+                'link' => env('URL_TOOLS_' . $loop),
+                'position' => $loop
+            ]);
 
-        Tools::create([
-            'user_id' => User::where('email', $email)->first()->id,
-            'name' => 'Gestionnaire de mot de passe',
-            'link' => env('ACCOUNT_MANAGER_URL'),
-            'position' => 2
-        ]);
-
+            $loop++;
+        }
 
         /* Connexion de l'utilisateur */
         if (Auth::attempt($request->only('email', 'password'))) {
