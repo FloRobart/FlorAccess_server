@@ -35,7 +35,7 @@ class VerificationEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address(env('MAIL_FROM_ADDRESS'), env('MAIL_NAME')),
+            from: new Address(env('ADMIN_EMAIL'), env('MAIL_NAME')),
             subject: 'Verification de votre compte - Home Server Maison',
         );
     }
