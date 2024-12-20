@@ -377,7 +377,7 @@ class ProfilController extends Controller
             /* Bannissement de l'adresse IP */
             $this->banIp($email, $adresseIp);
 
-            return redirect()->route('accueil')->with('error', 'Vous avez été bannie !');
+            return redirect()->route('public.accueil')->with('error', 'Vous avez été bannie !');
         }
 
 
@@ -391,7 +391,7 @@ class ProfilController extends Controller
             /* Bannissement de l'adresse IP */
             $this->banIp($email, $adresseIp);
 
-            return redirect()->route('accueil')->with('error', 'Vous avez changer d\'endroit entre le moment où vous avez demander à vérifier votre email et le moment ou vous avez cliqué sur le lien dans le mail, par mesure de sécurité vous avez été bannie. Si c\'est bien vous qui avez demander à vérifier votre email, veuillez contacter l\'administrateur');
+            return redirect()->route('public.accueil')->with('error', 'Vous avez changer d\'endroit entre le moment où vous avez demander à vérifier votre email et le moment ou vous avez cliqué sur le lien dans le mail, par mesure de sécurité vous avez été bannie. Si c\'est bien vous qui avez demander à vérifier votre email, veuillez contacter l\'administrateur');
         }
         else
         {
@@ -399,7 +399,7 @@ class ProfilController extends Controller
             if ($adresseIPBannie)
             {
                 LogController::addLog('Un utilisateur a tenté de se connecter depuis une IP bannie', $user->id, 1);
-                return redirect()->route('accueil')->with(['error' => 'Vous êtes bannie ! Cet évènement sera rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !']);
+                return redirect()->route('public.accueil')->with(['error' => 'Vous êtes bannie ! Cet évènement sera rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !']);
             }
         }
 
@@ -419,11 +419,11 @@ class ProfilController extends Controller
             /* Suppression du token */
             DB::table('adresse_ips_tokens')->where('token', $token)->delete();
 
-            return redirect()->route('accueil')->with('success', 'Vous pouvez maintenant vous connecter depuis cette endroit 👍');
+            return redirect()->route('public.accueil')->with('success', 'Vous pouvez maintenant vous connecter depuis cette endroit 👍');
         }
 
         LogController::addLog('Erreur lors de l\'ajout de l\'adresse IP : ' . $ip . ' à la liste blanche', $user->id, 1);
-        return redirect()->route('accueil')->with('error', 'Une erreur est survenue, si le problème persiste veuillez contacter l\'administrateur');
+        return redirect()->route('public.accueil')->with('error', 'Une erreur est survenue, si le problème persiste veuillez contacter l\'administrateur');
     }
 
     /**
@@ -484,7 +484,7 @@ class ProfilController extends Controller
             return view('profil.profil');
         } else {
             LogController::addLog('Un utilisateur non connecté a tenté d\'accéder à la page du profil', null, 1);
-            return redirect()->route('accueil');
+            return redirect()->route('public.accueil');
         }
     }
 
@@ -573,7 +573,7 @@ class ProfilController extends Controller
         }
 
         /* Redirection vers la page d'accueil */
-        return Redirect()->route('accueil');
+        return Redirect()->route('public.accueil');
     }
 
 
@@ -591,7 +591,7 @@ class ProfilController extends Controller
         /* Vérification de la connexion de l'utilisateur */
         if (!Auth::check()) {
             LogController::addLog('Un utilisateur non connecté a tenté de supprimer un compte');
-            return Redirect('accueil');
+            return Redirect('public.accueil');
         }
 
         /* Récupération des informations de l'utilisateur */
@@ -612,6 +612,6 @@ class ProfilController extends Controller
         LogController::addLog('Suppression du compte de l\'utilisateur', $user->id);
 
         /* Redirection vers la page d'accueil */
-        return Redirect()->route('accueil');
+        return Redirect()->route('public.accueil');
     }
 }

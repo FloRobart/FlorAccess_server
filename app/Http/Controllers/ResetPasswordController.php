@@ -68,7 +68,7 @@ class ResetPasswordController extends Controller
             return view('reset_password.resetPassword', ['token' => $token, 'email' => $email]);
         } else {
             LogController::addLog('Tentative d\'accès à la page de réinitialisation du mot de passe pour l\'adresse mail ' . $email . ' avec un token invalide', null, 1);
-            return redirect()->route('accueil');
+            return redirect()->route('public.accueil');
         }
     }
 
@@ -105,7 +105,7 @@ class ResetPasswordController extends Controller
 
         if ($user != null && !(Password::tokenExists($user, $token))) {
             LogController::addLog('Tentative de réinitialisation du mot de passe pour l\'adresse mail ' . $email . ' avec un token invalide', null, 1);
-            return redirect()->route('accueil');
+            return redirect()->route('public.accueil');
         }
      
         $status = Password::reset(
@@ -125,7 +125,7 @@ class ResetPasswordController extends Controller
 
         Schedule::command('auth:clear-resets')->everyFifteenMinutes();
         return $status === Password::PASSWORD_RESET
-                    ? redirect()->route('accueil')->with(['success' => 'Votre mot de passe a été réinitialisé avec succès.'])
+                    ? redirect()->route('public.accueil')->with(['success' => 'Votre mot de passe a été réinitialisé avec succès.'])
                     : back()->with(['error' => 'Une erreur est survenue lors de la réinitialisation de votre mot de passe.']);
     }
 }

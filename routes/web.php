@@ -20,9 +20,8 @@ use App\Http\Middleware\VerifIP;
 /*                        PublicController                        */
 /*----------------------------------------------------------------*/
 /* Accueil */ // L'accueil permet de se connecter et de s'inscrire
-Route::get('/', [PublicController::class, 'accueil'])->name('accueil');
 Route::get('/accueil', [PublicController::class, 'accueil'])->name('public.accueil');
-Route::get('/accueil', [PublicController::class, 'accueil'])->name('login');
+Route::get('/', [PublicController::class, 'accueil'])->name('login');
 
 /* Contact */
 Route::get('/contact', [PublicController::class, 'contact'])->name('contact');
