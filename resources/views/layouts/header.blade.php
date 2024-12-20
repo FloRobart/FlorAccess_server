@@ -38,7 +38,7 @@
                 @else
                     <!-- Connexion -->
                     <div class="smallRowCenterContainer">
-                        <a href="{{ route('accueil') }}" class="hover:underline colorFontReverse" title="Connexion">
+                        <a href="{{ route('public.accueil') }}" class="hover:underline colorFontReverse" title="Connexion">
                             <span class="smallTextReverse ml-2 flex">Connexion</span>
                         </a>
                     </div>
@@ -75,7 +75,7 @@
                 @endif
             @else
                 <!-- Connexion -->
-                <a href="{{ route('accueil') }}" class="smallTextReverse">Connexion</a>
+                <a href="{{ route('login') }}" class="smallTextReverse">Connexion</a>
 
                 <!-- Inscription -->
                 @if (str_contains(strtolower(URL::current()), 'inscription'))
