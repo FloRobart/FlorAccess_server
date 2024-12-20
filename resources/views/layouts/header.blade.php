@@ -9,7 +9,7 @@
         <!-- Logo + lien vers la page d'accueil -->
         <div class="smallRowCenterContainer mx-6 min-[400px]:mx-14">
             <a href="{{ route('private.accueil') }}" class="logo">
-                <img class="w-20 sm:w-28" src="{{ asset('img/logo/logo_white.png') }}" alt="Logo">
+                <img class="w-20 sm:w-28" src="{{ asset('favicon.ico') }}" alt="Logo">
             </a>
         </div>
 
