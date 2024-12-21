@@ -43,7 +43,7 @@ class ProfilController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:12|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/',
             'password_confirmation' => 'required|same:password',
-            'profil_image' => 'required|image|mimes:jpeg,png,jpg',
+            'profil_image' => 'required|image|mimes:jpeg,png,jpg,webp',
         ], [
             'name.required' => 'Le nom est obligatoire',
             'name.min' => 'Le nom doit contenir au moins 3 caractères',
@@ -58,7 +58,7 @@ class ProfilController extends Controller
             'password_confirmation.same' => 'Les mots de passe doivent être identiques',
             'profil_image.required' => 'L\'image de profil est obligatoire',
             'profil_image.image' => 'Votre image de profil doit être une image',
-            'profil_image.mimes' => 'Votre image de profil doit être au format jpeg, jpg ou png',
+            'profil_image.mimes' => 'Votre image de profil doit être au format jpeg, jpg, png ou webp',
         ]);
 
         /* Récupération des informations du formulaire */
@@ -81,10 +81,9 @@ class ProfilController extends Controller
 
         /* Enregistrement de l'adresse IP de l'utilisateur */
         $userId = User::where('email', $email)->first()->id;
-        $adresseIP = request()->ip();
-        DB::table('adresse_ips')->insert([
+        AdresseIP::create([
             'user_id' => $userId,
-            'adresse_ip' => $adresseIP,
+            'adresse_ip' => request()->ip(),
             'est_bannie' => false,
         ]);
 
@@ -403,12 +402,17 @@ class ProfilController extends Controller
             }
         }
 
+        if ($tokenDB->created_at->diffInMinutes(now()) > 30)
+        {
+            return redirect()->route('public.accueil')->with('error', 'Le lien a expiré, veuillez recommencer la procédure et cliquer sur le lien reçu par mail dans les 30 minutes');
+        }
+
 
         /*----------------------------------*/
         /* Ajout de l'adresse IP à la liste */
         /*----------------------------------*/
         LogController::addLog('Ajout de l\'adresse IP : ' . $ip . ' à la liste blanche', $user->id);
-        $builder = DB::table('adresse_ips')->insert([
+        $builder = AdresseIP::created([
             'user_id' => $user->id,
             'adresse_ip' => $ip,
             'est_bannie' => false,
@@ -499,7 +503,7 @@ class ProfilController extends Controller
             'name' => 'required|min:3|max:18',
             'email' => 'required|email|unique:users,email,' . Auth::user()->id,
             'password' => 'nullable|min:12|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/',
-            'profil_image' => 'nullable|image|mimes:jpeg,png,jpg',
+            'profil_image' => 'nullable|image|mimes:jpeg,png,jpg,webp',
         ], [
             'name.required' => 'Le nom est obligatoire',
             'name.min' => 'Le nom doit contenir au moins 3 caractères',
@@ -510,7 +514,7 @@ class ProfilController extends Controller
             'password.min' => 'Le mot de passe doit contenir au moins 12 caractères',
             'password.regex' => 'Le mot de passe doit contenir au moins une minuscule, une majuscule, un chiffre et un caractère spécial',
             'profil_image.image' => 'Votre image de profil doit être une image',
-            'profil_image.mimes' => 'Votre image de profil doit être au format jpeg, jpg ou png',
+            'profil_image.mimes' => 'Votre image de profil doit être au format jpeg, jpg, png ou webp',
         ]);
 
         /* Vérification des informations du formulaire */
@@ -519,7 +523,7 @@ class ProfilController extends Controller
 
         $modif = false;
         /* Enregistrement des informations dans la base de données */
-        if (auth()->user()->name != $name || auth()->user()->email != $email || $request->password != null)
+        if (Auth::user()->name != $name || Auth::user()->email != $email || $request->password != null)
         {
             $user = User::find(Auth::user()->id);
 
@@ -590,7 +594,7 @@ class ProfilController extends Controller
     {
         /* Vérification de la connexion de l'utilisateur */
         if (!Auth::check()) {
-            LogController::addLog('Un utilisateur non connecté a tenté de supprimer un compte');
+            LogController::addLog('Un utilisateur non connecté a tenté de supprimer un compte', null, 2);
             return Redirect('public.accueil');
         }
 
@@ -603,11 +607,17 @@ class ProfilController extends Controller
         /* Suppression des sessions de l'utilisateur */
         DB::table('sessions')->where('user_id', $user->id)->delete();
 
-        /* Suppression du compte de l'utilisateur */
-        User::destroy($user->id);
+        /* Suppression des tokens de l'utilisateur */
+        DB::table('adresse_ips_tokens')->where('email', $user->email)->delete();
+
+        /* Suppression des adresses IP de l'utilisateur */
+        DB::table('adresse_ips')->where('user_id', $user->id)->delete();
 
         /* Suppression des outils de l'utilisateur */
         DB::table('tools')->where('user_id', $user->id)->delete();
+
+        /* Suppression du compte de l'utilisateur */
+        User::destroy($user->id);
 
         LogController::addLog('Suppression du compte de l\'utilisateur', $user->id);
 
