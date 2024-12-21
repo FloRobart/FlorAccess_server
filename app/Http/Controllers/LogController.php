@@ -72,6 +72,7 @@ class LogController extends Controller
         $user_id = $user_id ?? (Auth::check() ? Auth::user()->id : null);
 
         $log = new Log();
+        $log->app = env('APP_NAME_REAL');
         $log->host = $_SERVER['HTTP_HOST'];
         $log->user_id = $user_id;
         $log->ip = request()->ip();

@@ -45,7 +45,7 @@ class AddIpEmail extends Mailable
     {
         return new Envelope(
             from: new Address(env('MAIL_FROM_ADDRESS'), env('MAIL_NAME')),
-            subject: 'Verification de votre compte - FlorAccess',
+            subject: 'Verification de votre compte - ' . env('APP_NAME_REAL'),
         );
     }
 
