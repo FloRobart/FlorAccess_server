@@ -25,11 +25,11 @@ class LogController extends Controller
      */
     public function showListeLogs(Request $request)
     {
-        $sort = $request->query('sort') ?? 'created_at';
+        $sort = $request->query('sort') ?? 'id';
         $order = $request->query('order') ?? 'desc';
 
-        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
-            Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError(Log::all()->sortByDesc('created_at')->first()));
+        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
+            LogController::addLog("Queslqu'un à essayer d'accéder à la page de logs {showListeLogs}", Auth::check() ? Auth::user()->id : null, 2);
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
         }
 
@@ -45,8 +45,8 @@ class LogController extends Controller
      */
     public function showDetailsLog($id)
     {
-        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
-            Mail::to(env('MAIL_FROM_ADDRESS'))->send(new LogError(Log::all()->sortByDesc('created_at')->first()));
+        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
+            LogController::addLog("Queslqu'un à essayer d'accéder à la page de détails du log n°$id {showDetailsLog}", Auth::check() ? Auth::user()->id : null, 2);
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
         }
 
@@ -91,7 +91,7 @@ class LogController extends Controller
         if (env('APP_ENV') == 'production')
         {
             if (!$log->save()) { Mail::to(env('ADMIN_EMAIL'))->send(new LogError($log)); }
-            if ($error == 1) { Mail::to(env('ADMIN_EMAIL'))->send(new LogError($log)); }
+            if ($error == 2) { Mail::to(env('ADMIN_EMAIL'))->send(new LogError($log)); }
         }
         else
         {
