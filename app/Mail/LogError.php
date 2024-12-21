@@ -36,7 +36,7 @@ class LogError extends Mailable
     {
         return new Envelope(
             from: new Address(env('MAIL_FROM_ADDRESS'), env('MAIL_NAME')),
-            subject: 'Erreur critique - FlorAccess',
+            subject: 'Erreur critique - ' . env('APP_NAME_REAL'),
         );
     }
 

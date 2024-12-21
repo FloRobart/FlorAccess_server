@@ -51,7 +51,7 @@ class ContactEmail extends Mailable
     {
         return new Envelope(
             from: new Address($this->depuis, $this->nom),
-            subject: 'FlorAccess - ' . $this->sujet,
+            subject: env('APP_NAME_REAL') . ' - ' . $this->sujet,
         );
     }
 
