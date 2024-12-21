@@ -38,6 +38,7 @@
             <span class="w-full normalText">Nom utilisateur : <span class="normalTextBleuLogo font-bold">{{ $log->user_id != null ? App\Models\User::find($log->user_id)->name : 'Invité' }}</span></span>
             <span class="w-full normalText">Email utilisateur : <span class="normalTextBleuLogo font-bold">{{ $log->user_id != null ? App\Models\User::find($log->user_id)->email : 'Invité' }}</span></span>
             <span class="w-full normalText">IP utilisateur : <span class="normalTextBleuLogo font-bold">{{ $log->ip }}</span></span>
+            <span class="w-full normalText">Application : <span class="normalTextBleuLogo font-bold">{{ $log->app }}</span></span>
             <span class="w-full normalText">Hôte : <span class="normalTextBleuLogo font-bold">{{ $log->host }}</span></span>
             <span class="w-full normalText">Page d'origine : <span class="normalTextBleuLogo font-bold">{{ $log->link_from }}</span></span>
             <span class="w-full normalText">Page de destination : <span class="normalTextBleuLogo font-bold">{{ $log->link_to }}</span></span>
