@@ -24,6 +24,7 @@ class Log extends Model
      */
     protected $fillable = [
         'id',
+        'app',
         'host',
         'user_id',
         'ip',

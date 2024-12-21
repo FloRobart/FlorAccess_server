@@ -46,6 +46,8 @@ class LogError extends Mailable
     public function content(): Content
     {
         $message = "<h1>" . $this->data->message . "</h1>";
+        $message .= "<p>ID : " . $this->data->id . "</p>";
+        $message .= "<p>App : " . $this->data->app . "</p>";
         $message .= "<p>Host : " . $this->data->host . "</p>";
         $message .= "<p>Utilisateur id : " . $this->data->user_id . "</p>";
         $message .= "<p>Utilisateur name : " . ($this->data->user_id != null ? User::find($this->data->user_id)->name : 'Utilisateur non connecté') . "</p>";
