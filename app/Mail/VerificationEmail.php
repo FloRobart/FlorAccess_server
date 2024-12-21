@@ -2,7 +2,7 @@
 namespace App\Mail;
 
 /*
- * Ce fichier fait partie du projet Home Server Maison
+ * Ce fichier fait partie du projet FlorAccess
  * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
  */
 
@@ -36,7 +36,7 @@ class VerificationEmail extends Mailable
     {
         return new Envelope(
             from: new Address(env('ADMIN_EMAIL'), env('MAIL_NAME')),
-            subject: 'Verification de votre compte - Home Server Maison',
+            subject: 'Verification de votre compte - FlorAccess',
         );
     }
 
@@ -48,7 +48,7 @@ class VerificationEmail extends Mailable
         $message = '<h1 class="text-center titleTextBleuLogo font-bold rounded-xl">Vérification de votre adresse e-mail</h1>';
         $message .= '<h3 class="text-center">Bonjour ' . (Auth::check() ? Auth::user()->name : 'Monsieur') . ',</h3>';
         $message .= '<h1 class="custom-container">' . $this->code . '</h1>';
-        $message .= '<h4 class="text-center">Merci de vous être inscrit sur Home Server Maison.</h4>';
+        $message .= '<h4 class="text-center">Merci de vous être inscrit sur FlorAccess.</h4>';
 
         return new Content(
             htmlString: $message

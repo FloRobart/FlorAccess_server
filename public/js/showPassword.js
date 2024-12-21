@@ -1,5 +1,5 @@
 /*
- * Ce fichier fait partie du projet Home Server Maison
+ * Ce fichier fait partie du projet FlorAccess
  * Copyright (C) 2024 Floris Robart <florisrobart.pro@gmail.com>
  */
 

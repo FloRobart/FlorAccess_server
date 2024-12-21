@@ -2,7 +2,7 @@
 namespace App\Mail;
 
 /*
- * Ce fichier fait partie du projet Home Server Maison
+ * Ce fichier fait partie du projet FlorAccess
  * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
  */
 
@@ -45,7 +45,7 @@ class AddIpMail extends Mailable
     {
         return new Envelope(
             from: new Address($this->data['from'], env('MAIL_NAME')),
-            subject: 'Verification de votre compte - Home Server Maison',
+            subject: 'Verification de votre compte - FlorAccess',
         );
     }
 

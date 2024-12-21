@@ -2,7 +2,7 @@
 namespace App\Mail;
 
 /**
- * Ce fichier fait partie du projet Home Server Maison
+ * Ce fichier fait partie du projet FlorAccess
  * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
  */
 
@@ -51,7 +51,7 @@ class ContactEmail extends Mailable
     {
         return new Envelope(
             from: new Address($this->depuis, $this->nom),
-            subject: 'Home Server Maison - ' . $this->sujet,
+            subject: 'FlorAccess - ' . $this->sujet,
         );
     }
 

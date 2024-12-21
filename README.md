@@ -1,8 +1,8 @@
-# Home Server Maison
+# FlorAccess
 
 ## Table des matières
 
-- [Home Server Maison](#home-server-maison)
+- [FlorAccess](#home-server-maison)
   - [Table des matières](#table-des-matières)
   - [Présentation](#présentation)
   - [Fonctionnalités](#fonctionnalités)
@@ -12,19 +12,19 @@
   - [Technologies utilisées](#technologies-utilisées)
   - [Installation](#installation)
     - [Prérequis](#prérequis)
-    - [Installation de Home Server Maison](#installation-de-home-server-maison)
-    - [Lancement Home Server Maison](#lancement-home-server-maison)
+    - [Installation de FlorAccess](#installation-de-home-server-maison)
+    - [Lancement FlorAccess](#lancement-home-server-maison)
   - [Autheur](#autheur)
   - [Report de bug et suggestions](#report-de-bug-et-suggestions)
   - [License](#license)
 
 ## Présentation
 
-**Home Server Maison** est une application web de gestion de comptes personnels. Elle à créée pour servir d'entré à votre serveur personnel. C'est à dire que c'est cette application qui va gérer les comptes utilisateurs et qui affichera toutes les autres applications disponible sur votre serveur personnel. Par exemple j'ai créé une [application de gestion des finances](https://github.com/FloRobart/FinanceDashboard) qui se rattache à **Home Server Maison**.
+**FlorAccess** est une application web de gestion de comptes personnels. Elle à créée pour servir d'entré à votre serveur personnel. C'est à dire que c'est cette application qui va gérer les comptes utilisateurs et qui affichera toutes les autres applications disponible sur votre serveur personnel. Par exemple j'ai créé une [application de gestion des finances](https://github.com/FloRobart/FinanceDashboard) qui se rattache à **FlorAccess**.
 
-Home Server Maison à été conçue pour être utilisé par plusieurs personnes, c'est pourquoi elle permet de créer plusieurs comptes utilisateurs. Chaque utilisateur aura donc son propre profil et ne pourra pas accéder à celui des autres sans leur mot de passe. Si vous êtes seul à utiliser l'application et que vous ne voulez pas créer de compte utilisateur cette application ne vous sera pas utile.
+FlorAccess à été conçue pour être utilisé par plusieurs personnes, c'est pourquoi elle permet de créer plusieurs comptes utilisateurs. Chaque utilisateur aura donc son propre profil et ne pourra pas accéder à celui des autres sans leur mot de passe. Si vous êtes seul à utiliser l'application et que vous ne voulez pas créer de compte utilisateur cette application ne vous sera pas utile.
 
-**Home Server Maison** n'est pas disponible en ligne, si vous voulez l'utiliser, vous devrez l'installer sur votre propre serveur. Si vous voulez créer un serveur personnel vous pouvez suivre les instructions de ma documentation sur la [création d'un serveur personnel](https://florobart.github.io/Documentations/src/doc_creation_serveur_local.html). Si vous avez déjà un serveur personnel, vous pouvez suivre les [instructions d'installation de **Home Server Maison**](#installation).
+**FlorAccess** n'est pas disponible en ligne, si vous voulez l'utiliser, vous devrez l'installer sur votre propre serveur. Si vous voulez créer un serveur personnel vous pouvez suivre les instructions de ma documentation sur la [création d'un serveur personnel](https://florobart.github.io/Documentations/src/doc_creation_serveur_local.html). Si vous avez déjà un serveur personnel, vous pouvez suivre les [instructions d'installation de **FlorAccess**](#installation).
 
 ## Fonctionnalités
 
@@ -44,7 +44,7 @@ Home Server Maison à été conçue pour être utilisé par plusieurs personnes,
 - Ajouter un lien d'une application sur la page d'accueil.
 - Supprimer un lien d'une application sur la page d'accueil.
 
-**Home Server Maison** est une application web open-source, elle est donc gratuite et libre d'utilisation. Vous pouvez l'utiliser, la modifier, la distribuer, la partager, etc. comme bon vous semble. Par contre, vous ne pouvez pas la vendre, ni la commercialiser, ni la distribuer sans en donner l'accès gratuit. [Voir la licence](#license).
+**FlorAccess** est une application web open-source, elle est donc gratuite et libre d'utilisation. Vous pouvez l'utiliser, la modifier, la distribuer, la partager, etc. comme bon vous semble. Par contre, vous ne pouvez pas la vendre, ni la commercialiser, ni la distribuer sans en donner l'accès gratuit. [Voir la licence](#license).
 
 ## Images
 
@@ -78,7 +78,7 @@ Home Server Maison à été conçue pour être utilisé par plusieurs personnes,
 
 ## Technologies utilisées
 
-**Home Server Maison** est une application web développée avec les technologies suivantes :
+**FlorAccess** est une application web développée avec les technologies suivantes :
 
 - **Langages :**
   - PHP
@@ -94,7 +94,7 @@ Home Server Maison à été conçue pour être utilisé par plusieurs personnes,
 
 ### Prérequis
 
-Pour installer **Home Server Maison** sur votre serveur, vous devez avoir les prérequis suivants :
+Pour installer **FlorAccess** sur votre serveur, vous devez avoir les prérequis suivants :
 
 - [Un serveur sous Linux de préférence](https://florobart.github.io/Documentations/src/doc_creation_serveur_local.html)
   - Vous pouvez également l'installer sur un ordinateur de bureau ou un hébergement web sous Linux, Windows ou MacOS, mais vous devrez adapter vous-même les instructions d'installation.
@@ -106,10 +106,10 @@ Pour installer **Home Server Maison** sur votre serveur, vous devez avoir les pr
   - Vous pouvez également utiliser un autre serveur web, mais vous devrez adapter vous-même les instructions d'installation.
   - Vous pouvez aussi [installer Apache](https://florobart.github.io/Documentations/src/doc_developpement_web.html#apache) et [MySQL](https://florobart.github.io/Documentations/src/doc_developpement_web.html#mysql) séparément, mais XAMPP vous facilitera grandement l'installation et la configuration de ces deux logiciels.
 
-### Installation de Home Server Maison
+### Installation de FlorAccess
 
-- [Télécharger le code source](https://github.com/FloRobart/HomeServerMaison/archive/refs/tags/v1.0.0.zip) de **Home Server Maison** sur votre serveur.
-- Ouvrir un terminal et se placer dans le dossier de **Home Server Maison**.
+- [Télécharger le code source](https://github.com/FloRobart/HomeServerMaison/archive/refs/tags/v1.0.0.zip) de **FlorAccess** sur votre serveur.
+- Ouvrir un terminal et se placer dans le dossier de **FlorAccess**.
 - Installer les dépendances PHP
 
   ```bash
@@ -134,7 +134,7 @@ Pour installer **Home Server Maison** sur votre serveur, vous devez avoir les pr
   php artisan migrate
   ```
 
-### Lancement Home Server Maison
+### Lancement FlorAccess
 
 - Lancer le serveur
 
@@ -144,12 +144,12 @@ Pour installer **Home Server Maison** sur votre serveur, vous devez avoir les pr
 
   - Vous pouvez remplacer le port `3000` par un autre si vous le souhaitez.
 
-- Vous pouvez maintenant accéder à l'application à l'adresse `http://<IP Serveur>:3000` (remplacer `<IP Serveur>` par l'adresse IP de votre serveur sur lequel vous avez installé **Home Server Maison**).
-  - Notez qu'en suivant ces instructions, vous aurez accès à **Home Server Maison** uniquement si vous êtes connecté au même réseau que votre serveur. Si vous voulez accéder à **Home Server Maison** depuis un autre réseau, vous devrez configurer votre serveur pour qu'il soit accessible depuis l'extérieur. Mais **ATTENTION** je ne recommande pas de le faire si vous n'avez pas les compétences, car cela peut poser des problèmes de sécurité.
+- Vous pouvez maintenant accéder à l'application à l'adresse `http://<IP Serveur>:3000` (remplacer `<IP Serveur>` par l'adresse IP de votre serveur sur lequel vous avez installé **FlorAccess**).
+  - Notez qu'en suivant ces instructions, vous aurez accès à **FlorAccess** uniquement si vous êtes connecté au même réseau que votre serveur. Si vous voulez accéder à **FlorAccess** depuis un autre réseau, vous devrez configurer votre serveur pour qu'il soit accessible depuis l'extérieur. Mais **ATTENTION** je ne recommande pas de le faire si vous n'avez pas les compétences, car cela peut poser des problèmes de sécurité.
 
 ## Autheur
 
-Home Server Maison est un projet open-source développé seulement par [Floris Robart](https://florobart.github.io/)
+FlorAccess est un projet open-source développé seulement par [Floris Robart](https://florobart.github.io/)
 
 ## Report de bug et suggestions
 
@@ -159,4 +159,4 @@ Si vous avez une une **suggestion**, une **idée**, une **amélioration**, ou un
 
 ## License
 
-Home Server Maison est un projet open-source sous licence [GNU General Public License v3.0](https://opensource.org/licenses/GPL-3.0).
+FlorAccess est un projet open-source sous licence [GNU General Public License v3.0](https://opensource.org/licenses/GPL-3.0).
