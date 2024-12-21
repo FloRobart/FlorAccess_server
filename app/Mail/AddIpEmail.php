@@ -14,7 +14,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Address;
 
 
-class AddIpMail extends Mailable
+class AddIpEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -33,7 +33,7 @@ class AddIpMail extends Mailable
      */
     public function build()
     {
-        return $this->from($this->data['from'], env('MAIL_NAME')) // L'expéditeur
+        return $this->from(env('MAIL_FROM_ADDRESS'), env('MAIL_NAME')) // L'expéditeur
                     ->subject($this->data['subject']) // Le sujet
                     ->view('mail.contactEmail', $this->data); // La vue
     }
@@ -44,7 +44,7 @@ class AddIpMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address($this->data['from'], env('MAIL_NAME')),
+            from: new Address(env('MAIL_FROM_ADDRESS'), env('MAIL_NAME')),
             subject: 'Verification de votre compte - FlorAccess',
         );
     }

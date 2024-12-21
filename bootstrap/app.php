@@ -23,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return $response;
             }
 
-            LogController::addLog("Une erreur " . $response->getStatusCode() . " est survenue {bootstrap/app.php}", Auth::user()->id, 2);
-            return Redirect()->route('accueil')->with('error', 'La page demandée à rencontrée une erreur. L\'administrateur à été informé du problème et travail à le résoudre.');
+            LogController::addLog("Une erreur " . $response->getStatusCode() . " est survenue {bootstrap/app.php}", Auth::check() ? Auth::user()->id : null, 2);
+            return Redirect()->route('public.accueil')->with('error', 'La page demandée à rencontrée une erreur. L\'administrateur à été informé du problème et travail à le résoudre.');
         });
     })->create();

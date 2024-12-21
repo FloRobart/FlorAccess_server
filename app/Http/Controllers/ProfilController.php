@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
  * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
  */
 
-use App\Mail\AddIpMail;
+use App\Mail\AddIpEmail;
 use App\Models\AdresseIP;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\VerificationEmail;
 use App\Models\Tools;
+use DateTime;
 
 
 class ProfilController extends Controller
@@ -242,29 +243,30 @@ class ProfilController extends Controller
             $fakePassword = Hash::make('fakepassword');
             Hash::check($password, $fakePassword);
 
-            LogController::addLog('Un utilisateur a tenté de se connecter avec un e-mail incorrectes', $user->id ?? null);
+            LogController::addLog("Un utilisateur a tenté de se connecter avec l'e-mail '$email' qui n'existe pas dans la base de donnée incorrectes", null, 2);
             return back()->with(['error' => 'Identifiant ou mot de passe incorrect']);
         }
 
         /* Vérification du mot de passe de l'utilisateur */
         if (!Hash::check($password, $user->password)) {
             $fakePassword = Hash::make('fakepassword');
-            LogController::addLog('Un utilisateur a tenté de se connecter avec un mot de passe incorrectes', $user->id ?? null);
+            LogController::addLog('Un utilisateur a tenté de se connecter avec un mot de passe incorrectes', $user->id ?? null, 1);
             return back()->with(['error' => 'Identifiant ou mot de passe incorrect']);
         }
 
         /* Vérification de l'adresse IP */
         $message = [
-            '0' => 'C\'est la première fois que vous vous connectez depuis cet endroit, veuillez certifier qu\'il s\'agit bien de vous en cliquant sur le lien envoyé par mail à l\'adresse suivante : ' . $email,
-            '2' => 'Un email vous a déjà été envoyé à l\'adresse ' . $email . ' pour vérifier qu\'il s\'agit bien de vous, veuillez vérifier votre boite mail',
-            '3' => 'Vous êtes bannie ! Cet évènement serait rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !',
+            '0' => "C'est la première fois que vous vous connectez depuis cet endroit, veuillez certifier qu'il s'agit bien de vous en cliquant sur le lien envoyé par mail à l'adresse email suivante : $email",
+            '2' => "Un mail de vérification vous à déjà été envoyé à l'adresse $user->email",
+            '3' => "Vous êtes bannie ! Cet évènement serait rapporter à l'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !",
         ];
 
         $ipFound = $this->verifIp($user, request()->ip());
         if ($ipFound != 1) {
-            LogController::addLog('Un utilisateur a tenté de se connecter depuis une adresse IP non autorisée', $user->id ?? null);
+            LogController::addLog('Un utilisateur a tenté de se connecter depuis une adresse IP non autorisée', $user->id ?? null, 1);
             return back()->with(['error' => $message[$ipFound]]);
         }
+        
 
         /* Connexion de l'utilisateur */
         if (Auth::check()) { Auth::logout(); }
@@ -299,7 +301,7 @@ class ProfilController extends Controller
         /* Vérification si l'adresse IP est bannie */
         $adresseIPBannie = AdresseIP::where('user_id', $user->id)->where('adresse_ip', $ip)->where('est_bannie', true)->first();
         if ($adresseIPBannie) {
-            LogController::addLog('L\'adresse IP de l\'utilisateur ('.$ip.') est bannie', $user->id, 1);
+            LogController::addLog("L'adresse IP de l'utilisateur ($ip) est bannie", $user->id, 1);
             return 3;
         }
 
@@ -318,12 +320,23 @@ class ProfilController extends Controller
             /* Vérification de l'existence d'un token de connexion */
             $tokenDB = DB::table('adresse_ips_tokens')->where('email', $user->email)->where('adresse_ip', $ip)->first();
             if ($tokenDB != null) {
-                LogController::addLog('Un mail de vérification de l\'adresse IP ('.$ip.') a déjà été envoyé', $user->id);
+                LogController::addLog("Un mail de vérification vous à déjà été envoyé à l'adresse $user->email", $user->id);
                 return 2;
             }
 
             /* Génération d'un token de connexion */
             $token = bin2hex(random_bytes(64));
+
+            /* Envoi du mail de vérification */
+            $data = [
+                'subject' => 'Vérification de votre adresse IP - FlorAccess',
+                'token' => $token,
+                'ip' => $ip,
+            ];
+
+            /* Envoie du mail */
+            LogController::addLog('Envoi d\'un mail de vérification de l\'adresse IP ('.$ip.')', $user->id);
+            Mail::to($user->email)->send(new AddIpEmail($data));
 
             /* Enregistrement du token de connexion */
             DB::table('adresse_ips_tokens')->insert([
@@ -332,17 +345,6 @@ class ProfilController extends Controller
                 'token' => $token,
                 'created_at' => now(),
             ]);
-
-            /* Envoi du mail de vérification */
-            $data = [
-                'email' => $user->email,
-                'token' => $token,
-                'ip' => $ip,
-            ];
-
-            /* Envoie du mail */
-            LogController::addLog('Envoi d\'un mail de vérification de l\'adresse IP ('.$ip.')', $user->id);
-            Mail::to($user->email)->send(new AddIpMail($data));
         }
         
         return $ipFound ? 1 : 0;
@@ -376,6 +378,9 @@ class ProfilController extends Controller
             /* Bannissement de l'adresse IP */
             $this->banIp($email, $adresseIp);
 
+            /* Suppression du token */
+            DB::table('adresse_ips_tokens')->where('email', $email)->where('adresse_ip', $ip)->delete();
+
             return redirect()->route('public.accueil')->with('error', 'Vous avez été bannie !');
         }
 
@@ -390,6 +395,8 @@ class ProfilController extends Controller
             /* Bannissement de l'adresse IP */
             $this->banIp($email, $adresseIp);
 
+            /* Suppression du token */
+            DB::table('adresse_ips_tokens')->where('email', $email)->where('adresse_ip', $ip)->where('token', $token)->delete();
             return redirect()->route('public.accueil')->with('error', 'Vous avez changer d\'endroit entre le moment où vous avez demander à vérifier votre email et le moment ou vous avez cliqué sur le lien dans le mail, par mesure de sécurité vous avez été bannie. Si c\'est bien vous qui avez demander à vérifier votre email, veuillez contacter l\'administrateur');
         }
         else
@@ -398,12 +405,18 @@ class ProfilController extends Controller
             if ($adresseIPBannie)
             {
                 LogController::addLog('Un utilisateur a tenté de se connecter depuis une IP bannie', $user->id, 1);
+
+                /* Suppression du token */
+                DB::table('adresse_ips_tokens')->where('email', $email)->where('adresse_ip', $ip)->where('token', $token)->delete();
                 return redirect()->route('public.accueil')->with(['error' => 'Vous êtes bannie ! Cet évènement sera rapporter à l\'administrateur, en ignorant votre banissement vous vous engagez à de potentiel poursuite judiciaire !']);
             }
         }
 
-        if ($tokenDB->created_at->diffInMinutes(now()) > 30)
+        $dateTime = DateTime::createFromFormat("Y-m-d H:i:s", $tokenDB->created_at);
+        if ($dateTime->diff(now())->i > 30)
         {
+            /* Suppression du token */
+            DB::table('adresse_ips_tokens')->where('email', $email)->where('adresse_ip', $ip)->where('token', $token)->delete();
             return redirect()->route('public.accueil')->with('error', 'Le lien a expiré, veuillez recommencer la procédure et cliquer sur le lien reçu par mail dans les 30 minutes');
         }
 
@@ -412,7 +425,7 @@ class ProfilController extends Controller
         /* Ajout de l'adresse IP à la liste */
         /*----------------------------------*/
         LogController::addLog('Ajout de l\'adresse IP : ' . $ip . ' à la liste blanche', $user->id);
-        $builder = AdresseIP::created([
+        $builder = AdresseIP::create([
             'user_id' => $user->id,
             'adresse_ip' => $ip,
             'est_bannie' => false,
@@ -422,11 +435,13 @@ class ProfilController extends Controller
         {
             /* Suppression du token */
             DB::table('adresse_ips_tokens')->where('token', $token)->delete();
-
             return redirect()->route('public.accueil')->with('success', 'Vous pouvez maintenant vous connecter depuis cette endroit 👍');
         }
 
         LogController::addLog('Erreur lors de l\'ajout de l\'adresse IP : ' . $ip . ' à la liste blanche', $user->id, 1);
+
+        /* Suppression du token */
+        DB::table('adresse_ips_tokens')->where('token', $token)->delete();
         return redirect()->route('public.accueil')->with('error', 'Une erreur est survenue, si le problème persiste veuillez contacter l\'administrateur');
     }
 
@@ -453,7 +468,7 @@ class ProfilController extends Controller
         }
 
         /* Bannissement de l'adresse IP */
-        $builder = DB::table('adresse_ips')->insert([
+        $builder = AdresseIP::create([
             'user_id' => $user->id,
             'adresse_ip' => $ip,
             'est_bannie' => true,
