@@ -90,7 +90,11 @@ class LogController extends Controller
 
         if (env('APP_ENV') == 'production')
         {
-            if (!$log->save()) { Mail::to(env('ADMIN_EMAIL'))->send(new LogError($log)); }
+            if (!$log->save())
+            {
+                $log->message = "Erreur lors de l'enregistrement du log : $log->message";
+                Mail::to(env('ADMIN_EMAIL'))->send(new LogError($log));
+            }
             if ($error == 2) { Mail::to(env('ADMIN_EMAIL'))->send(new LogError($log)); }
         }
         else
