@@ -630,7 +630,7 @@ attach them to the start of each source file to most effectively state
 the exclusion of warranty; and each file should have at least the
 "copyright" line and a pointer to where the full notice is found.
 
-        Home Server Maison est une page d'accueil et un système de gestion de
+        FlorAccess est une page d'accueil et un système de gestion de
         compte personnel qui permet de regrouper plusieurs services en un seul
         endroit.
         Copyright (C) 2024  Floris Robart
@@ -654,7 +654,7 @@ mail.
 If the program does terminal interaction, make it output a short
 notice like this when it starts in an interactive mode:
 
-        Home Server Maison Copyright (C) 2024 Floris Robart
+        FlorAccess Copyright (C) 2024 Floris Robart
         This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
         This is free software, and you are welcome to redistribute it
         under certain conditions; type `show c' for details.

@@ -2,7 +2,7 @@
 namespace App\Mail;
 
 /*
- * Ce fichier fait partie du projet Home Server Maison
+ * Ce fichier fait partie du projet FlorAccess
  * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
  */
 
@@ -36,7 +36,7 @@ class LogError extends Mailable
     {
         return new Envelope(
             from: new Address(env('MAIL_FROM_ADDRESS'), env('MAIL_NAME')),
-            subject: 'Erreur log - Home Server Maison',
+            subject: 'Erreur log - FlorAccess',
         );
     }
 
