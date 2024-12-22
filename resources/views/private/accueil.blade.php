@@ -88,9 +88,6 @@
     <!-- Bouton pour modifier, ajouter ou supprimer un outil -->
     <button onclick="showActionTool()" id="addToolButton" class="buttonForm mt-8">+ Modifier les outils</button>
 </section>
-
-{{-- Enregistrement du log --}}
-{{ App\Http\Controllers\LogController::addLog('Affichage de la page d\'accueil privée'); }}
 @endsection
 
 @section('scripts')

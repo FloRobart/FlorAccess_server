@@ -20,6 +20,8 @@ class ResetPasswordController extends Controller
     /**
      * 1
      * Affiche le formulaire de demande de réinitialisation du mot de passe
+     * @return \Illuminate\View\View reset_password.emailRequest
+     * @method GET
      */
     public function emailRequest()
     {
@@ -31,6 +33,9 @@ class ResetPasswordController extends Controller
      * 2
      * Génère le token et
      * Envoie le mail de réinitialisation du mot de passe
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse back() | avec un message de succès ou d'erreur
+     * @method POST
      */
     public function emailRequestSave(Request $request)
     {
@@ -46,7 +51,7 @@ class ResetPasswordController extends Controller
             $request->only('email')
         );
 
-        LogController::addLog('Demande de réinitialisation du mot de passe (email envoyé) pour l\'adresse mail ' . $request->email);
+        LogController::addLog("Demande de réinitialisation du mot de passe (email envoyé) pour l'adresse mail : $request->email");
         return $status === Password::RESET_LINK_SENT
                     ? back()->with(['success' => 'Un mail de réinitialisation du mot de passe vous a été envoyé à l\'adresse mail ' . $request->email . '. Vous pouvez fermé cette page et cliquer sur le lien du mail pour réinitialiser votre mot de passe.'])
                     : back()->with(['error' => 'Une erreur est survenue lors de l\'envoi du mail de réinitialisation du mot de passe.']);
@@ -56,6 +61,9 @@ class ResetPasswordController extends Controller
     /**
      * 3
      * Affiche le formulaire de réinitialisation du mot de passe
+     * @param String $token
+     * @return \Illuminate\View\View reset_password.resetPassword
+     * @method GET
      */
     public function resetPassword(String $token)
     {
@@ -67,7 +75,7 @@ class ResetPasswordController extends Controller
         if ($user != null && Password::tokenExists($user, $token)) {
             return view('reset_password.resetPassword', ['token' => $token, 'email' => $email]);
         } else {
-            LogController::addLog('Tentative d\'accès à la page de réinitialisation du mot de passe pour l\'adresse mail ' . $email . ' avec un token invalide', null, 1);
+            LogController::addLog("Tentative d'accès à la page de réinitialisation du mot de passe pour l'adresse mail $email avec un token invalide", null, 1);
             return redirect()->route('public.accueil');
         }
     }
@@ -76,6 +84,9 @@ class ResetPasswordController extends Controller
     /**
      * 4
      * Réinitialise le mot de passe
+     * @param \Illuminate\Http\Request $request
+     * @return Route private.accueil
+     * @method POST
      */
     public function resetPasswordSave(Request $request)
     {
@@ -104,7 +115,7 @@ class ResetPasswordController extends Controller
         $token = $request->token;
 
         if ($user != null && !(Password::tokenExists($user, $token))) {
-            LogController::addLog('Tentative de réinitialisation du mot de passe pour l\'adresse mail ' . $email . ' avec un token invalide', null, 1);
+            LogController::addLog("Tentative de réinitialisation du mot de passe pour l'adresse mail $email avec un token invalide", null, 1);
             return redirect()->route('public.accueil');
         }
      
@@ -121,7 +132,7 @@ class ResetPasswordController extends Controller
             }
         );
 
-        LogController::addLog('Réinitialisation du mot de passe pour l\'adresse mail ' . $email);
+        LogController::addLog("Réinitialisation du mot de passe pour l'adresse mail $email");
 
         Schedule::command('auth:clear-resets')->everyFifteenMinutes();
         return $status === Password::PASSWORD_RESET

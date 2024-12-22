@@ -103,9 +103,6 @@
 <div class="rowCenterContainer my-14 lg:my-20">
     <a onclick="return confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.')" href="{{ route('supprimerCompte') }}" class="alertButtonForm">Supprimer mon compte</a>
 </div>
-
-{{-- Enregistrement du log --}}
-{{ App\Http\Controllers\LogController::addLog('Affichage de la page de profil'); }}
 @endsection
 
 @section('scripts')
