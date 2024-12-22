@@ -102,7 +102,4 @@
 
     {{ $logs->links('pagination::tailwind') }}
 </section>
-
-{{-- Enregistrement du log --}}
-{{ App\Http\Controllers\LogController::addLog('Affichage de la page des logs'); }}
 @endsection

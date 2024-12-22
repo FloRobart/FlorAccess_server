@@ -19,6 +19,7 @@ class PrivateController extends Controller
     /**
      * Affiche la page d'accueil
      * @return \Illuminate\View\View private.accueil
+     * @method GET
      */
     public function accueil()
     {
@@ -33,6 +34,7 @@ class PrivateController extends Controller
      * Ajouter un outil
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse back()
+     * @method POST
      */
     public function addTool(Request $request)
     {
@@ -64,10 +66,9 @@ class PrivateController extends Controller
         $tool->position = Tools::where('user_id', Auth::id())->max('position') + 1;
 
         if ($tool->save()) {
-            LogController::addLog('Ajout de l\'outil ' . $tool->name . ' (' . $tool->link . ')');
             return back()->with('success', 'L\'outil a été ajouté avec succès 👍')->with('message', $message);
         } else {
-            LogController::addLog('Une erreur est survenue lors de l\'ajout de l\'outil ' . $tool->name . ' (' . $tool->link . ')', null, 1);
+            LogController::addLog('Une erreur est survenue lors de l\'ajout de l\'outil ' . $tool->name . ' (' . $tool->link . ')', Auth::id(), 1);
             return back()->with('error', 'Une erreur est survenue lors de l\'ajout de l\'outil');
         }
     }
@@ -76,6 +77,7 @@ class PrivateController extends Controller
      * Modifier un outil
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse back()
+     * @method POST
      */
     public function editTool(Request $request)
     {
@@ -103,10 +105,9 @@ class PrivateController extends Controller
         $tool->link = $request->input('link');
 
         if ($tool->save()) {
-            LogController::addLog('Modification de l\'outil ' . $tool->name . ' (' . $tool->link . ')');
             return back()->with('success', 'L\'outil a été modifié avec succès 👍');
         } else {
-            LogController::addLog('Une erreur est survenue lors de la modification de l\'outil ' . $tool->name . ' (' . $tool->link . ')', null, 1);
+            LogController::addLog('Une erreur est survenue lors de la modification de l\'outil ' . $tool->name . ' (' . $tool->link . ')', Auth::id(), 1);
             return back()->with('error', 'Une erreur est survenue lors de la modification de l\'outil');
         }
     }
@@ -116,6 +117,7 @@ class PrivateController extends Controller
      * @param int $id
      * @param int $new_position
      * @return \Illuminate\Http\RedirectResponse back()
+     * @method GET
      */
     public function moveTool($id, $new_position)
     {
@@ -145,10 +147,9 @@ class PrivateController extends Controller
 
         $tool->position = $new_position;
         if ($tool->save()) {
-            LogController::addLog('Déplacement de l\'outil ' . $tool->name . ' (' . $tool->link . ')');
             return back()->with('success', 'L\'outil a été déplacé avec succès 👍')->with('modif', 'true')->with('position', min(array($oldPosition, $new_position)) - 2);
         } else {
-            LogController::addLog('Une erreur est survenue lors du déplacement de l\'outil ' . $tool->name . ' (' . $tool->link . ')', null, 1);
+            LogController::addLog('Une erreur est survenue lors du déplacement de l\'outil ' . $tool->name . ' (' . $tool->link . ')', Auth::id(), 1);
             return back()->with('error', 'Une erreur est survenue lors du déplacement de l\'outil');
         }
     }
@@ -157,6 +158,7 @@ class PrivateController extends Controller
      * Supprimer un outil
      * @param int $id
      * @return \Illuminate\Http\RedirectResponse back()
+     * @method GET
      */
     public function deleteTool($id)
     {
@@ -178,10 +180,9 @@ class PrivateController extends Controller
 
         /* Suppression de l'outil */
         if ($tool->delete()) {
-            LogController::addLog('Suppression de l\'outil ' . $tool->name . ' (' . $tool->link . ')');
             return back()->with('success', 'L\'outil a été supprimé avec succès 👍');
         } else {
-            LogController::addLog('Une erreur est survenue lors de la suppression de l\'outil ' . $tool->name . ' (' . $tool->link . ')', null, 1);
+            LogController::addLog('Une erreur est survenue lors de la suppression de l\'outil ' . $tool->name . ' (' . $tool->link . ')', Auth::id(), 1);
             return back()->with('error', 'Une erreur est survenue lors de la suppression de l\'outil');
         }
     }

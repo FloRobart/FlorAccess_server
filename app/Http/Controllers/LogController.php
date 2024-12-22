@@ -22,6 +22,7 @@ class LogController extends Controller
      * Affiche la page des logs
      * @param Request $request
      * @return \Illuminate\View\View logs.logListe
+     * @method GET
      */
     public function showListeLogs(Request $request)
     {
@@ -42,6 +43,7 @@ class LogController extends Controller
      * Affiche la page d'un log
      * @param int $id
      * @return \Illuminate\View\View logs.logDetails
+     * @method GET
      */
     public function showDetailsLog($id)
     {

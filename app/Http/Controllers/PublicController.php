@@ -70,7 +70,7 @@ class PublicController extends Controller
         ]);
 
         /* Envoi du mail */
-        Mail::to(env('MAIL_FROM_ADDRESS'))->send(new ContactEmail($request->email, $request->subject, $request->message, Auth::check() ? Auth::user()->name : 'Invité'));
+        Mail::to(env('ADMIN_EMAIL'))->send(new ContactEmail($request->email, $request->subject, $request->message, Auth::check() ? Auth::user()->name : 'Invité'));
 
         /* Redirection vers la page d'accueil */
         return redirect()->route('contact')->with('success', 'Votre message à bien été envoyé à l\'administrateur');

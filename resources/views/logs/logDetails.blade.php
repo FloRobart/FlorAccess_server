@@ -60,7 +60,4 @@
         </div>
     </div>
 </section>
-
-{{-- Enregistrement du log --}}
-{{ App\Http\Controllers\LogController::addLog('Affichage de la page du log n°' . $log->id); }}
 @endsection

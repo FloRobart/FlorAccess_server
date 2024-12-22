@@ -26,6 +26,8 @@ class ProfilController extends Controller
     /*-------------*/
     /**
      * Affiche le formulaire d'inscription
+     * @return \Illuminate\View\View profil.inscription
+     * @method GET
      */
     public function inscription()
     {
@@ -35,6 +37,9 @@ class ProfilController extends Controller
 
     /**
      * Enregistre les informations de l'inscription
+     * @param Request $request
+     * @return Route verification.email | avec un message de succès
+     * @method POST
      */
     public function inscriptionSave(Request $request)
     {
@@ -103,10 +108,9 @@ class ProfilController extends Controller
 
         /* Connexion de l'utilisateur */
         if (Auth::attempt($request->only('email', 'password'))) {
-            LogController::addLog('Enregistrement de l\'inscription');
             return redirect()->route('verification.email')->with('success', 'Inscription réussie 👍');
         } else {
-            LogController::addLog('Erreur lors de l\'inscription', null, 1);
+            LogController::addLog("Erreur lors de l'inscription de $name ($email)", Auth::id(), 1);
             return back()->with(['error' => 'Erreur lors de l\'inscription réessayez plus tard ou contactez l\'administrateur.']);
         }
     }
@@ -117,6 +121,7 @@ class ProfilController extends Controller
      * Envoie un mail de vérification
      * Affiche la page de vérification de l'e-mail qui permet de rentrer le code de vérification
      * @return \Illuminate\View\View profil.verificationEmail
+     * @method GET
      */
     public function showVerificationEmail()
     {
@@ -141,6 +146,7 @@ class ProfilController extends Controller
      * Enregistre la date de vérification de l'adresse e-mail
      * @param Request $request
      * @return Route private.accueil | avec un message de succès ou d'erreur
+     * @method POST
      */
     public function verificationEmailSave(Request $request)
     {
@@ -157,6 +163,7 @@ class ProfilController extends Controller
 
         if ($code != session('code')) {
             session()->forget('code');
+            LogController::addLog('Tentative de vérification de l\'email avec un code incorrect', Auth::id(), 1);
             return redirect()->route('verification.email')->with('error', 'Le code de vérification est incorrect. Un nouveau mail de vérification vous a été envoyé');
         }
 
@@ -218,6 +225,9 @@ class ProfilController extends Controller
     /*-----------*/
     /**
      * Connecte l'utilisateur si les informations sont correctes
+     * @param Request $request
+     * @return Route private.accueil
+     * @method POST
      */
     public function connexionSave(Request $request)
     {
@@ -243,7 +253,7 @@ class ProfilController extends Controller
             $fakePassword = Hash::make('fakepassword');
             Hash::check($password, $fakePassword);
 
-            LogController::addLog("Un utilisateur a tenté de se connecter avec l'e-mail '$email' qui n'existe pas dans la base de donnée incorrectes", null, 2);
+            LogController::addLog("Un utilisateur a tenté de se connecter avec l'e-mail '$email' qui n'existe pas dans la base de donnée", null, 2);
             return back()->with(['error' => 'Identifiant ou mot de passe incorrect']);
         }
 
@@ -277,7 +287,7 @@ class ProfilController extends Controller
         $user->save();
 
         /* Redirection vers la page d'accueil */
-        LogController::addLog('Connexion de l\'utilisateur');
+        LogController::addLog("Connexion de l'utilisateur $user->name ($user->email)", $user->id, 0);
         return redirect()->route('private.accueil');
     }
 
@@ -320,7 +330,6 @@ class ProfilController extends Controller
             /* Vérification de l'existence d'un token de connexion */
             $tokenDB = DB::table('adresse_ips_tokens')->where('email', $user->email)->where('adresse_ip', $ip)->first();
             if ($tokenDB != null) {
-                LogController::addLog("Un mail de vérification vous à déjà été envoyé à l'adresse $user->email", $user->id);
                 return 2;
             }
 
@@ -335,7 +344,6 @@ class ProfilController extends Controller
             ];
 
             /* Envoie du mail */
-            LogController::addLog('Envoi d\'un mail de vérification de l\'adresse IP ('.$ip.')', $user->id);
             Mail::to($user->email)->send(new AddIpEmail($data));
 
             /* Enregistrement du token de connexion */
@@ -373,14 +381,12 @@ class ProfilController extends Controller
         /*--------------------------------------*/
         if ($tokenDB == null)
         {
-            LogController::addLog('Bannissement de l\'adresse IP : ' . $ip . ' car le token est invalide', $user->id, 1);
-
             /* Bannissement de l'adresse IP */
             $this->banIp($email, $adresseIp);
+            LogController::addLog('Bannissement de l\'adresse IP : ' . $ip . ' car le token est invalide', $user->id, 1);
 
             /* Suppression du token */
             DB::table('adresse_ips_tokens')->where('email', $email)->where('adresse_ip', $ip)->delete();
-
             return redirect()->route('public.accueil')->with('error', 'Vous avez été bannie !');
         }
 
@@ -390,10 +396,9 @@ class ProfilController extends Controller
         /*---------------------------------------------*/
         if ($ip != $adresseIp || $ip != $tokenDB->adresse_ip || $adresseIp != $tokenDB->adresse_ip)
         {
-            LogController::addLog('Bannissement de l\'adresse IP : ' . $ip . ' car l\'adresse IP n\'est pas valide', $user->id, 1);
-
             /* Bannissement de l'adresse IP */
             $this->banIp($email, $adresseIp);
+            LogController::addLog('Bannissement de l\'adresse IP : ' . $ip . ' car l\'adresse IP n\'est pas valide', $user->id, 1);
 
             /* Suppression du token */
             DB::table('adresse_ips_tokens')->where('email', $email)->where('adresse_ip', $ip)->where('token', $token)->delete();
@@ -404,7 +409,7 @@ class ProfilController extends Controller
             $adresseIPBannie = AdresseIP::where('user_id', $user->id)->where('adresse_ip', $ip)->where('est_bannie', true)->first();
             if ($adresseIPBannie)
             {
-                LogController::addLog('Un utilisateur a tenté de se connecter depuis une IP bannie', $user->id, 1);
+                LogController::addLog('Un utilisateur a tenté de se connecter depuis une IP bannie', $user->id, 2);
 
                 /* Suppression du token */
                 DB::table('adresse_ips_tokens')->where('email', $email)->where('adresse_ip', $ip)->where('token', $token)->delete();
@@ -424,7 +429,6 @@ class ProfilController extends Controller
         /*----------------------------------*/
         /* Ajout de l'adresse IP à la liste */
         /*----------------------------------*/
-        LogController::addLog('Ajout de l\'adresse IP : ' . $ip . ' à la liste blanche', $user->id);
         $builder = AdresseIP::create([
             'user_id' => $user->id,
             'adresse_ip' => $ip,
@@ -438,7 +442,7 @@ class ProfilController extends Controller
             return redirect()->route('public.accueil')->with('success', 'Vous pouvez maintenant vous connecter depuis cette endroit 👍');
         }
 
-        LogController::addLog('Erreur lors de l\'ajout de l\'adresse IP : ' . $ip . ' à la liste blanche', $user->id, 1);
+        LogController::addLog("Erreur lors de l'ajout de l'adresse IP $ip à la liste blanche", $user->id, 2);
 
         /* Suppression du token */
         DB::table('adresse_ips_tokens')->where('token', $token)->delete();
@@ -476,14 +480,14 @@ class ProfilController extends Controller
 
         if ($builder != null)
         {
-            LogController::addLog('Bannissement de l\'adresse IP : ' . $ip, $user->id);
+            LogController::addLog("Bannissement de l'adresse IP : $ip", $user->id, 0);
 
             /* Suppression du token */
             DB::table('adresse_ips_tokens')->where('email', $email)->where('adresse_ip', $ip)->delete();
         }
         else
         {
-            LogController::addLog('Erreur lors du bannissement de l\'adresse IP : ' . $ip, $user->id, 1);
+            LogController::addLog('Erreur lors du bannissement de l\'adresse IP : ' . $ip, $user->id, 2);
         }
 
         return $builder != null;
@@ -496,13 +500,14 @@ class ProfilController extends Controller
     /*--------*/
     /**
      * Affiche la page du profil
+     * @return \Illuminate\View\View profil.profil
+     * @method GET
      */
     public function profil()
     {
         if (Auth::check()) {
             return view('profil.profil');
         } else {
-            LogController::addLog('Un utilisateur non connecté a tenté d\'accéder à la page du profil', null, 1);
             return redirect()->route('public.accueil');
         }
     }
@@ -510,6 +515,9 @@ class ProfilController extends Controller
 
     /**
      * Enregistre les informations du profil
+     * @param Request $request
+     * @return Route profil | avec un message de succès ou d'erreur
+     * @method POST
      */
     public function profilSave(Request $request)
     {
@@ -545,8 +553,12 @@ class ProfilController extends Controller
             if ($user->name != $name) { $user->name = $name; }
             if ($user->email != $email) { $user->email = $email; }
             if ($request->password != null) { $user->password = Hash::make($request->password); }
+            if ($user->save()) {
+                $modif = true;
+            } else {
+                LogController::addLog("Erreur lors de la modification des informations de $user->name ($user->email)", $user->id, 2);
+            }
 
-            $user->save();
             $modif = true;
         }
 
@@ -556,14 +568,15 @@ class ProfilController extends Controller
             $user = User::find(Auth::user()->id);
             $imgProfilBase64 = $this->resizeImage(imagecreatefromstring(file_get_contents($request->profil_image)));
             $user->imgProfil = $imgProfilBase64;
-            $user->save();
-            $modif = true;
+            if ($user->save()) {
+                $modif = true;
+            } else {
+                LogController::addLog("Erreur lors de la modification de l'image de profil de $user->name ($user->email)", $user->id, 2);
+            }
         }
 
         if ($modif)
         {
-            LogController::addLog('Modification des informations du profil', $user->id);
-
             /* Redirection vers la page du profil */
             return back()->with('success', 'Votre profil à bien été mis à jour 👍');
         }
@@ -579,17 +592,13 @@ class ProfilController extends Controller
     /*-------------*/
     /**
      * Déconnecte l'utilisateur et le redirige vers la page d'accueil
+     * @return Route public.accueil
+     * @method GET
      */
     public function deconnexion()
     {
         /* Déconnexion de l'utilisateur */
-        if (Auth::check())
-        {
-            $user = User::find(Auth::user()->id);
-            Auth::logout();
-            
-            LogController::addLog('Déconnexion de l\'utilisateur ' . $user->name, $user->id);
-        }
+        if (Auth::check()) { Auth::logout(); }
 
         /* Redirection vers la page d'accueil */
         return Redirect()->route('public.accueil');
@@ -604,6 +613,8 @@ class ProfilController extends Controller
      * Déconnecte l'utilisateur
      * Puis supprime le compte de l'utilisateur
      * Puis le redirige vers la page d'accueil
+     * @return Route public.accueil
+     * @method GET
      */
     public function supprimerCompte()
     {
@@ -634,7 +645,7 @@ class ProfilController extends Controller
         /* Suppression du compte de l'utilisateur */
         User::destroy($user->id);
 
-        LogController::addLog('Suppression du compte de l\'utilisateur', $user->id);
+        LogController::addLog("Suppression du compte de l'utilisateur $user->name ($user->email)", $user->id, 0);
 
         /* Redirection vers la page d'accueil */
         return Redirect()->route('public.accueil');

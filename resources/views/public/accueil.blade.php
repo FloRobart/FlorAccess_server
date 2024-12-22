@@ -71,9 +71,6 @@
 
 <!-- Modal -->
 @include('components.password-modal', ['email' => '$email'])
-
-{{-- Enregistrement du log --}}
-{{ App\Http\Controllers\LogController::addLog('Affichage de la page d\'accueil public (pour se connecter ou s\'inscrire)'); }}
 @endsection
 
 

@@ -84,9 +84,6 @@
         </div>
     </div>
 </section>
-
-{{-- Enregistrement du log --}}
-{{ App\Http\Controllers\LogController::addLog('Affichage de la page d\'inscription'); }}
 @endsection
 
 @section('scripts')
