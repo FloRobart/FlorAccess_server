@@ -10,6 +10,7 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PrivateController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\VerifIP;
 
@@ -46,9 +47,6 @@ Route::middleware(['auth', VerifIP::class])->group(function () {
 /* Connexion */
 Route::post('/connexion', [ProfilController::class, 'connexionSave'])->middleware('throttle:5,10')->name('connexionSave'); // 5 tentatives de connexion par minute, puis blocage pendant 10 minutes
 Route::get('/add/ip/{token}/{ip}', [ProfilController::class, 'addIp'])->name('addIp'); // Ajout d'une adresse IP à la liste blanche
-
-/* Adresse IP */
-
 
 /* Profil */
 Route::get('/profil', [ProfilController::class, 'profil'])->middleware(['auth', VerifIP::class])->name('profil');
@@ -101,4 +99,19 @@ Route::middleware(['auth', VerifIP::class])->group(function () {
     /* Affichage des logs, uniquement pour l'administrateur */
     Route::get('/logs', [LogController::class, 'showListeLogs'])->name('log.logs');
     Route::get('/log/details/{id}', [LogController::class, 'showDetailsLog'])->name('log.log.details');
+});
+
+
+
+/*--------------------------------*/
+/* Route pour les administrateurs */
+/*        AdminController         */
+/*--------------------------------*/
+Route::middleware(['auth', VerifIP::class])->group(function () {
+    /* Affichage des logs, uniquement pour l'administrateur */
+    Route::get('/admin/adresse_ip', [AdminController::class, 'adresseIp'])->name('admin.adresse_ip');
+    Route::post('/admin/adresse_ip', [AdminController::class, 'adresseIpSave'])->name('admin.adresse_ipSave');
+    Route::get('/admin/adresse_ip_token', [AdminController::class, 'adresseIpToken'])->name('admin.adresse_ip_token');
+    Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::get('/admin/tools', [AdminController::class, 'tools'])->name('admin.tools');
 });

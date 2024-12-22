@@ -30,7 +30,7 @@ class LogController extends Controller
         $order = $request->query('order') ?? 'desc';
 
         if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
-            LogController::addLog("Queslqu'un à essayer d'accéder à la page de logs {showListeLogs}", Auth::check() ? Auth::user()->id : null, 2);
+            LogController::addLog("Quelqu'un à essayer d'accéder à la page des logs {showListeLogs}", Auth::check() ? Auth::user()->id : null, 2);
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
         }
 
