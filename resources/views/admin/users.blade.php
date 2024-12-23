@@ -36,7 +36,7 @@
             <span class="normalText">Nombre d'utilisateur total : <span class="normalTextBleuLogo font-bold">{{ $nbUser }}</span></span>
         </div>
         <div class="rowCenterContainer">
-            <span class="normalText">Nombre d'utilisateur par page : <span class="normalTextBleuLogo font-bold">{{ $users->count() }}</span></span>
+            <span class="normalText">Nombre d'utilisateur par page : <span class="normalTextBleuLogo font-bold">{{ $perPage }}</span></span>
         </div>
     </div>
 
@@ -64,11 +64,11 @@
                 @if (isset($users))
                     @foreach ($users as $user)
                         <tr class="tableRow smallText text-center">
-                            <td class="tableCell">{{ strftime('%d %B %Y %T', strtotime($user->created_at)) }}</td>
-                            <td class="tableCell">{{ $user->id }}</td>
-                            <td class="tableCell">{{ $user->name }}</td>
-                            <td class="tableCell">{{ $user->email }}</td>
-                            <td class="tableCell">{{ strftime('%d %B %Y %T', strtotime($user->last_login_at)) }}</td>
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ strftime('%e/%m/%Y', strtotime($user->created_at)) }}</td>
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ $user->id }}</td>
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ $user->name }}</td>
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ $user->email }}</td>
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ strftime('%d %B %Y %T', strtotime($user->last_login_at)) }}</td>
                         </tr>
                     @endforeach
                 @endif

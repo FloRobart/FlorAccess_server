@@ -10,58 +10,10 @@ use App\Models\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\LogError;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Http\Request;
 
 
 class LogController extends Controller
 {
-    /*--------------------*/
-    /* Affichage des logs */
-    /*--------------------*/
-    /**
-     * Affiche la page des logs
-     * @param Request $request
-     * @return \Illuminate\View\View logs.logListe
-     * @method GET
-     */
-    public function showListeLogs(Request $request)
-    {
-        $sort = $request->query('sort') ?? 'id';
-        $order = $request->query('order') ?? 'desc';
-
-        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
-            LogController::addLog("Quelqu'un à essayer d'accéder à la page des logs {showListeLogs}", Auth::check() ? Auth::user()->id : null, 2);
-            return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
-        }
-
-        $nbLogs = Log::count();
-        $logs = Log::orderBy($sort, $order)->paginate(20);
-        return view('logs.logListe', compact('logs', 'nbLogs'));
-    }
-
-    /**
-     * Affiche la page d'un log
-     * @param int $id
-     * @return \Illuminate\View\View logs.logDetails
-     * @method GET
-     */
-    public function showDetailsLog($id)
-    {
-        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
-            LogController::addLog("Queslqu'un à essayer d'accéder à la page de détails du log n°$id {showDetailsLog}", Auth::check() ? Auth::user()->id : null, 2);
-            return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
-        }
-
-        $log = Log::where('id', $id)->first();
-        if ($log == null) { return back()->with('error', 'Le log n\'existe pas'); }
-        return view('logs.logDetails', compact('log'));
-    }
-
-
-
-    /*-------------------------*/
-    /* Enregistrement des logs */
-    /*-------------------------*/
     /**
      * Permets d'ajouter un log
      * @param string $message

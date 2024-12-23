@@ -106,6 +106,16 @@ class ProfilController extends Controller
             $loop++;
         }
 
+        /* Ajout de la page d'accueil de l'administrateur */
+        if ($email == env('ADMIN_EMAIL')) {
+            Tools::create([
+                'user_id' => $userId,
+                'name' => 'Accueil administrateur',
+                'link' => route('admin.accueil'),
+                'position' => $loop
+            ]);
+        }
+
         /* Connexion de l'utilisateur */
         if (Auth::attempt($request->only('email', 'password'))) {
             return redirect()->route('verification.email')->with('success', 'Inscription réussie 👍');

@@ -62,7 +62,7 @@
     .hoverText              { @apply hover:text-[var(--bleuLogo)] hover:underline; }
 
     /* Placeholder */
-    .PlaceholderText        { @apply placeholder-[var(--placeholderColor)] placeholder:font-light; }
+    .placeholderText        { @apply placeholder-[var(--placeholderColor)] placeholder:font-light; }
 
     /* Lien */
     .link                   { @apply hover:underline; }
@@ -79,8 +79,8 @@
     .normalScale            { @apply scale-105; }
 
     /* Composant */
-    .inputForm              { @apply bgElement normalText PlaceholderText focus:outline focus:outline-[var(--bleuLogo)] focus:outline-2 focus:border-white w-full border-solid border-2 rounded-xl py-2 pl-3 pr-5; }
-    .hiddenInputForm        { @apply font fontSizeNormal colorFontBleuLogo PlaceholderText font-bold w-full rounded-lg min-[400px]:rounded-xl px-2 bgPage hover:underline focus:hover:no-underline focus:text-black focus:bg-white focus:outline focus:outline-[var(--bleuLogo)] focus:outline-2 cursor-pointer focus:cursor-text; }
+    .inputForm              { @apply bgElement normalText placeholderText focus:outline focus:outline-[var(--bleuLogo)] focus:outline-2 focus:border-white w-full border-solid border-2 rounded-xl py-2 pl-3 pr-5; }
+    .hiddenInputForm        { @apply font fontSizeNormal colorFontBleuLogo placeholderText font-bold w-full rounded-lg min-[400px]:rounded-xl px-2 bgPage hover:underline focus:hover:no-underline focus:text-black focus:bg-white focus:outline focus:outline-[var(--bleuLogo)] focus:outline-2 cursor-pointer focus:cursor-text; }
     .buttonForm             { @apply normalTextReverse font-bold bgBleuLogo hover:bgBleuFonce focus:normalScale rounded-xl py-2 px-5; }
     .alertButtonForm        { @apply normalTextReverse font-bold bgError hover:bg-[var(--errorDarkenColor)] focus:normalScale rounded-xl py-2 px-5; }
     .labelForm              { @apply normalText font-medium; }

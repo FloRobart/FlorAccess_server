@@ -64,14 +64,39 @@
                     @include('components.breadcrumb-link', ['name' => 'Profil', 'link' => route('profil')])
                 @endif
 
+                <!-- Admin -->
+                @if (str_contains(strtolower(URL::current()), 'admin'))
+                    @include('components.breadcrumb-link', ['name' => 'Admin', 'link' => route('admin.accueil')])
+                @endif
+
                 <!-- Logs -->
-                @if (str_contains(strtolower(URL::current()), 'log'))
-                    @include('components.breadcrumb-link', ['name' => 'Logs', 'link' => route('log.logs')])
+                @if (str_contains(strtolower(URL::current()), 'logs'))
+                    @include('components.breadcrumb-link', ['name' => 'Logs', 'link' => route('admin.logs')])
                 @endif
 
                 <!-- log détails -->
-                @if (str_contains(strtolower(URL::current()), 'log/details'))
+                @if (str_contains(strtolower(URL::current()), 'logs/details'))
                     @include('components.breadcrumb-link', ['name' => 'Détails', 'link' => '#'])
+                @endif
+
+                <!-- Adresse IP -->
+                @if (str_contains(strtolower(URL::current()), 'adresse_ip'))
+                    @include('components.breadcrumb-link', ['name' => 'Adresse IP', 'link' => route('admin.adresse_ip')])
+                @endif
+
+                <!-- Adresse IP Token -->
+                @if (str_contains(strtolower(URL::current()), 'adresse_ip_token'))
+                    @include('components.breadcrumb-link', ['name' => 'Adresse IP Token', 'link' => route('admin.adresse_ip_token')])
+                @endif
+
+                <!-- Utilisateurs -->
+                @if (str_contains(strtolower(URL::current()), 'users'))
+                    @include('components.breadcrumb-link', ['name' => 'Utilisateur', 'link' => route('admin.users')])
+                @endif
+
+                <!-- Outils -->
+                @if (str_contains(strtolower(URL::current()), 'tools'))
+                    @include('components.breadcrumb-link', ['name' => 'Outils', 'link' => route('admin.tools')])
                 @endif
             @else
                 <!-- Connexion -->
