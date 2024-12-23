@@ -27,7 +27,7 @@ class AdminController extends Controller
      */
     public function accueil()
     {
-        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
+        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
             LogController::addLog("Quelqu'un à essayer d'accéder à la page d'accueil de l'administrateur {accueil}", Auth::check() ? Auth::user()->id : null, 2);
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
         }
@@ -48,7 +48,7 @@ class AdminController extends Controller
      */
     public function adresseIp(Request $request)
     {
-        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
+        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
             LogController::addLog("Quelqu'un à essayer d'accéder à la page des adresse IP {adresseIp}", Auth::check() ? Auth::user()->id : null, 2);
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
         }
@@ -71,7 +71,7 @@ class AdminController extends Controller
      */
     public function adresseIpSave(Request $request)
     {
-        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
+        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
             LogController::addLog("Quelqu'un à essayer d'accéder à la page de sauvegarde des adresse IP {adresseIpSave}", Auth::check() ? Auth::user()->id : null, 2);
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
         }
@@ -122,7 +122,7 @@ class AdminController extends Controller
      */
     public function adresseIpToken(Request $request)
     {
-        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
+        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
             LogController::addLog("Quelqu'un à essayer d'accéder à la page des adresse IP Token {adresseIpToken}", Auth::check() ? Auth::user()->id : null, 2);
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
         }
@@ -148,7 +148,7 @@ class AdminController extends Controller
      */
     public function users(Request $request)
     {
-        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
+        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
             LogController::addLog("Quelqu'un à essayer d'accéder à la page des users {users}", Auth::check() ? Auth::user()->id : null, 2);
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
         }
@@ -174,7 +174,7 @@ class AdminController extends Controller
      */
     public function tools(Request $request)
     {
-        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
+        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
             LogController::addLog("Quelqu'un à essayer d'accéder à la page des tools {tools}", Auth::check() ? Auth::user()->id : null, 2);
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
         }
@@ -201,7 +201,7 @@ class AdminController extends Controller
      */
     public function showListeLogs(Request $request)
     {
-        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
+        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
             LogController::addLog("Quelqu'un à essayer d'accéder à la page des logs {showListeLogs}", Auth::check() ? Auth::user()->id : null, 2);
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
         }
@@ -223,7 +223,7 @@ class AdminController extends Controller
      */
     public function showDetailsLog($id)
     {
-        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL_2')) {
+        if (!Auth::check() || Auth::user()->email != env('ADMIN_EMAIL')) {
             LogController::addLog("Queslqu'un à essayer d'accéder à la page de détails du log n°$id {showDetailsLog}", Auth::check() ? Auth::user()->id : null, 2);
             return back()->with('error', 'Vous n\'avez pas les droits pour accéder à cette page, cette évènement a été signalé à l\'administrateur');
         }

@@ -64,11 +64,11 @@
                 @if (isset($users))
                     @foreach ($users as $user)
                         <tr class="tableRow smallText text-center">
-                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ strftime('%e/%m/%Y', strtotime($user->created_at)) }}</td>
-                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ $user->id }}</td>
-                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ $user->name }}</td>
-                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ $user->email }}</td>
-                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ strftime('%d %B %Y %T', strtotime($user->last_login_at)) }}</td>
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL')) fontColorError @endif">{{ strftime('%e/%m/%Y', strtotime($user->created_at)) }}</td>
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL')) fontColorError @endif">{{ $user->id }}</td>
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL')) fontColorError @endif">{{ $user->name }}</td>
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL')) fontColorError @endif">{{ $user->email }}</td>
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL')) fontColorError @endif">{{ strftime('%d %B %Y %T', strtotime($user->last_login_at)) }}</td>
                         </tr>
                     @endforeach
                 @endif

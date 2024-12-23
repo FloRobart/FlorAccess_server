@@ -65,7 +65,7 @@
                         <tr class="tableRow smallText text-center">
                             <td class="tableCell">{{ $tool->id }}</td>
                             @php $user = App\Models\User::where('id', $tool->user_id)->first(); @endphp
-                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ "$user->id - $user->name" }}</td>
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL')) fontColorError @endif">{{ "$user->id - $user->name" }}</td>
                             <td class="tableCell">{{ $tool->name }}</td>
                             <td class="tableCell">{{ $tool->link }}</td>
                         </tr>
