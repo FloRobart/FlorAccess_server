@@ -72,7 +72,7 @@
 
                             <!-- Utilisateur -->
                             @php $user = $users->where('id', $adresseIp->user_id)->first(); @endphp
-                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ "$user->id - $user->name" }}</td>
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL')) fontColorError @endif">{{ "$user->id - $user->name" }}</td>
 
                             <!-- Adresse IP -->
                             <td class="tableCell @if ($adresseIp->adresse_ip == request()->ip()) fontColorValid @endif">{{ $adresseIp->adresse_ip }}</td>

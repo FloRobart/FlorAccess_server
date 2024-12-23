@@ -72,14 +72,14 @@
                             <!-- Nom de l'utilisateur -->
                             @php $user = App\Models\User::where('id', $log->user_id)->first(); @endphp
                             @if ($user != null)
-                                <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ "$user->id - $user->name" }}</td>
+                                <td class="tableCell @if ($user->email == env('ADMIN_EMAIL')) fontColorError @endif">{{ "$user->id - $user->name" }}</td>
                             @else
                                 <td class="tableCell">Invité</td>
                             @endif
 
                             <!-- email de l'utilisateur -->
                             @if ($user != null)
-                                <td class="tableCell max-w-[200px] truncate @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ $user->email }}</td>
+                                <td class="tableCell max-w-[200px] truncate @if ($user->email == env('ADMIN_EMAIL')) fontColorError @endif">{{ $user->email }}</td>
                             @else
                                 <td class="tableCell">Invité</td>
                             @endif
