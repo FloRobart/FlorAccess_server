@@ -37,7 +37,7 @@
             <span class="normalText">Nombre de logs total : <span class="normalTextBleuLogo font-bold">{{ $nbLogs }}</span></span>
         </div>
         <div class="rowCenterContainer">
-            <span class="normalText">Nombre de logs par page : <span class="normalTextBleuLogo font-bold">{{ $logs->count() }}</span></span>
+            <span class="normalText">Nombre de logs par page : <span class="normalTextBleuLogo font-bold">{{ $perPage }}</span></span>
         </div>
     </div>
 
@@ -67,13 +67,22 @@
                     @foreach ($logs as $log)
                         <tr class="tableRow smallText text-center">
                             <!-- Id du log -->
-                            <td class="tableCell"><a href="{{ route('log.log.details', $log->id) }}" title="Accéder aux détails du log n°{{ $log->id }}" class="link">{{ $log->id }}</a></td>
+                            <td class="tableCell"><a href="{{ route('admin.log.details', $log->id) }}" title="Accéder aux détails du log n°{{ $log->id }}" class="link">{{ $log->id }}</a></td>
 
                             <!-- Nom de l'utilisateur -->
-                            <td class="tableCell">{{ $log->user_id != null ? App\Models\User::find($log->user_id)->name : 'Invité' }}</td>
+                            @php $user = App\Models\User::where('id', $log->user_id)->first(); @endphp
+                            @if ($user != null)
+                                <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ "$user->id - $user->name" }}</td>
+                            @else
+                                <td class="tableCell">Invité</td>
+                            @endif
 
                             <!-- email de l'utilisateur -->
-                            <td class="tableCell max-w-[200px] truncate">{{ $log->user_id != null ? App\Models\User::find($log->user_id)->email : 'Invité' }}</td>
+                            @if ($user != null)
+                                <td class="tableCell max-w-[200px] truncate @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ $user->email }}</td>
+                            @else
+                                <td class="tableCell">Invité</td>
+                            @endif
 
                             <!-- Page visitée -->
                             <td class="tableCell max-sm:hidden max-w-[150px] min-[800px]:max-w-[250px] lg:max-w-[400px] truncate"><a href="http://{{ $log->link_to }}" target="_blank" class="link">{{ $log->link_to }}</a></td>

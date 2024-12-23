@@ -36,7 +36,7 @@
             <span class="normalText">Nombre d'outils total : <span class="normalTextBleuLogo font-bold">{{ $nbTool }}</span></span>
         </div>
         <div class="rowCenterContainer">
-            <span class="normalText">Nombre d'outils par page : <span class="normalTextBleuLogo font-bold">{{ $tools->count() }}</span></span>
+            <span class="normalText">Nombre d'outils par page : <span class="normalTextBleuLogo font-bold">{{ $perPage }}</span></span>
         </div>
     </div>
 
@@ -52,7 +52,7 @@
                 <tr class="tableRow smallText text-center font-bold">
                     @php request()->get('order') == 'asc' ? $order = 'desc' : $order = 'asc'; @endphp
                     <th class="tableCell">ID</th>
-                    <th class="tableCell">User ID</th>
+                    <th class="tableCell">Utilisateur</th>
                     <th class="tableCell">Name</th>
                     <th class="tableCell">Link</th>
                 </tr>
@@ -64,7 +64,8 @@
                     @foreach ($tools as $tool)
                         <tr class="tableRow smallText text-center">
                             <td class="tableCell">{{ $tool->id }}</td>
-                            <td class="tableCell">{{ $tool->user_id }}</td>
+                            @php $user = App\Models\User::where('id', $tool->user_id)->first(); @endphp
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ "$user->id - $user->name" }}</td>
                             <td class="tableCell">{{ $tool->name }}</td>
                             <td class="tableCell">{{ $tool->link }}</td>
                         </tr>

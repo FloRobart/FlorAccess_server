@@ -36,7 +36,7 @@
             <span class="normalText">Nombre d'adresse IP total : <span class="normalTextBleuLogo font-bold">{{ $nbAdresseIp }}</span></span>
         </div>
         <div class="rowCenterContainer">
-            <span class="normalText">Nombre d'adresse IP par page : <span class="normalTextBleuLogo font-bold">{{ $adresseIps->count() }}</span></span>
+            <span class="normalText">Nombre d'adresse IP par page : <span class="normalTextBleuLogo font-bold">{{ $perPage }}</span></span>
         </div>
     </div>
 
@@ -53,7 +53,7 @@
                     @php request()->get('order') == 'asc' ? $order = 'desc' : $order = 'asc'; @endphp
                     <th class="tableCell">Date</th>
                     <th class="tableCell">ID</th>
-                    <th class="tableCell">user ID</th>
+                    <th class="tableCell">Utilisateur</th>
                     <th class="tableCell">Adresse IP</th>
                     <th class="tableCell">Authorisé</th>
                 </tr>
@@ -65,16 +65,17 @@
                     @foreach ($adresseIps as $adresseIp)
                         <tr class="tableRow smallText text-center">
                             <!-- Date de l'ajout de l'adresse IP -->
-                            <td class="tableCell">{{ strftime('%d %B %Y %T', strtotime($adresseIp->created_at)) }}</td>
+                            <td class="tableCell">{{ strftime('%e/%m/%Y', strtotime($adresseIp->created_at)) }}</td>
                             
                             <!-- ID de l'adresse IP -->
                             <td class="tableCell">{{ $adresseIp->id }}</td>
 
-                            <!-- ID de l'utilisateur -->
-                            <td class="tableCell">{{ $adresseIp->user_id }}</td>
+                            <!-- Utilisateur -->
+                            @php $user = $users->where('id', $adresseIp->user_id)->first(); @endphp
+                            <td class="tableCell @if ($user->email == env('ADMIN_EMAIL_2')) fontColorError @endif">{{ "$user->id - $user->name" }}</td>
 
                             <!-- Adresse IP -->
-                            <td class="tableCell">{{ $adresseIp->adresse_ip }}</td>
+                            <td class="tableCell @if ($adresseIp->adresse_ip == request()->ip()) fontColorValid @endif">{{ $adresseIp->adresse_ip }}</td>
 
                             <!-- Autorisation de l'adresse IP -->
                             <td class="tableCell rowCenterContainer @if ($adresseIp->est_bannie) fontColorValid @else fontColorError @endif">
@@ -93,8 +94,39 @@
                 @endif
             </tbody>
         </table>
-    </div>
 
-    {{ $adresseIps->links('pagination::tailwind') }}
+        <!-- Pagination -->
+        <div class="colCenterContainer mt-8">
+            {{ $adresseIps->links('pagination::tailwind') }}
+        </div>
+
+        <!-- Formulaire d'ajout d'une adresse IP -->
+        <div class="colCenterContainer mt-8">
+            <h2 class="w-full bigTextBleuLogo text-center mb-3">Ajouter une adresse IP</h2>
+            <form action="{{ route('admin.adresse_ipSave') }}" method="POST" class="smallColCenterContainer sm:w-[55%]">
+                @csrf
+                <div class="colCenterContainer">
+                    <!-- Adresse IP -->
+                    <input name="ip" type="text" minlength="7" maxlength="15" size="15" class="inputForm" required>
+
+                    <!-- Utilisateur -->
+                    <select name="user_id" class="inputForm mt-4">
+                        <option value="" selected disabled>Utilisateur</option>
+                        @foreach ($users as $user)
+                            <option value="{{ $user->id }}">{{ "$user->id - $user->name" }}</option>
+                        @endforeach
+                    </select>
+
+                    <!-- Bannir l'adresse IP -->
+                    <div class="rowCenterContainer mt-4 space-x-4">
+                        <label for="est_bannie" class="normalText ml-2 link cursor-pointer">Bannir l'adresse IP</label>
+                        <input id="est_bannie" name="est_bannie" type="checkbox" class="size-6 cursor-pointer">
+                    </div>
+
+                    <button type="submit" class="buttonForm font-bold mt-4">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </section>
 @endsection

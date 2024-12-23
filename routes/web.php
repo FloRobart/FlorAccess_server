@@ -9,7 +9,6 @@ use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\PrivateController;
 use App\Http\Controllers\ResetPasswordController;
-use App\Http\Controllers\LogController;
 use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\VerifIP;
@@ -91,27 +90,26 @@ Route::middleware(['auth', VerifIP::class])->group(function () {
 
 
 
-/*---------------------*/
-/* Route pour les logs */
-/*    LogController    */
-/*---------------------*/
-Route::middleware(['auth', VerifIP::class])->group(function () {
-    /* Affichage des logs, uniquement pour l'administrateur */
-    Route::get('/logs', [LogController::class, 'showListeLogs'])->name('log.logs');
-    Route::get('/log/details/{id}', [LogController::class, 'showDetailsLog'])->name('log.log.details');
-});
-
-
-
 /*--------------------------------*/
 /* Route pour les administrateurs */
 /*        AdminController         */
 /*--------------------------------*/
 Route::middleware(['auth', VerifIP::class])->group(function () {
-    /* Affichage des logs, uniquement pour l'administrateur */
+    /* Accueil */
+    Route::get('/admin/accueil', [AdminController::class, 'accueil'])->name('admin.accueil');
+
+    /* Logs */
+    Route::get('/admin/logs', [AdminController::class, 'showListeLogs'])->name('admin.logs');
+    Route::get('/admin/logs/details/{id}', [AdminController::class, 'showDetailsLog'])->name('admin.log.details');
+
+    /* Adresse IP */
     Route::get('/admin/adresse_ip', [AdminController::class, 'adresseIp'])->name('admin.adresse_ip');
     Route::post('/admin/adresse_ip', [AdminController::class, 'adresseIpSave'])->name('admin.adresse_ipSave');
     Route::get('/admin/adresse_ip_token', [AdminController::class, 'adresseIpToken'])->name('admin.adresse_ip_token');
+
+    /* Utilisateurs */
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
+
+    /* Outils */
     Route::get('/admin/tools', [AdminController::class, 'tools'])->name('admin.tools');
 });
