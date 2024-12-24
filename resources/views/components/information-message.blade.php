@@ -4,6 +4,16 @@
 --}}
 
 <div class="colCenterContainer">
+    @if ($errors->any())
+        <div class="rowCenterContainer">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li class="normalTextError text-center">{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @if (session()->has('error'))
         <div class="rowCenterContainer">
             <span class="normalTextError text-center">{{ session()->get('error') }}</span>
