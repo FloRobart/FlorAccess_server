@@ -15,15 +15,6 @@
 
 <!-- Messages d'erreur et de succès -->
 <div class="colCenterContainer mt-8 px-4">
-    @if ($errors->any())
-        <div class="rowCenterContainer">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li class="normalTextError text-center">{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
     @include('components.information-message')
 </div>
 
