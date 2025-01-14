@@ -18,20 +18,23 @@ class ContactEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $depuis;
-    public $sujet;
-    public $messages;
-    public $nom;
+    public $data;
 
     /**
      * Create a new messages instance.
+     * @param string $nom Nom de l'expéditeur
+     * @param string $mail Adresse mail de l'expéditeur
+     * @param string $sujet Sujet du messages
+     * @param string $message Contenu du message
      */
-    public function __construct(string $from, string $subject, string $message, ?string $name = 'Invité')
+    public function __construct(string $nom, string $mail, string $sujet, string $message)
     {
-        $this->depuis = $from;
-        $this->sujet = $subject;
-        $this->messages = $message;
-        $this->nom = $name;
+        $this->data = [
+            'name' => $nom,
+            'mail' => $mail,
+            'subject' => $sujet,
+            'message' => $message,
+        ];
     }
 
     /**
@@ -39,9 +42,9 @@ class ContactEmail extends Mailable
      */
     public function build()
     {
-        return $this->from($this->depuis, $this->nom) // L'expéditeur
-                    ->subject($this->sujet) // Le sujet
-                    ->view('mail.contactEmail', ['depuis' => $this->depuis, 'messages' => $this->messages]); // La vue
+        return $this->from($this->data['mail'], $this->data['name'])
+                    ->subject($this->data['subject'])
+                    ->view('mail.contactEmail', ['name' => $this->data['name'], 'mail' => $this->data['mail'], 'messages' => $this->data['message']]);
     }
 
     /**
@@ -50,8 +53,8 @@ class ContactEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address($this->depuis, $this->nom),
-            subject: env('APP_NAME_REAL') . ' - ' . $this->sujet,
+            from: new Address($this->data['mail'], $this->data['name']),
+            subject: env('APP_NAME_REAL') . ' - ' . $this->data['subject'],
         );
     }
 

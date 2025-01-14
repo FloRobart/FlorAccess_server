@@ -25,6 +25,7 @@ Route::get('/', [PublicController::class, 'accueil'])->name('login');
 
 /* Contact */
 Route::get('/contact', [PublicController::class, 'contact'])->name('contact');
+Route::get('/bug/report', [PublicController::class, 'bugReport'])->name('bug.report');
 Route::post('/contact', [PublicController::class, 'contactSave'])->name('contactSave');
 
 

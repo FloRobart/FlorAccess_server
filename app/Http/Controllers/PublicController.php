@@ -43,7 +43,17 @@ class PublicController extends Controller
      */
     public function contact()
     {
-        return view('public.contact');
+        return view('public.contact')->with('subject', 'Contact');
+    }
+
+    /**
+     * Affiche le formulaire de contact
+     * @return \Illuminate\View\View Vue du formulaire de contact
+     * @method GET
+     */
+    public function bugReport()
+    {
+        return view('public.contact')->with('subject', 'Rapport de bug');
     }
 
 
@@ -57,22 +67,25 @@ class PublicController extends Controller
     {
         /* Récupération des informations du formulaire */
         $request->validate([
+            'name' => 'required|max:980',
             'email' => 'required|email',
-            'subject' => 'required|max:980',
             'message' => 'required|min:10',
+            'subject' => 'required|max:50',
         ], [
+            'name.required' => 'Le sujet du mail est obligatoire',
+            'name.max' => 'Le sujet ne peux pas contenir plus de 980 caractères',
             'email.required' => 'L\'adresse mail est obligatoire',
             'email.email' => 'L\'adresse mail n\'est pas valide',
-            'subject.required' => 'Le sujet du mail est obligatoire',
-            'subject.max' => 'Le sujet ne peux pas contenir plus de 980 caractères',
             'message.required' => 'Le message est obligatoire',
             'message.min' => 'Le message doit contenir au moins 10 caractères',
+            'subject.required' => 'Vous ne devez pas modifier le sujet',
+            'subject.max' => 'Vous ne devez pas modifier le sujet',
         ]);
 
         /* Envoi du mail */
-        Mail::to(env('ADMIN_EMAIL'))->send(new ContactEmail($request->email, $request->subject, $request->message, Auth::check() ? Auth::user()->name : 'Invité'));
+        Mail::to(env('ADMIN_EMAIL'))->send(new ContactEmail($request->name, $request->email, $request->subject, $request->message));
 
         /* Redirection vers la page d'accueil */
-        return redirect()->route('contact')->with('success', 'Votre message à bien été envoyé à l\'administrateur');
+        return back()->with('success', 'Votre message à bien été envoyé à l\'administrateur');
     }
 }

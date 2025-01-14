@@ -6,12 +6,12 @@
 <!-- Page de contact -->
 @extends('layouts.page_template')
 @section('title')
-    Contact
+    {{ ucfirst($subject) }}
 @endsection
 
 @section('content')
 <!-- Titre de la page -->
-@include('components.page-title', ['title' => 'Contactez-nous'])
+@include('components.page-title', ['title' => ucfirst($subject) ])
 
 
 <!-- Messages d'erreur et de succès -->
@@ -24,16 +24,19 @@
 <section class="bgPage py-8 lg:py-16 px-4 mx-auto max-w-screen-md">
     <form action="{{ route('contactSave') }}" method="POST" class="space-y-8">
         @csrf
+        <!-- Subject -->
+        <input type="hidden" name="subject" value="{{ $subject }}">
+
+        <!-- Nom -->
+        <div>
+            <label for="name" class="normalText font-medium mb-2">Votre nom @include('components.asterisque')</label>
+            <input type="text" id="name" name="name" class="inputForm" placeholder="Donner un titre à votre mail" maxlength="980" required value="{{ auth()->check() ? auth()->user()->name : old('name') }}">
+        </div>
+
         <!-- Adresse email -->
         <div>
             <label for="email" class="normalText font-medium mb-2">Votre email @include('components.asterisque')</label>
             <input type="email" id="email" name="email" class="inputForm" autocomplete="email" placeholder="nom@mail.com" minlength="3" maxlength="320" value="{{ auth()->check() ? auth()->user()->email : old('email') }}" required>
-        </div>
-
-        <!-- Sujet -->
-        <div>
-            <label for="subject" class="normalText font-medium mb-2">Sujet du mail @include('components.asterisque')</label>
-            <input type="text" id="subject" name="subject" class="inputForm" placeholder="Donner un titre à votre mail" maxlength="980" required value="{{ old('subject') }}">
         </div>
 
         <!-- Message -->

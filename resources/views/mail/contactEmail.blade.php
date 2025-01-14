@@ -13,14 +13,15 @@
 
     <body>
         <div>
-            <h2>Message de {{ $depuis }}</h2>
-            <h3>Utilisateur : 
+            <h2>Message de <span style="color: #FF0000">{{ $name }}</span></h2>
+            <h3>Email : {{ $mail }}</h3>
+            <h2>Utilisateur id : 
                 @if (auth()->check())
-                    {{ auth()->user()->name }}
+                    {{ auth()->user()->id }}
                 @else
                     Non connecté
                 @endif
-            </h3>
+            </h2>
             <hr>
             <div>{{ $messages }}</div>
         </div>
