@@ -348,7 +348,6 @@ class ProfilController extends Controller
 
             /* Envoi du mail de vérification */
             $data = [
-                'subject' => 'Vérification de votre adresse IP - FlorAccess',
                 'token' => $token,
                 'ip' => $ip,
             ];

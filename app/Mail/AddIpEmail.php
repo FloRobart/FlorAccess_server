@@ -33,9 +33,9 @@ class AddIpEmail extends Mailable
      */
     public function build()
     {
-        return $this->from(env('MAIL_FROM_ADDRESS'), env('MAIL_NAME')) // L'expéditeur
-                    ->subject($this->data['subject']) // Le sujet
-                    ->view('mail.contactEmail', $this->data); // La vue
+        return $this->from(env('MAIL_FROM_ADDRESS'), env('MAIL_NAME'))
+                    ->subject(env('APP_NAME_REAL') . ' - Vérification de votre adresse IP')
+                    ->view('mail.addIpEmail', $this->data);
     }
 
     /**
@@ -45,7 +45,7 @@ class AddIpEmail extends Mailable
     {
         return new Envelope(
             from: new Address(env('MAIL_FROM_ADDRESS'), env('MAIL_NAME')),
-            subject: 'Verification de votre compte - ' . env('APP_NAME_REAL'),
+            subject: env('APP_NAME_REAL') . ' - Vérification de votre adresse IP',
         );
     }
 
@@ -55,8 +55,7 @@ class AddIpEmail extends Mailable
     public function content(): Content
     {
         return new Content(
-            //view: 'mail.addIpMail',
-            htmlString: "<h1><a href=". route('addIp', ['token' => $this->data['token'], 'ip' => $this->data['ip']]) . ">Cliquez pour validé qu'il s'agit bien de vous</a></h1>",
+            view: 'mail.addIpEmail',
         );
     }
 

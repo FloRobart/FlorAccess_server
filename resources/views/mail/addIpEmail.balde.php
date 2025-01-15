@@ -4,4 +4,4 @@
 --}}
 
 <h1>Validation de l'email</h1>
-<a href="{{ route('addIp', ['token' => $data['token'], 'ip' => $data['ip']]) }}">Cliquez ici</a>
+<a href="{{ route('addIp', ['token' => $data['token'], 'ip' => $data['ip']]) }}">Cliquez ici pour validé qu'il s'agit bien de vous</a>
