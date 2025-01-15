@@ -35,4 +35,26 @@ class Log extends Model
         'message',
         'status',
     ];
+
+    /**
+     * Permet de convertir le modèle en tableau
+     * @return array<string, string> Tableau contenant les attributs du modèle
+     */
+    public function toArray()
+    {
+        return [
+            'id' => $this->id,
+            'app' => $this->app,
+            'host' => $this->host,
+            'user_id' => $this->user_id,
+            'ip' => $this->ip,
+            'link_from' => $this->link_from,
+            'link_to' => $this->link_to,
+            'method_to' => $this->method_to,
+            'user_agent' => $this->user_agent,
+            'message' => $this->message,
+            'status' => $this->status,
+            'created_at' => date_format($this->created_at, 'd/m/Y H:i:s')
+        ];
+    }
 }

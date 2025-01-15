@@ -25,7 +25,7 @@ class LogError extends Mailable
      */
     public function __construct($data)
     {
-        $this->data = $data;
+        $this->data = $data->toArray();
     }
 
     /**
@@ -34,7 +34,7 @@ class LogError extends Mailable
     public function build()
     {
         return $this->from(env('ADMIN_EMAIL'), env('ADMIN_EMAIL'))
-                    ->subject(env('APP_NAME_REAL') . ' - ' . $this->data->message)
+                    ->subject(env('APP_NAME_REAL') . ' - ' . $this->data['message'])
                     ->view('mail.logEmail', $this->data);
     }
 
@@ -45,7 +45,7 @@ class LogError extends Mailable
     {
         return new Envelope(
             from: new Address(env('ADMIN_EMAIL'), env('MAIL_NAME')),
-            subject: env('APP_NAME_REAL') . ' - ' . $this->data->message,
+            subject: env('APP_NAME_REAL') . ' - ' . $this->data['message'],
         );
     }
 
