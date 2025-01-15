@@ -12,6 +12,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Address;
+use Illuminate\Support\Facades\Auth;
 
 
 class VerificationEmail extends Mailable
@@ -19,6 +20,7 @@ class VerificationEmail extends Mailable
     use Queueable, SerializesModels;
 
     public $code;
+    public $nom;
 
     /**
      * Crée une nouvelle instance de message.
@@ -26,6 +28,7 @@ class VerificationEmail extends Mailable
     public function __construct($code)
     {
         $this->code = $code;
+        $this->nom = Auth::check() ? Auth::user()->name : 'Monsieur';
     }
 
     /**
@@ -35,7 +38,7 @@ class VerificationEmail extends Mailable
     {
         return $this->from(env('MAIL_FROM_ADDRESS'), env('MAIL_NAME'))
                     ->subject(env('APP_NAME_REAL') . ' - Vérification de votre compte')
-                    ->view('mail.verificationEmail', $this->code);
+                    ->view('mail.verificationEmail', ['nom' => $this->nom, 'code' => $this->code]);
     }
 
     /**
