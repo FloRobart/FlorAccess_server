@@ -3,27 +3,55 @@
  * Copyright (C) 2024 Floris Robart <florobart.github@gmail.com>
 --}}
 
-<!-- Contenu du mail envoyé -->
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    </head>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $subject }}</title>
+</head>
 
-    <body>
-        <div>
-            <h2>Message de <span style="color: #FF0000">{{ $name }}</span></h2>
-            <h3>Email : {{ $mail }}</h3>
-            <h2>Utilisateur id : 
-                @if (auth()->check())
-                    {{ auth()->user()->id }}
-                @else
-                    Non connecté
-                @endif
-            </h2>
-            <hr>
-            <div>{{ $messages }}</div>
-        </div>
-    </body>
+<!-- Corps de l'email -->
+<body style="font-family: 'Poppins', Arial, sans-serif">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td align="center" style="padding: 20px;">
+                <table class="content" width="600" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 1px solid #721414;">
+                    <!-- Entête de l'email -->
+                    <tr>
+                        <td class="header" style="background-color: #721414; padding: 40px; text-align: center; color: white; font-size: 24px;">
+                            {{ $subject }}
+                        </td>
+                    </tr>
+
+                    <!-- Contenu de l'email -->
+                    <tr>
+                        <td class="body" style="padding: 40px; text-align: left; font-size: 16px; line-height: 1.6;">
+                            Message de : <b>{{ $name }} </b><br>
+                            Email : <b>{{ $email }} </b><br>
+                            Utilisateur id :
+                            <b>
+                            @if (auth()->check())
+                                {{ auth()->user()->id }}
+                            @else
+                                Non connecté
+                            @endif
+                            </b>
+                            <br><br><hr>
+                            <pre>{{ $messages }}</pre>
+                        <td>
+                    </tr>
+
+                    <!-- Footer de l'email -->
+                    <tr>
+                        <td class="footer" style="background-color: #333333; padding: 40px; text-align: center; color: white; font-size: 14px;">
+                            <span>Copyright © 2024 - <script>document.write(new Date().getFullYear())</script>
+                            <a href="https://florobart.github.io/" target="_blank"><b>Floris Robart</b></a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
 </html>

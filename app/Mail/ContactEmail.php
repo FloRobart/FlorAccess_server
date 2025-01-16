@@ -32,7 +32,7 @@ class ContactEmail extends Mailable
         $this->data = [
             'name' => $nom,
             'mail' => $mail,
-            'subject' => $sujet,
+            'subject' => env('APP_NAME_REAL') . ' - ' . $sujet,
             'message' => $message,
         ];
     }
@@ -44,7 +44,7 @@ class ContactEmail extends Mailable
     {
         return $this->from($this->data['mail'], $this->data['name'])
                     ->subject($this->data['subject'])
-                    ->view('mail.contactEmail', ['name' => $this->data['name'], 'mail' => $this->data['mail'], 'messages' => $this->data['message']]);
+                    ->view('mail.contactEmail', ['name' => $this->data['name'], 'email' => $this->data['mail'], 'subject' => $this->data['subject'],'messages' => $this->data['message']]);
     }
 
     /**
@@ -54,7 +54,7 @@ class ContactEmail extends Mailable
     {
         return new Envelope(
             from: new Address($this->data['mail'], $this->data['name']),
-            subject: env('APP_NAME_REAL') . ' - ' . $this->data['subject'],
+            subject: $this->data['subject'],
         );
     }
 
