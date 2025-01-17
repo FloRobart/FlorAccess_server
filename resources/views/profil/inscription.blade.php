@@ -62,6 +62,12 @@
                 </div>
             </div>
 
+            <!-- Acceptation des CGU -->
+            <div class="smallRowStartContainer">
+                <input type="checkbox" id="cgu" name="cgu" required class="w-5 h-5 cursor-pointer">
+                <label for="cgu" class="labelForm ml-4">J'accepte les <a href="{{ route('cgu') }}" class="normalTextBleuLogo link">CGU</a> @include('components.asterisque')</label>
+            </div>
+
             <!-- bouton d'inscription -->
             <div class="smallRowStartContainer">
                 <button type="submit" class="buttonForm">Inscription</button>
