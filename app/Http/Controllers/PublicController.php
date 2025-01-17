@@ -56,7 +56,6 @@ class PublicController extends Controller
         return view('public.contact')->with('subject', 'Rapport de bug');
     }
 
-
     /**
      * Envoie un mail à l'administrateur
      * @param \Illuminate\Http\Request $request Informations du formulaire
@@ -87,5 +86,15 @@ class PublicController extends Controller
 
         /* Redirection vers la page d'accueil */
         return back()->with('success', 'Votre message à bien été envoyé à l\'administrateur');
+    }
+
+    /**
+     * Affiche les conditions générales d'utilisation
+     * @return 
+     * @method GET
+     */
+    public function cgu()
+    {
+        return response()->file(storage_path(env('CGU_PATH')));
     }
 }

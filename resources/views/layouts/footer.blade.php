@@ -18,7 +18,8 @@
     <div class="rowCenterContainer space-x-2 mb-4">
         <span class="tinyTextReverse">Copyright © 2024 - <script>document.write(new Date().getFullYear())</script>
         <a href="https://florobart.github.io/" target="_blank"><b>Floris Robart</b></a> |
-        <a href="{{ Route('contact') }}">Me contacter</a> |
-        <a href="{{ Route('bug.report') }}">Signaler un bug</a></span>
+        <a class="link" href="{{ route('cgu') }}">Mentions légales et CGU</a> |
+        <a class="link" href="{{ route('contact') }}">Me contacter</a> |
+        <a class="link" href="{{ route('bug.report') }}">Signaler un bug</a></span>
     </div>
 </footer>

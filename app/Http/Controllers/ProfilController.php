@@ -50,6 +50,7 @@ class ProfilController extends Controller
             'password' => 'required|min:12|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).*$/',
             'password_confirmation' => 'required|same:password',
             'profil_image' => 'required|image|mimes:jpeg,png,jpg,webp',
+            'cgu' => 'accepted',
         ], [
             'name.required' => 'Le nom est obligatoire',
             'name.min' => 'Le nom doit contenir au moins 3 caractères',
@@ -65,6 +66,7 @@ class ProfilController extends Controller
             'profil_image.required' => 'L\'image de profil est obligatoire',
             'profil_image.image' => 'Votre image de profil doit être une image',
             'profil_image.mimes' => 'Votre image de profil doit être au format jpeg, jpg, png ou webp',
+            'cgu.accepted' => 'Vous devez accepter les conditions générales d\'utilisation',
         ]);
 
         /* Récupération des informations du formulaire */

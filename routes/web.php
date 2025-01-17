@@ -28,6 +28,9 @@ Route::get('/contact', [PublicController::class, 'contact'])->name('contact');
 Route::get('/bug/report', [PublicController::class, 'bugReport'])->name('bug.report');
 Route::post('/contact', [PublicController::class, 'contactSave'])->name('contactSave');
 
+/* CGU et Mentions légales */
+Route::get('/cgu', [PublicController::class, 'cgu'])->name('cgu');
+
 
 
 /*---------------------------------*/
