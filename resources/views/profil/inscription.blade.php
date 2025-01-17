@@ -63,9 +63,20 @@
             </div>
 
             <!-- Acceptation des CGU -->
-            <div class="smallRowStartContainer">
-                <input type="checkbox" id="cgu" name="cgu" required class="w-5 h-5 cursor-pointer">
-                <label for="cgu" class="labelForm ml-4">J'accepte les <a href="{{ route('cgu') }}" class="normalTextBleuLogo link">CGU</a> @include('components.asterisque')</label>
+            <div class="smallColStartContainer">
+                <div class="rowStartContainer">
+                    <input type="checkbox" id="cgu" name="cgu" required class="w-5 h-5 cursor-pointer">
+                    <label for="cgu" class="labelForm ml-4">J'accepte les <a href="{{ route('cgu') }}" class="normalTextBleuLogo link">CGU</a> @include('components.asterisque')</label>
+                </div>
+
+                <div class="rowStartContainer ml-10">
+                    <ul class="list-disc ml-8">
+                        <li class="tinyText">Données sensible sécurisé</li>
+                        <li class="tinyText">Aucune collecte, utilisation ou revente de données personnel</li>
+                        <li class="tinyText">Pas de publicité</li>
+                        <li class="tinyText">Aucun cookie</li>
+                    </ul>
+                </div>
             </div>
 
             <!-- bouton d'inscription -->
