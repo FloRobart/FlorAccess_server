@@ -31,6 +31,8 @@ Route::post('/contact', [PublicController::class, 'contactSave'])->name('contact
 /* CGU et Mentions légales */
 Route::get('/cgu', [PublicController::class, 'cgu'])->name('cgu');
 
+Route::get('/information', [PublicController::class, 'toolsInformation'])->name('tools.information');
+
 
 
 /*---------------------------------*/

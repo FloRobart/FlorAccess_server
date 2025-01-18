@@ -97,4 +97,14 @@ class PublicController extends Controller
     {
         return response()->file(storage_path(env('CGU_PATH')));
     }
+
+    /**
+     * Affiche les informations sur les outils utilisés
+     * @return \Illuminate\View\View Vue des informations sur les outils utilisés
+     * @method GET
+     */
+    public function toolsInformation()
+    {
+        return view('public.toolsInformation');
+    }
 }

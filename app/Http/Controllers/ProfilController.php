@@ -137,6 +137,11 @@ class ProfilController extends Controller
      */
     public function showVerificationEmail()
     {
+        /* Vérification que l'adresse e-mail est déjà vérifiée */
+        if (Auth::user()->email_verified_at != null) {
+            return redirect()->route('private.accueil');
+        }
+
         /* Vérification de la présence du code de vérification dans la session pour éviter de renvoyer un mail à chaque rafraichissement de la page */
         if (session('code') == null)
         {
@@ -157,7 +162,7 @@ class ProfilController extends Controller
      * Vérifie le code de vérification
      * Enregistre la date de vérification de l'adresse e-mail
      * @param Request $request
-     * @return Route private.accueil | avec un message de succès ou d'erreur
+     * @return Route tools.information | avec un message de succès ou d'erreur
      * @method POST
      */
     public function verificationEmailSave(Request $request)
@@ -187,8 +192,8 @@ class ProfilController extends Controller
         $user->email_verified_at = now();
         $user->save();
 
-        /* Redirection vers la page d'accueil */
-        return redirect()->route('private.accueil')->with('success', 'Votre adresse e-mail a bien été vérifiée 👍');
+        /* Redirection vers la page d'information des outils */
+        return redirect()->route('tools.information')->with('success', 'Votre adresse e-mail a bien été vérifiée 👍');
     }
 
     /**
@@ -562,7 +567,10 @@ class ProfilController extends Controller
             $user = User::find(Auth::user()->id);
 
             if ($user->name != $name) { $user->name = $name; }
-            if ($user->email != $email) { $user->email = $email; }
+            if ($user->email != $email) {
+                $user->email = $email;
+                $user->email_verified_at = null;
+            }
             if ($request->password != null) { $user->password = Hash::make($request->password); }
             if ($user->save()) {
                 $modif = true;
