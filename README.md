@@ -127,6 +127,12 @@ Pour installer **FlorAccess** sur votre serveur, vous devez avoir les prérequis
   npm install
   ```
 
+- Initialiser le framework Laravel
+
+  ```bash
+  php init_framework.php
+  ```
+
 - Créer les base de données
 
   ```bash
