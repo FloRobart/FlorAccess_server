@@ -15,7 +15,7 @@
     </div>
 
     <!-- Copyright -->
-    <div class="rowCenterContainer space-x-2 mb-4">
+    <div class="rowCenterContainer space-x-2 mb-4 mt-8">
         <span class="tinyTextReverse">Copyright © 2024 - <script>document.write(new Date().getFullYear())</script>
             <a href="https://florobart.github.io/" target="_blank"><b>Floris Robart</b></a> |
             <a class="link" href="{{ route('cgu') }}">Mentions légales et CGU</a> |

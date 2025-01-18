@@ -1,9 +1,9 @@
 :root {
     /* Couleur */
-    --bleuLogo        : #3232FF;
-    --bleuFonce       : #0000CC;
-    --bleuFonce2      : #111165;
-    --bleuSombre      : #0A0A2A;
+    --bleuLogo        : #721414;
+    --bleuFonce       : #147272;
+    --bleuFonce2      : #0a2a2a;
+    --bleuSombre      : #0c4747;
     --textColor       : var(--bleuSombre);
     --textColorReverse: #FFFFFF;
     --colorPage       : #F0F0F0;
