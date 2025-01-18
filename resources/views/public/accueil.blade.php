@@ -45,7 +45,7 @@
 
             <!-- Ajout d'un profil -->
             <div class="smallColCenterContainer">
-                <a href="{{ route('inscription') }}" class="smallColCenterContainer group gap-y-2">
+                <a href="{{ route('inscription') }}" class="smallColCenterContainer group gap-y-2" title="Inscription">
                     <div class="smallColCenterContainer bg-white rounded-xl shadow-lg w-36 h-36 min-[400px]:w-44 min-[400px]:h-44 lg:w-52 lg:h-52 xl:w-72 xl:h-72">
                         <div class="flex justify-center items-center group-hover:bigScale">
                             <svg class="w-full colorFontBleuFonce" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -53,7 +53,7 @@
                             </svg>
                         </div>
                     </div>
-                    <span class="w-full smallText text-center group-hover:text-[#5B1010] font-bold">Ajouter un profil</span>
+                    <span class="w-full smallText text-center group-hover:text-[#5B1010] font-bold">Inscription</span>
                 </a>
             </div>
         </div>

@@ -36,10 +36,10 @@
                         {{ auth()->user()->name }}
                     </span>
                 @else
-                    <!-- Connexion -->
+                    <!-- Inscription -->
                     <div class="smallRowCenterContainer">
-                        <a href="{{ route('public.accueil') }}" class="hover:underline colorFontReverse" title="Connexion">
-                            <span class="smallTextReverse ml-2 flex">Connexion</span>
+                        <a href="{{ route('inscription') }}" class="hover:underline colorFontReverse" title="Inscription">
+                            <span class="smallTextReverse ml-2 flex">Inscription</span>
                         </a>
                     </div>
                 @endif

@@ -26,7 +26,7 @@
             <!-- Nom -->
             <div>
                 <label for="name" class="labelForm">Prénom @include('components.asterisque')</label>
-                <input name="name" type="text" id="name" minlength="3" maxlength="18" autofocus autocomplete="off" class="inputForm" placeholder="Nom" required value="{{ old('name') }}">
+                <input name="name" type="text" id="name" minlength="3" maxlength="18" autofocus autocomplete="off" class="inputForm" placeholder="Prénom" required value="{{ old('name') }}">
             </div>
 
             <!-- Adresse email -->
