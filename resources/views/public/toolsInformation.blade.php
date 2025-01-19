@@ -54,6 +54,7 @@
             <p class="normalText text-center">Le contrecoup de cette sécurité maximale, c'est que si vous perdez le mot de passe (appeler clé d'accès) pour accéder à vos comptes enregistrés sur Lys Secure, il sera impossible récupérer vos mots de passe.</p>
             <p class="normalText text-center">Il est donc très important de bien garder votre clé d'accès en sécurité et de ne jamais la perdre. Si vous la perdez, vous devrez recréer un compte et réenregistrer tous vos mots de passe.</p>
             <p class="normalText text-center">L'autre petit inconvénient lié à la sécurité, c'est qu'il n'est pas possible de saisir automatiquement vos mots de passe sur les sites web. Il faudra donc les copier coller manuellement, mais rassurer vous ça se fait en trois cliques.</p>
+            <p class="normalText text-center"><b>Petite astuce :</b> lors de la modification d'un compte, si vous ne voulez pas changer le mot de passe, il suffit de laisser le champs de mot de passe vide et il ne sera pas modifié.</p>
             <p class="normalText text-center"><b>Petite astuce :</b> vous pouvez créer un compte, puis l'exporter pour avoir le modèle de fichier à remplir pour ajouter vos mots de passe en important un fichier texte.</p>
         </div>
     </div>

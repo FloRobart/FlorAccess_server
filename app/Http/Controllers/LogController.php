@@ -23,7 +23,7 @@ class LogController extends Controller
      */
     public static function addLog(string $message, ?string $user_id = null, ?int $error = 0): void
     {
-        $user_id = $user_id ?? (Auth::check() ? Auth::user()->id : null);
+        $user_id = $user_id == null ? (Auth::check() ? Auth::user()->id : null) : null;
 
         $log = new Log();
         $log->app = env('APP_NAME_REAL');
@@ -38,7 +38,7 @@ class LogController extends Controller
         $log->status = $error;
 
         /* Vérification que le log est différent du dernier log */
-        $lastLog = Log::all()->sortByDesc('created_at')->first();
+        $lastLog = Log::all()->sortByDesc('id')->first();
         if ($lastLog != null && $lastLog->status == $log->status && $lastLog->user_id == $log->user_id && $lastLog->ip == $log->ip && $lastLog->link_to == $log->link_to && $lastLog->method_to == $log->method_to) {
             return;
         }
