@@ -49,7 +49,7 @@
             <h1 class="titleTextBleuLogo ml-4">{{ env('NAME_TOOLS_2') }}</h1>
         </div>
         <div class="smallColStartContainer space-y-6">
-            <p class="normalText text-center">{{ env('NAME_TOOLS_2') }} est un gestionnaire de mot passe entièrement sécurisé. Il respecte de standard de sécurité de haut niveau, habituellement utilisé dans des applications sensibles telles que des logiciels militaires.</p>
+            <p class="normalText text-center">{{ env('NAME_TOOLS_2') }} est un gestionnaire de mot passe entièrement sécurisé. Il respecte de standard de sécurité de haut niveau, habituellement utilisé dans des applications sensibles telles que des logiciels bancaires.</p>
             <p class="normalText text-center">Vos mots de passe sont protégés contre le vol de données, c'est-à-dire que même en cas de piratage du serveur, personne ne pourras récupérer vos mots de passe grâce à un système de sécurité très particulier qui utilise plusieurs sources de données dont certaines ne sont jamais enregistrées.</p>
             <p class="normalText text-center">Le contrecoup de cette sécurité maximale, c'est que si vous perdez le mot de passe (appeler clé d'accès) pour accéder à vos comptes enregistrés sur Lys Secure, il sera impossible récupérer vos mots de passe.</p>
             <p class="normalText text-center">Il est donc très important de bien garder votre clé d'accès en sécurité et de ne jamais la perdre. Si vous la perdez, vous devrez recréer un compte et réenregistrer tous vos mots de passe.</p>
