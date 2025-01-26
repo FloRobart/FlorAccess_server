@@ -57,7 +57,7 @@
         <div id="breadcrumb" class="rowStartContainer ml-20">
             @if (auth()->check())
                 <!-- Accueil -->
-                <a href="{{ route('private.accueil') }}" class="smallTextReverse">Accueil</a>
+                <a href="{{ route('private.accueil') }}" class="smallTextReverse">FlorAccess</a>
 
                 <!-- Profil -->
                 @if (str_contains(strtolower(URL::current()), 'profil'))
@@ -115,6 +115,31 @@
                 <!-- Nouveau mot de passe -->
                 @if (str_contains(strtolower(URL::current()), 'resetPasswordSave'))
                     @include('components.breadcrumb-link', ['name' => 'Nouveau mot de passe', 'link' => route('password.reset')])
+                @endif
+
+                <!-- Nouveau mot de passe -->
+                @if (str_contains(strtolower(URL::current()), 'resetPasswordSave'))
+                    @include('components.breadcrumb-link', ['name' => 'Nouveau mot de passe', 'link' => route('password.reset')])
+                @endif
+
+                <!-- Contact -->
+                @if (str_contains(strtolower(URL::current()), 'contact'))
+                    @include('components.breadcrumb-link', ['name' => 'Contact', 'link' => route('contact')])
+                @endif
+
+                <!-- Bug report -->
+                @if (str_contains(strtolower(URL::current()), 'bug'))
+                    @include('components.breadcrumb-link', ['name' => 'Rapport de bug', 'link' => route('bug.report')])
+                @endif
+
+                <!-- CGU -->
+                @if (str_contains(strtolower(URL::current()), 'cgu'))
+                    @include('components.breadcrumb-link', ['name' => 'Condition générale d\'utilisation', 'link' => route('cgu')])
+                @endif
+
+                <!-- Bug report -->
+                @if (str_contains(strtolower(URL::current()), 'information'))
+                    @include('components.breadcrumb-link', ['name' => 'Information sur les outils', 'link' => route('tools.information')])
                 @endif
             @endif
         </div>
