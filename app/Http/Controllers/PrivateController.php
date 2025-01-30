@@ -175,7 +175,7 @@ class PrivateController extends Controller
         $tools = Tools::where('user_id', Auth::id())->where('position', '>', $tool->position)->get();
         foreach ($tools as $t) {
             $t->position = $t->position - 1;
-            if ($t->save()) { return back()->with('error', 'Une erreur est survenue lors du décalage des positions des outils'); }
+            if (!$t->save()) { return back()->with('error', 'Une erreur est survenue lors du décalage de la positions des outils'); }
         }
 
         /* Suppression de l'outil */
