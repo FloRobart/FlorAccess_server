@@ -11,6 +11,9 @@
             <a href="{{ route('private.accueil') }}" class="logo">
                 <img class="w-20 sm:w-28" src="{{ asset('favicon.ico') }}" alt="Logo">
             </a>
+            <a href="{{ route('private.accueil') }}" class="logo">
+                <span class="normalTextReverse ml-4 font-bold">{{ env('APP_NAME_REAL') }}</span>
+            </a>
         </div>
 
         <!-- Profil -->
