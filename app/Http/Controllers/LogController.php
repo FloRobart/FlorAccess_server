@@ -23,12 +23,16 @@ class LogController extends Controller
      */
     public static function addLog(string $message, ?string $user_id = null, ?int $error = 0): void
     {
-        $user_id = $user_id == null ? (Auth::check() ? Auth::user()->id : null) : null;
+        if ($user_id == null) {
+            $user_id_final = Auth::check() ? Auth::id() : null;
+        } else {
+            $user_id_final = $user_id;
+        }
 
         $log = new Log();
         $log->app = env('APP_NAME_REAL');
         $log->host = $_SERVER['HTTP_HOST'];
-        $log->user_id = $user_id;
+        $log->user_id = $user_id_final;
         $log->ip = request()->ip();
         $log->link_from = $_SERVER['HTTP_REFERER'] ?? null;
         $log->link_to = $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
