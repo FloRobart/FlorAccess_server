@@ -1,16 +1,41 @@
 {
-    "private": true,
-    "type": "module",
-    "scripts": {
-        "dev": "vite",
-        "build": "vite build"
-    },
-    "devDependencies": {
-        "autoprefixer": "^10.4.19",
-        "axios": "^1.7.4",
-        "laravel-vite-plugin": "^1.0",
-        "postcss": "^8.4.38",
-        "tailwindcss": "^3.4.4",
-        "vite": "^5.4"
-    }
+  "name": "floraccess",
+  "version": "2.0.0",
+  "description": "Authentification API",
+  "main": "server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts",
+    "lint": "eslint 'src/**/*.ts'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FloRobart/Home_server_maison.git"
+  },
+  "author": "Floris Robart",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/FloRobart/Home_server_maison/issues"
+  },
+  "homepage": "https://github.com/FloRobart/Home_server_maison#readme",
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.23",
+    "@types/pg": "^8.15.2",
+    "eslint": "^9.27.0",
+    "install": "^0.13.0",
+    "nodemon": "^3.1.10",
+    "npm": "^11.4.1",
+    "prettier": "^3.5.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "pg": "^8.16.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  }
 }
