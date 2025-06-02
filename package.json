@@ -7,7 +7,12 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts",
-    "lint": "eslint 'src/**/*.ts'"
+    "lint": "eslint 'src/**/*.ts'",
+
+    "db-start": "docker build -t floraccess-db-image ./Database --build-arg postgres && docker run --name floraccess-db-container -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d floraccess-db-image",
+    "db-stop": "docker container stop floraccess-db-container && docker container rm floraccess-db-container && docker image rm floraccess-db-image",
+    "db-logs": "docker logs floraccess-db-container",
+    "db-connect": "psql -U postgres -h localhost floraccess"
   },
   "repository": {
     "type": "git",
@@ -23,6 +28,7 @@
     "@types/express": "^5.0.2",
     "@types/node": "^22.15.23",
     "@types/pg": "^8.15.2",
+    "@types/nodemailer": "^6.4.17",
     "eslint": "^9.27.0",
     "install": "^0.13.0",
     "nodemon": "^3.1.10",
@@ -34,6 +40,7 @@
   "dependencies": {
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "nodemailer": "^7.0.3",
     "pg": "^8.16.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"

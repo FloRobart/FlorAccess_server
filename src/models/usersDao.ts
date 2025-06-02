@@ -1,0 +1,183 @@
+import { executeQuery } from '../database/database';
+import * as logger from '../utils/logger';
+
+
+
+/**
+ * Creates a new user in the database.
+ * @param email The email address of the user to create.
+ * @param token The authentication token for the user.
+ * @param name Optional name of the user.
+ * @returns A promise that resolves to the created user object.
+ */
+export async function createUser(email: string, token: string, name: string|undefined): Promise<User> {
+    if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
+    if (!token || typeof token !== 'string') { throw new Error('Invalid token.'); }
+
+    let query = "INSERT INTO users (users_email, users_token, users_name) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *";
+    let values = [email, token, name||null];
+
+    return executeQuery({text: query, values: values}).then((rows) => {
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('Failed to create user.'); }
+
+        return rows[0] as User;
+    }).catch((err) => {
+        throw new Error(`Database error: ${err.message}`);
+    });
+}
+
+
+/**
+ * Retrieves a user from the database by email and token.
+ * @param email The email address of the user to retrieve.
+ * @param token The authentication token of the user to retrieve.
+ * @returns A promise that resolves to the user object if found, otherwise throws an error.
+ */
+export async function getUserByEmailToken(email: string, token: string): Promise<User> {
+    if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
+    if (!token || typeof token !== 'string') { throw new Error('Invalid token.'); }
+
+    let query = "SELECT * FROM users WHERE users_email = $1 AND users_token = $2";
+    let values = [email, token];
+
+    return executeQuery({text: query, values: values}).then((rows) => {
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('No user with this email and this token.'); }
+
+        return rows[0] as User;
+    }).catch((err) => {
+        throw new Error(`Database error: ${err.message}`);
+    });
+}
+
+/**
+ * Retrieves a user from the database by email.
+ * @param email The email address of the user to retrieve.
+ * @returns A promise that resolves to the user object if found, otherwise throws an error.
+ */
+export async function getUserByEmail(email: string): Promise<User> {
+    if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
+
+    const query = "SELECT * FROM users WHERE users_email = $1";
+    const values = [email]
+
+    logger.debug("getUserByEmail query :", query);
+    logger.debug("getUserByEmail values :", values);
+
+    return executeQuery({text: query, values: values}).then((rows) => {
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('No user with this email.'); }
+
+        return rows[0] as User;
+    }).catch((err) => {
+        throw new Error(`Database error: ${err.message}`);
+    });
+}
+
+/**
+ * Retrieves a user's token from the database by email.
+ * @param email The email address of the user whose token is to be retrieved.
+ * @returns A promise that resolves to the user's token if found, otherwise throws an error.
+ */
+export async function getUserTokenByEmail(email: string): Promise<string> {
+    if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
+
+    let query = "SELECT users_token FROM users WHERE users_email = $1";
+    let values = [email]
+
+    return executeQuery({text: query, values: values}).then((rows) => {
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('No user with this email.'); }
+
+        return rows[0].users_token;
+    }).catch((err) => {
+        throw new Error(`Database error: ${err.message}`);
+    });
+}
+
+/**
+ * Updates a user in the database by ID.
+ * @param id The ID of the user to update.
+ * @param updatedValues An object containing the values to update in the user record.
+ * @returns A promise that resolves to the updated user object.
+ */
+export async function updateUserById(id: number, updatedValues: UpdatedValues): Promise<User> {
+    if (!id || typeof id !== 'number') { throw new Error('Invalid id.'); }
+
+    let query = "UPDATE users SET ";
+    let setClauses: string[] = [];
+    let values: (string | number | null)[] = [];
+    values.push(id);
+
+    let index = 2;
+    for (const key in updatedValues) {
+        if (updatedValues.hasOwnProperty(key)) {
+            setClauses.push(`${key} = $${index}`);
+            values.push(updatedValues[key as keyof UpdatedValues] || null);
+            index++;
+        }
+    }
+    if (setClauses.length === 0) { throw new Error('No values to update.'); }
+    query += setClauses.join(', ') + " WHERE users_id = $1 RETURNING *";
+
+    logger.debug("updateUserById query :", query);
+    logger.debug("updateUserById values :", values);
+
+    return executeQuery({text: query, values: values}).then((rows) => {
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('No user with this id.'); }
+
+        return rows[0] as User;
+    }).catch((err) => {
+        throw new Error(`Database error: ${err.message}`);
+    });
+}
+
+/**
+ * Deletes a user from the database by email and token.
+ * @param email The email address of the user to delete.
+ * @param token The authentication token of the user to delete.
+ * @returns A promise that resolves to the deleted user object.
+ */
+export async function deleteUser(email: string, token: string): Promise<User> {
+    if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
+    if (!token || typeof token !== 'string') { throw new Error('Invalid token.'); }
+
+    let query = "DELETE FROM users WHERE users_email = $1 AND users_token = $2 RETURNING *";
+    let values = [email, token];
+
+    return executeQuery({text: query, values: values}).then((rows) => {
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('No user with this email.'); }
+
+        return rows[0] as User;
+    }).catch((err) => {
+        throw new Error(`Database error: ${err.message}`);
+    });
+}
+
+
+
+/**
+ * User interface representing the structure of a user in the database.
+ */
+export interface User {
+    users_id: number;
+    users_email: string;
+    users_name?: string;
+    users_password?: string;
+    users_token?: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+/**
+ * Interface representing the values that can be updated in a user record.
+ */
+interface UpdatedValues {
+    users_email?: string,
+    users_name?: string,
+    users_password?: string,
+    users_token?: string
+}
