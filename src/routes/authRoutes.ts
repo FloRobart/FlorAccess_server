@@ -28,6 +28,9 @@ const router = Router();
  *               type: string
  *               format: email
  *               description: The email address to which the authentication token will be sent
+ *             app_name:
+ *               type: string
+ *               description: The name of the application to be used in the email subject
  *     responses:
  *       200:
  *         description: Token sent successfully
@@ -144,7 +147,7 @@ router.post('/register', registerUser);
  *             schema:
  *               $ref: '#components/schemas/error500'
  */
-router.post('/jwt', getJwt);
+router.get('/jwt', getJwt);
 
 
 export default router;

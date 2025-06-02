@@ -5,7 +5,7 @@ CREATE TABLE users (
     users_name VARCHAR(255) NOT NULL,
     users_password VARCHAR(255),
     users_token VARCHAR(510),
+    users_ip VARCHAR(45),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE (users_email, users_token)
 );

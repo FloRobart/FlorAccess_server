@@ -4,6 +4,7 @@ import { errorHandler } from './middlewares/errorHandler';
 import * as logger from './utils/logger';
 import fs from 'node:fs';
 import config from './config/config';
+import { connectToDatabase } from './database/database';
 
 
 
@@ -44,7 +45,17 @@ app.get('/api-docs.json', (req, res) => {
 
 
 /* Database */
-// TODO : Implement database connection
+connectToDatabase(config.db_uri).then((connected) => {
+    if (connected) {
+        logger.success("Connected to database successfully");
+    } else {
+        logger.error("Failed to connect to database");
+        process.exit(1); // Exit the application if database connection fails
+    }
+}).catch((err) => {
+    logger.error("Error connecting to database:", err);
+    process.exit(1); // Exit the application if an error occurs
+});
 
 
 /* Routes */
