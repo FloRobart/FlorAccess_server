@@ -5,7 +5,7 @@ import config from '../config/config';
 
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    service: config.mail_service,
     auth: {
         user: config.mail_username,
         pass: config.mail_password
@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const mailOptions = {
-  from: config.mail_username,
+  from: config.app_name + " <" + config.mail_username + ">",
   to: "",
   subject: "",
   html: ""
