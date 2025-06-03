@@ -9,6 +9,7 @@ import { sendEmailConnexion } from '../mail/connexionMail';
 
 /**
  * Sends a token to the email address provided in the request body.
+ * @POST /send/token
  * @param req Request
  * @param req.body.email Email address to send the token to
  * @param req.body.app_name Optional application name for the email subject
@@ -29,8 +30,7 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
         try {
             Users.getUserByEmail(email).then((user) => {
                 /* Generate token */
-                const token = generateToken(128) + "." + (Date.now() + 3600000) + "." + user.users_id; // Token valid for 1 hour
-                logger.debug("token :", token)
+                const token = generateToken(config.token_length) + "." + (Date.now() + (config.token_expiration * 1000)) + "." + user.users_id; // Token valid for 1 hour
 
                 /* Save token */
                 try {
@@ -49,8 +49,6 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
 
                 /* Send token by email */
                 sendEmailConnexion(email, appName, token).then(() => {
-                    logger.debug("Email sent successfully to :", email);
-                    /* Return success message */
                     res.status(200).json({ message: 'Token sent successfully' });
                 }).catch((err) => {
                     logger.error("Failed to send email :", err);
@@ -74,6 +72,7 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
 
 /**
  * Registers a new user with the provided information.
+ * @POST /register
  * @param req Request
  * @param req.body.email Email address of the user
  * @param req.body.name Optional name of the user
@@ -96,6 +95,7 @@ export const registerUser = (req: Request, res: Response, next: NextFunction) =>
 
 /**
  * Generates a JWT for the user based on the provided information.
+ * @POST /jwt
  * @param req Request
  * @param req.query.email Email address of the user
  * @param req.query.token Token for verification
@@ -122,6 +122,7 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
 
 /**
  * Verifies the user's email and generates a JWT.
+ * @POST /verified-email
  * @param req Request
  * @param req.body.email Email address of the user
  * @param req.body.token Token for verification
@@ -130,7 +131,7 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
  */
 export const verifiedEmail = (req: Request, res: Response, next: NextFunction) => {
     try {
-        /* Get user email */
+        /* Get count user email */
     } catch (error) {
         next(error);
     }
