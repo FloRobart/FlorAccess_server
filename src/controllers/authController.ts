@@ -29,7 +29,7 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
         try {
             Users.getUserByEmail(email).then((user) => {
                 /* Generate token */
-                const token = generateToken(128);
+                const token = generateToken(128) + "." + (Date.now() + 3600000) + "." + user.users_id; // Token valid for 1 hour
                 logger.debug("token :", token)
 
                 /* Save token */
