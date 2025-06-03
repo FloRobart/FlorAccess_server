@@ -34,7 +34,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
         if (error) {
             logger.error(error);
         } else {
-            logger.debug("Email sent :", info.response);
+            logger.success("Email sent successfully");
         }
     });
 }

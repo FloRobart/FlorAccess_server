@@ -39,7 +39,7 @@ const ENABLE_ENV: Record<string, number> = {
  */
 export function error(...args: any[]) {
     if (ENABLE_ENV[config.app_env] >= 1) {
-        console.log(` [❌] ${config.app_name} - ERROR |`, ...args);
+        console.error(` [❌] ${config.app_name} - ERROR |`, ...args);
     }
 }
 
@@ -71,7 +71,7 @@ export function success(...args: any[]) {
  */
 export function info(...args: any[]) {
     if (ENABLE_ENV[config.app_env] >= 3) {
-        console.log(` [❕] ${config.app_name} - INFO |`, ...args);
+        console.info(` [❕] ${config.app_name} - INFO |`, ...args);
     }
 }
 
@@ -87,6 +87,6 @@ export function info(...args: any[]) {
  */
 export function debug(...args: any[]) {
     if (ENABLE_ENV[config.app_env] >= 4) {
-        console.log(` [🐛] ${config.app_name} - DEBUG |`, ...args);
+        console.debug(` [🐛] ${config.app_name} - DEBUG |`, ...args);
     }
 }
