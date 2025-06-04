@@ -5,6 +5,7 @@ import * as logger from './utils/logger';
 import fs from 'node:fs';
 import config from './config/config';
 import { connectToDatabase } from './database/database';
+import { limiter } from './middlewares/rateLimiter';
 
 
 
@@ -48,9 +49,6 @@ app.get('/api-docs.json', (req, res) => {
 connectToDatabase(config.db_uri).then((connected) => {
     if (connected) {
         logger.success("Connected to database successfully");
-    } else {
-        logger.error("Failed to connect to database");
-        process.exit(1); // Exit the application if database connection fails
     }
 }).catch((err) => {
     logger.error("Error connecting to database:", err);
@@ -59,6 +57,7 @@ connectToDatabase(config.db_uri).then((connected) => {
 
 
 /* Routes */
+app.use(limiter);
 app.use(express.json());
 
 app.use('/', authRoutes);
