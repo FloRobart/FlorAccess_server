@@ -16,6 +16,9 @@ interface Config {
     db_uri: string;
     request_limit_per_second: number;
     request_limit_time: number;
+    jwt_signing_key: string;
+    jwt_encryption_key: string;
+    jwt_expiration: number;
 }
 
 
@@ -31,7 +34,10 @@ const config: Config = {
     token_expiration: Math.round(Number(process.env.TOKEN_EXPIRATION)) || 3600,
     db_uri: process.env.DB_URI || "postgresql://postgres:postgres@localhost:5432/postgres",
     request_limit_per_second: Math.round(Number(process.env.REQUEST_LIMIT_PER_SECOND)) || 1,
-    request_limit_time: Math.round(Number(process.env.REQUEST_LIMIT_TIME)) || 900
+    request_limit_time: Math.round(Number(process.env.REQUEST_LIMIT_TIME)) || 900,
+    jwt_signing_key: process.env.JWT_SIGNING_KEY || 'your_jwt_signing_key',
+    jwt_encryption_key: process.env.JWT_ENCRYPTION_KEY || 'your_jwt_encryption_key',
+    jwt_expiration: process.env.JWT_EXPIRATION ? Number(process.env.JWT_EXPIRATION) : 3600, // Default to 1 hour
 };
 
 
