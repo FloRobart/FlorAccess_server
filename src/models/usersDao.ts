@@ -27,7 +27,6 @@ export async function createUser(email: string, token: string, name: string|unde
     });
 }
 
-
 /**
  * Retrieves a user from the database by email and token.
  * @param email The email address of the user to retrieve.
@@ -97,6 +96,26 @@ export async function getUserTokenByEmail(email: string): Promise<string> {
 }
 
 /**
+ * Retrieves the count of users in the database by email.
+ * @param email The email address to count users by.
+ * @returns A promise that resolves to the count of users with the specified email.
+ */
+export async function getUserCountByEmail(email: string): Promise<number> {
+    if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
+    let query = "SELECT COUNT(*) FROM users WHERE users_email = $1";
+    let values = [email];
+
+    return executeQuery({text: query, values: values}).then((rows) => {
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('No user with this email.'); }
+
+        return rows[0] as number;
+    }).catch((err) => {
+        throw new Error(`Database error: ${err.message}`);
+    });
+}
+
+/**
  * Updates a user in the database by ID.
  * @param id The ID of the user to update.
  * @param updatedValues An object containing the values to update in the user record.
@@ -140,16 +159,15 @@ export async function updateUserById(id: number, updatedValues: UpdatedValues): 
  * @param token The authentication token of the user to delete.
  * @returns A promise that resolves to the deleted user object.
  */
-export async function deleteUser(email: string, token: string): Promise<User> {
-    if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
-    if (!token || typeof token !== 'string') { throw new Error('Invalid token.'); }
+export async function deleteUserById(id: number): Promise<User> {
+    if (!id || typeof id !== 'number') { throw new Error('Invalid id.'); }
 
-    let query = "DELETE FROM users WHERE users_email = $1 AND users_token = $2 RETURNING *";
-    let values = [email, token];
+    let query = "DELETE FROM users WHERE users_id = $1 RETURNING *";
+    let values = [id];
 
     return executeQuery({text: query, values: values}).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
-        if (rows.length === 0) { throw new Error('No user with this email.'); }
+        if (rows.length === 0) { throw new Error('No user with this id.'); }
 
         return rows[0] as User;
     }).catch((err) => {

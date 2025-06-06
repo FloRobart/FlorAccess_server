@@ -3,6 +3,8 @@ import {
     sendToken,
     registerUser,
     getJwt,
+    verifyEmail,
+    deleteUserByEmail,
 } from '../controllers/authController';
 
 
@@ -129,7 +131,7 @@ router.post('/register', registerUser);
  *               description: The authentication token sent to the user's email address
  *     responses:
  *       200:
- *         description: User registered successfully
+ *         description: JWT generated and sent successfully
  *         content:
  *           application/json:
  *             schema:
@@ -149,5 +151,52 @@ router.post('/register', registerUser);
  */
 router.get('/jwt', getJwt);
 
+
+/**
+ * @swagger
+ * /existing/email/{email}:
+ *   get:
+ *     summary: Verify if email is valid (if user exists)
+ *     description: Check if the provided email address is associated with an existing user. If the user exists '1' is returned, otherwise '0' is returned.
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         description: The email address to verify
+ *         schema:
+ *           type: string
+ *           format: email
+ *           example: "john.doe@mail.com"
+ *     responses:
+ *       200:
+ *         description: Email verification result. true if user exists, false if user does not exist
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - exists
+ *               properties:
+ *                 exists:
+ *                   type: boolean
+ *                   description: Indicates if the user exists (true) or not (false)
+ *                   example: true
+ *       400:
+ *         description: Bad request. Change your request for to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#components/schemas/error400'
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#components/schemas/error500'
+ */
+router.get('/existing/email/:email', verifyEmail);
+
+
+router.delete('/user', deleteUserByEmail);
 
 export default router;
