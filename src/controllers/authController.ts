@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as Users from '../models/usersDao';
-import { generateToken } from '../utils/utils';
+import { generateToken, isValidEmail, isValidRequestBody } from '../utils/utils';
 import * as logger from '../utils/logger';
 import config from '../config/config';
 import { sendEmailConnexion } from '../mail/connexionMail';
@@ -20,9 +20,14 @@ import JWT from 'jsonwebtoken';
 export const sendToken = (req: Request, res: Response, next: NextFunction) => {
     try {
         /* Verify body request */
-        const email = req.body.email instanceof Array ? req.body.email[req.body.email.length-1] : req.body.email;
+        if (!isValidRequestBody(req.body, ['email'])) { // add verif for callback route
+            res.status(400).json({ error: 'Invalid request body.' });
+            return;
+        }
+        const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length-1] : req.body.email;
         const appName = req.body.app_name || config.app_name;
-        if (!email || typeof email !== 'string') {
+
+        if (!isValidEmail(email)) {
             res.status(400).json({ error: 'Invalid email address.' });
             return;
         }
@@ -31,7 +36,7 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
         try {
             Users.getUserByEmail(email).then((user) => {
                 /* Generate token */
-                const token = generateToken(config.token_length) + "." + (Date.now() + (config.token_expiration * 1000)) + "." + user.users_id; // Token valid for 1 hour
+                const token = generateToken(user.users_id);
 
                 /* Save token */
                 try {
@@ -39,21 +44,21 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
                         user.users_token = result.users_token;
                     }).catch((err) => {
                         logger.error("Failed to update token :", err);
-                        res.status(500).json({ error: 'Failed to update token.' });
+                        next("Failed to update token.");
                         return;
                     });
                 } catch (error) {
                     logger.error(error);
-                    res.status(500).json({ error: 'Internal server error.' });
+                    next("Internal server error.");
                     return;
                 }
 
                 /* Send token by email */
-                sendEmailConnexion(email, appName, token).then(() => {
+                sendEmailConnexion(email, appName, token).then(() => { // add route to the email
                     res.status(200).json({ message: 'Token sent successfully' });
                 }).catch((err) => {
                     logger.error("Failed to send email :", err);
-                    res.status(500).json({ error: 'Failed to send email.' });
+                    next("Failed to send email.");
                     return;
                 });
             }).catch((err) => {
@@ -81,9 +86,22 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
  * @param next NextFunction
  */
 export const registerUser = (req: Request, res: Response, next: NextFunction) => {
+    /* Verify body request */
+    if (!isValidRequestBody(req.body, ['email', 'name'])) {
+        res.status(400).json({ error: 'Invalid request body.' });
+        return;
+    }
+    const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length-1] : req.body.email;
+    const name = Array.isArray(req.body.name) ? req.body.name[req.body.name.length-1] : req.body.name;
+
+    if (!isValidEmail(email)) {
+        res.status(400).json({ error: 'Invalid email address.' });
+        return;
+    }
+
     try {
         /* Save and get user informations */
-        Users.createUser(req.body.email, generateToken(), req.body.name).then((user) => {
+        Users.createUser(email, null, name).then((user) => {
             /* Generate JWT */
             const jwtPayload = {
                 userId: user.users_id,
@@ -187,13 +205,13 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
  */
 export const verifyEmail = (req: Request, res: Response, next: NextFunction) => {
     try {
-        /* Get count user email */
-        const email = req.params.email;
-        if (!email || typeof email !== 'string') {
+        const email = Array.isArray(req.params.email) ? req.params.email[req.params.email.length-1] : req.params.email;
+        if (!email || typeof email !== 'string' || !isValidEmail(email)) {
             res.status(400).json({ error: 'Invalid email address.' });
             return;
         }
-
+        
+        /* Get count user email */
         Users.getUserCountByEmail(email).then((count) => {
             res.status(200).json({ exists: Boolean(count) });
         }).catch((err) => {
@@ -207,7 +225,14 @@ export const verifyEmail = (req: Request, res: Response, next: NextFunction) => 
 }
 
 
-export const deleteUserByEmail = (req: Request, res: Response, next: NextFunction) => {
+/**
+ * Deletes a user by Id.
+ * @param req Request
+ * @param req.headers.authorization Authorization header containing the JWT
+ * @param res Response
+ * @param next NextFunction
+ */
+export const deleteUserById = (req: Request, res: Response, next: NextFunction) => {
     try {
         /* Get user id from JWT */
         const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as { userId: number,

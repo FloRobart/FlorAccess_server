@@ -4,7 +4,7 @@ import {
     registerUser,
     getJwt,
     verifyEmail,
-    deleteUserByEmail,
+    deleteUserById,
 } from '../controllers/authController';
 
 
@@ -59,7 +59,7 @@ const router = Router();
  *             schema:
  *               $ref: '#components/schemas/error500'
  */
-router.post('/send/token', sendToken);
+router.post('/send/token', sendToken); // /login
 
 
 /**
@@ -194,9 +194,9 @@ router.get('/jwt', getJwt);
  *             schema:
  *               $ref: '#components/schemas/error500'
  */
-router.get('/existing/email/:email', verifyEmail);
+router.get('/existing/email/:email', verifyEmail); // /verify ?
 
 
-router.delete('/user', deleteUserByEmail);
+router.delete('/user', deleteUserById);
 
 export default router;

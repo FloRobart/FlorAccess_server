@@ -10,9 +10,8 @@ import * as logger from '../utils/logger';
  * @param name Optional name of the user.
  * @returns A promise that resolves to the created user object.
  */
-export async function createUser(email: string, token: string, name: string|undefined): Promise<User> {
+export async function createUser(email: string, token: string|null, name: string|undefined): Promise<User> {
     if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
-    if (!token || typeof token !== 'string') { throw new Error('Invalid token.'); }
 
     let query = "INSERT INTO users (users_email, users_token, users_name) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *";
     let values = [email, token, name||null];
