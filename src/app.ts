@@ -48,17 +48,15 @@ app.get('/api-docs.json', (req, res) => {
 
 
 /* Database */
-connectToDatabase(config.db_uri).then((connected) => {
-    if (connected) {
-        logger.success("Connected to database successfully");
-    }
+connectToDatabase(config.db_uri).then(() => {
+    logger.success("Connected to database successfully");
 }).catch((err) => {
-    logger.error("Error connecting to database:", err);
+    logger.error(err);
     process.exit(1); // Exit the application if an error occurs
 });
 
 
-/* Routes */
+/* Routes and Middleware */
 app.use(limiter);
 app.use(express.json());
 

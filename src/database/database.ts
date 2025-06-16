@@ -13,7 +13,7 @@ let client: pg.Client;
  * @example dburi = "postgresql://<user>:<password>@<host>:<port>/<db_name>"
  * @returns true if connected successfully, otherwise false
  */
-export async function connectToDatabase(dburi: string|{host: string, user: string, password: string, port: number}): Promise<boolean> {
+export async function connectToDatabase(dburi: string|{host: string, user: string, password: string, port: number}): Promise<void> {
     try {
         client = new Client(dburi);
         await client.connect();
@@ -26,12 +26,8 @@ export async function connectToDatabase(dburi: string|{host: string, user: strin
         client.on('end', () => {
             logger.success("DATABASE CONNECTION CLOSED")
         });
-
-        return true;
-    } catch (err) {
-        logger.error(err);
-        logger.error("FAILED CONNECTING TO DATABASE");
-        return false;
+    } catch (err: any) {
+        throw new Error(err);
     }
 }
 

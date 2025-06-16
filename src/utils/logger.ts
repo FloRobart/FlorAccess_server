@@ -26,6 +26,11 @@ const ENABLE_ENV: Record<string, number> = {
     "disable": 0,
 };
 
+const errorMessage = ` [❌] ${config.app_name} - ERROR |`;
+const successMessage = ` [✅] ${config.app_name} - SUCCESS |`;
+const infoMessage = ` [❕] ${config.app_name} - INFO |`;
+const debugMessage = ` [🐛] ${config.app_name} - DEBUG |`;
+
 
 /**
  * Logger function to log messages based on the environment level.
@@ -39,7 +44,7 @@ const ENABLE_ENV: Record<string, number> = {
  */
 export function error(...args: any[]) {
     if (ENABLE_ENV[config.app_env] >= 1) {
-        console.error(` [❌] ${config.app_name} - ERROR |`, ...args);
+        console.error(errorMessage, ...args);
     }
 }
 
@@ -55,7 +60,7 @@ export function error(...args: any[]) {
  */
 export function success(...args: any[]) {
     if (ENABLE_ENV[config.app_env] >= 2) {
-        console.log(` [✅] ${config.app_name} - SUCCESS |`, ...args);
+        console.log(successMessage, ...args);
     }
 }
 
@@ -71,7 +76,7 @@ export function success(...args: any[]) {
  */
 export function info(...args: any[]) {
     if (ENABLE_ENV[config.app_env] >= 3) {
-        console.info(` [❕] ${config.app_name} - INFO |`, ...args);
+        console.info(infoMessage, ...args);
     }
 }
 
@@ -87,6 +92,6 @@ export function info(...args: any[]) {
  */
 export function debug(...args: any[]) {
     if (ENABLE_ENV[config.app_env] >= 4) {
-        console.debug(` [🐛] ${config.app_name} - DEBUG |`, ...args);
+        console.debug(debugMessage, ...args);
     }
 }
