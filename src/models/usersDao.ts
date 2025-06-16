@@ -117,7 +117,7 @@ export async function getUserCountByEmail(email: string): Promise<number> {
 /**
  * Updates a user in the database by ID.
  * @param id The ID of the user to update.
- * @param updatedValues An object containing the values to update in the user record.
+ * @param updatedValues An object containing the values to update in the user record. (in [user_name, user_password, user_token, users_ip])
  * @returns A promise that resolves to the updated user object.
  */
 export async function updateUserById(id: number, updatedValues: UpdatedValues): Promise<User> {
@@ -191,6 +191,10 @@ export interface User {
 
 /**
  * Interface representing the values that can be updated in a user record.
+ * @param users_email The email address of the user.
+ * @param users_name The name of the user.
+ * @param users_password The password of the user.
+ * @param users_token The authentication token of the user.
  */
 interface UpdatedValues {
     users_email?: string,
