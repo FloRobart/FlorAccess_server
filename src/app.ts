@@ -1,5 +1,7 @@
 import express from 'express';
-import authRoutes from './routes/authRoutes';
+import tokenRoutes from './routes/tokenRoutes';
+import userRoutes from './routes/userRoutes';
+import passwordRoutes from './routes/passwordRoutes';
 import { errorHandler } from './middlewares/errorHandler';
 import * as logger from './utils/logger';
 import fs from 'node:fs';
@@ -60,7 +62,9 @@ connectToDatabase(config.db_uri).then((connected) => {
 app.use(limiter);
 app.use(express.json());
 
-app.use('/', authRoutes);
+app.use('/user/', userRoutes);
+app.use('/token/', tokenRoutes);
+app.use('/password/', passwordRoutes);
 
 app.use(errorHandler);
 
