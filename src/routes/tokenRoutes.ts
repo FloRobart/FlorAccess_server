@@ -41,7 +41,7 @@ const router = Router();
  *                   type: string
  *                   example: "Token sent successfully"
  *       400:
- *         description: Bad request. Change your request for to fix this error
+ *         description: Bad request. Change your request to fix this error
  *         content:
  *           application/json:
  *             schema:
@@ -86,7 +86,7 @@ router.post('/send-token', sendToken);
  *             schema:
  *               $ref: '#components/schemas/messageResponse'
  *       400:
- *         description: Bad request. Change your request for to fix this error
+ *         description: Bad request. Change your request to fix this error
  *         content:
  *           application/json:
  *             schema:
@@ -131,7 +131,7 @@ router.post('/register', registerUser);
  *             schema:
  *               $ref: '#components/schemas/jwtResponse'
  *       400:
- *         description: Bad request. Change your request for to fix this error
+ *         description: Bad request. Change your request to fix this error
  *         content:
  *           application/json:
  *             schema:
