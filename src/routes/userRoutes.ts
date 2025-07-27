@@ -41,7 +41,7 @@ const router = Router();
  *                   description: Indicates if the user exists (true) or not (false)
  *                   example: true
  *       400:
- *         description: Bad request. Change your request for to fix this error
+ *         description: Bad request. Change your request to fix this error
  *         content:
  *           application/json:
  *             schema:
@@ -96,7 +96,7 @@ router.get('/existing/:email', verifyEmail);
  *                   description: Indicates if the user was updated (true) or not (false)
  *                   example: true
  *       400:
- *         description: Bad request. Change your request for to fix this error
+ *         description: Bad request. Change your request to fix this error
  *         content:
  *           application/json:
  *             schema:
@@ -132,7 +132,7 @@ router.put('/', updateUserById);
  *                   description: Confirmation message for successful deletion
  *                   example: "User deleted successfully."
  *       400:
- *         description: Bad request. Change your request for to fix this error
+ *         description: Bad request. Change your request to fix this error
  *         content:
  *           application/json:
  *             schema:

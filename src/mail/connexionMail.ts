@@ -8,6 +8,8 @@ import sendEmail from './mailer';
  * This function sends an email to the user with a link to verify their connection.
  * @param to Email address of the recipient
  * @param app_name Name of the application to be used in the email subject
+ * @param token Authentication token to be included in the verification link
+ * @returns {Promise<void>} A promise that resolves when the email is sent
  */ 
 export async function sendEmailConnexion(to: string, app_name: string, token: string): Promise<void> {
     const route = `${config.app_url}/jwt?email=${encodeURI(to)}&token=${encodeURI(token)}`;
@@ -45,7 +47,7 @@ export async function sendEmailConnexion(to: string, app_name: string, token: st
                                     <table cellspacing="0" cellpadding="0" style="margin: auto;">
                                         <tr>
                                             <td align="center" style="background-color: #721414; padding: 10px 20px; border-radius: 5px;">
-                                                <a href="${route}" style="color: #ffffff; text-decoration: none; font-weight: bold;">Cliquez ici pour validé votre connexion à ${config.app_name}</a>
+                                                <a href="${route}" style="color: #ffffff; text-decoration: none; font-weight: bold;">Cliquez ici pour validé votre connexion à ${appName}</a>
                                             </td>
                                         </tr>
                                     </table>

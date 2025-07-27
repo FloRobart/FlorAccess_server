@@ -40,7 +40,7 @@ const router = Router();
  *                   description: Indicates if the password was changed (true) or not (false)
  *                   example: true
  *       400:
- *         description: Bad request. Change your request for to fix this error
+ *         description: Bad request. Change your request to fix this error
  *         content:
  *           application/json:
  *             schema:
