@@ -8,9 +8,11 @@ const router = Router();
 
 
 /**
- * @swagger
- * /user/password:
+ * 
+ * /password:
  *   put:
+ *     tags:
+ *       - Password
  *     summary: Change user password
  *     description: Change the password of the user associated with the provided JWT token.
  *     parameters:
@@ -52,7 +54,7 @@ const router = Router();
  *             schema:
  *               $ref: '#components/schemas/error500'
  */
-router.put('/password', changeUserPassword);
+// router.put('/', changeUserPassword);
 
 
 

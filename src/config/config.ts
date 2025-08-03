@@ -4,10 +4,11 @@ dotenv.config();
 
 
 interface Config {
+    base_url: string;
     app_port: number;
+    host_name: string;
     app_env: string;
     app_name: string;
-    app_url: string;
     mail_service: string;
     mail_username?: string;
     mail_password?: string;
@@ -23,10 +24,11 @@ interface Config {
 
 
 const config: Config = {
+    base_url: process.env.BASE_URL || 'http://localhost',
     app_port: Math.round(Number(process.env.PORT)) || 3000,
+    host_name: process.env.HOST_NAME || 'localhost',
     app_env: process.env.APP_ENV || 'default',
     app_name: process.env.APP_NAME || 'Éconoris',
-    app_url: process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`,
     mail_service: process.env.MAIL_SERVICE || 'gmail',
     mail_username: process.env.MAIL_USERNAME,
     mail_password: process.env.MAIL_PASSWORD,
