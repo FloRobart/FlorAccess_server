@@ -75,58 +75,6 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-
-/**
- * Registers a new user with the provided information.
- * @POST /register
- * @param req Request
- * @param req.body.email Email address of the user
- * @param req.body.name Optional name of the user
- * @param res Return JWT for authentication or error
- * @param next NextFunction
- */
-export const registerUser = (req: Request, res: Response, next: NextFunction) => {
-    /* Verify body request */
-    if (!isValidRequestBody(req.body, ['email', 'name'])) {
-        res.status(400).json({ error: 'Invalid request body.' });
-        return;
-    }
-    const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length-1] : req.body.email;
-    const name = Array.isArray(req.body.name) ? req.body.name[req.body.name.length-1] : req.body.name;
-
-    if (!isValidEmail(email)) {
-        res.status(400).json({ error: 'Invalid email address.' });
-        return;
-    }
-
-    try {
-        /* Save and get user informations */
-        Users.createUser(email, null, name).then((user) => {
-            /* Generate JWT */
-            const jwtPayload = {
-                userId: user.users_id,
-                email: user.users_email,
-                name: user.users_name || '',
-                ip: req.ip,
-            };
-            const jwt: string = JWT.sign(jwtPayload, config.jwt_signing_key, {
-                expiresIn: config.jwt_expiration,
-            });
-            logger.debug("Generated JWT:", jwt);
-
-            /* Return JWT */
-            res.json({ jwt: jwt });
-        }).catch((err) => {
-            logger.error(err);
-            res.status(400).json({ error: 'User not created !' });
-            return;
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-
 /**
  * Generates a JWT for the user based on the provided information.
  * @POST /jwt
@@ -188,6 +136,40 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
             logger.error(err);
             res.status(400).json({ error: 'User not found !' });
             return;
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+/**
+ * Verify JWT passed in url params
+ * @GET /jwt
+ * @param req Request
+ * @param req.params.jwt JWT to check
+ * @param res Return JWT or error
+ * @param next NextFunction
+ */
+export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
+    try {
+        /* Verify body request */
+        const jwt = req.params.jwt;
+        if (!jwt || typeof jwt !== 'string') {
+            res.status(400).json({ error: 'Invalid JWT.' });
+            return;
+        }
+
+        /* Verify JWT */
+        JWT.verify(jwt, config.jwt_signing_key, (err, decoded) => {
+            if (err) {
+                res.status(200).json({ 
+                    valid: false,
+                    error: 'Invalid or expired JWT.'
+                });
+                return;
+            }
+
+            res.status(200).json({ valid: true });
         });
     } catch (error) {
         next(error);

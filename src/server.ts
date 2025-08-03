@@ -11,10 +11,10 @@ import * as logger from './utils/logger';
 const server = http.createServer(app);
 
 try {
-    server.listen(config.app_port, () => {
-        logger.success("Server running at PORT :", config.app_port, "!");
-        logger.success("Server running at URL :", config.app_url, "!");
-        logger.success("Server documentation running at URL :", config.app_url + ":" + config.app_port + "/api-docs", "!");
+    server.listen(config.app_port, config.host_name, () => {
+        logger.success("Server running at URL :", config.base_url, "!");
+        logger.success("Server documentation running at URL :", config.base_url + "/api-docs", "!");
+        logger.success("Server running at HOST :", config.host_name, "!");
     }).on("error", (error) => {
         logger.error("FAILED STARTING SERVER\n");
         throw new Error(error.message);

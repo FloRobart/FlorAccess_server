@@ -12,7 +12,7 @@ import sendEmail from './mailer';
  * @returns {Promise<void>} A promise that resolves when the email is sent
  */ 
 export async function sendEmailConnexion(to: string, app_name: string, token: string): Promise<void> {
-    const route = `${config.app_url}/jwt?email=${encodeURI(to)}&token=${encodeURI(token)}`;
+    const route = `${config.base_url}/jwt?email=${encodeURI(to)}&token=${encodeURI(token)}`;
     const appName = app_name || config.app_name;
 
     const html = `

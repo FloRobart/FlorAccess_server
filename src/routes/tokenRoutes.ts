@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { sendToken, registerUser, getJwt } from '../controllers/tokenController';
+import { sendToken, getJwt, verifyToken } from '../controllers/tokenController';
 
 
 
@@ -9,8 +9,10 @@ const router = Router();
 
 /**
  * @swagger
- * /send/token:
+ * /token/send-token:
  *   post:
+ *     tags:
+ *       - Token
  *     summary: Send a new authentication token to the email address
  *     description: Generate, save and send a new authentication token to the email address passed in the request body
  *     parameters:
@@ -55,56 +57,12 @@ const router = Router();
  */
 router.post('/send-token', sendToken);
 
-
 /**
  * @swagger
- * /register:
+ * /token/login:
  *   post:
- *     summary: Register a new user
- *     description: Register a new user by providing an email address and name. An authentication token will be sent to the provided email address.
- *     parameters:
- *       - in: body
- *         schema:
- *           type: object
- *           required:
- *             - email
- *           properties:
- *             email:
- *               type: string
- *               format: email
- *               description: The email address to which the authentication token will be sent
- *               example: "john.doe@mail.com"
- *             name:
- *               type: string
- *               description: The name of the user
- *               example: "John Doe"
- *     responses:
- *       200:
- *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#components/schemas/messageResponse'
- *       400:
- *         description: Bad request. Change your request to fix this error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#components/schemas/error400'
- *       500:
- *         description: Internal server error. Please create an issue on Github
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#components/schemas/error500'
- */
-router.post('/register', registerUser);
-
-
-/**
- * @swagger
- * /jwt:
- *   post:
+ *     tags:
+ *       - Token
  *     summary: Get JWT with email and token
  *     description: Generate a JWT using the email address and the authentication token sent to the user's email address.
  *     parameters:
@@ -145,6 +103,53 @@ router.post('/register', registerUser);
  */
 router.get('/login', getJwt);
 
-
+/**
+ * @swagger
+ * /token/verify-token/{jwt}:
+ *   get:
+ *     tags:
+ *       - Token
+ *     summary: Verify a JWT
+ *     description: Verify the authenticity of a JWT.
+ *     parameters:
+ *       - in: path
+ *         name: jwt
+ *         required: true
+ *         description: The JWT to verify
+ *     responses:
+ *       200:
+ *         description: JWT is valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                   example: true
+ *       401:
+ *         description: Unauthorized. The JWT is invalid or expired
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid or expired JWT"
+ *       400:
+ *         description: Bad request. Change your request to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#components/schemas/error400'
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#components/schemas/error500'
+ */
+router.get('/verify-token/:jwt', verifyToken);
 
 export default router;

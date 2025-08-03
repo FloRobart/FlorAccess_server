@@ -8,6 +8,8 @@ import fs from 'node:fs';
 import config from './config/config';
 import { connectToDatabase } from './database/database';
 import { limiter } from './middlewares/rateLimiter';
+import handshakeRoutes from './routes/handshakeRoutes';
+import { initAuthorizedApi } from './config/authorizedApi';
 
 
 
@@ -29,7 +31,7 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: config.app_url + ":" + config.app_port,
+                url: config.base_url,
             },
         ],
     },
@@ -40,7 +42,7 @@ const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.get('/api-docs.json', (req, res) => {
     if (!app.locals.swaggerJsonFileCreated) {
-        res.status(500).json({ error: "The Swagger JSON file encountered a problem creating it. Please see : " + config.app_url + ":" + config.app_port + "/api-docs" });
+        res.status(500).json({ error: "The Swagger JSON file encountered a problem creating it. Please see : " + config.base_url + "/api-docs" });
         return;
     }
     return res.download(SWAGGER_JSON_PATH)
@@ -56,6 +58,14 @@ connectToDatabase(config.db_uri).then(() => {
 });
 
 
+/* initialize authorized API */
+initAuthorizedApi().then(() => {
+    logger.success("Authorized API initialized successfully");
+}).catch((err) => {
+    logger.error("Error initializing authorized API :", err);
+});
+
+
 /* Routes and Middleware */
 app.use(limiter);
 app.use(express.json());
@@ -63,6 +73,8 @@ app.use(express.json());
 app.use('/user/', userRoutes);
 app.use('/token/', tokenRoutes);
 app.use('/password/', passwordRoutes);
+
+app.use('/handshake', handshakeRoutes);
 
 app.use(errorHandler);
 
