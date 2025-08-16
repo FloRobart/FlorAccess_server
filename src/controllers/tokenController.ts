@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import * as Users from '../models/usersDao';
-import { generateToken, isValidEmail, isValidRequestBody } from '../utils/utils';
+import * as Users from '../database/usersDao';
+import { generateUserToken, isValidEmail, isValidRequestBody } from '../utils/utils';
 import * as logger from '../utils/logger';
 import config from '../config/config';
 import { sendEmailConnexion } from '../mail/connexionMail';
@@ -36,7 +36,7 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
         try {
             Users.getUserByEmail(email).then((user) => {
                 /* Generate token */
-                const token = generateToken(user.users_id);
+                const token = generateUserToken(user.users_id);
 
                 /* Save token */
                 try {
@@ -118,7 +118,7 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
             }
 
             /* Generate JWT */
-            console.debug("adresse ip :", req.ip);
+            logger.debug("adresse ip :", req.ip);
             const jwtPayload = {
                 userId: user.users_id,
                 email: user.users_email,
@@ -152,6 +152,16 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
  */
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
     try {
+        /* Verify headers */
+        if (!req.headers.authorization) {
+            res.status(400).json({ error: 'Invalid Authorization header.' });
+            return;
+        }
+
+        const authHeader = req.headers.authorization;
+        const authParts = authHeader.split('.');
+
+
         /* Verify body request */
         const jwt = req.params.jwt;
         if (!jwt || typeof jwt !== 'string') {

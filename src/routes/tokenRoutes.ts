@@ -112,6 +112,13 @@ router.get('/login', getJwt);
  *     summary: Verify a JWT
  *     description: Verify the authenticity of a JWT.
  *     parameters:
+ *       - in: headers
+ *         name: Authorization
+ *         required: true
+ *         description: private token of API
+ *         schema:
+ *           type: string
+ *           example: "private_api_token.name"
  *       - in: path
  *         name: jwt
  *         required: true
@@ -124,9 +131,19 @@ router.get('/login', getJwt);
  *             schema:
  *               type: object
  *               properties:
- *                 valid:
- *                   type: boolean
- *                   example: true
+ *                 id:
+ *                   type: number
+ *                   description: The ID of the user associated with the JWT
+ *                   example: 123
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                   description: The email address of the user associated with the JWT
+ *                   example: "john.doe@mail.com"
+ *                 name:
+ *                   type: string
+ *                   description: The name of the user associated with the JWT
+ *                   example: "John Doe"
  *       401:
  *         description: Unauthorized. The JWT is invalid or expired
  *         content:
