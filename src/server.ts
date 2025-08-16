@@ -20,6 +20,6 @@ try {
         throw new Error(error.message);
     });
 } catch (error) {
-    logger.error("Error in main index.ts :", error);
+    logger.error("Error in main server.ts :", error);
     process.exit(1);
 }
