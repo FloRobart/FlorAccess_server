@@ -9,7 +9,8 @@ import config from './config/config';
 import { connectToDatabase } from './database/database';
 import { limiter } from './middlewares/rateLimiter';
 import handshakeRoutes from './routes/handshakeRoutes';
-import { initAuthorizedApi } from './config/authorizedApi';
+import { handshakeAuthorizedApis } from './services/handshakeAutorizedApis.service';
+import { saveDefaultAuthorizedApisToDatabase } from './config/authorizedApi';
 
 
 
@@ -58,25 +59,34 @@ connectToDatabase(config.db_uri).then(() => {
 });
 
 
-/* initialize authorized API */
-initAuthorizedApi().then(() => {
-    logger.success("Authorized API initialized successfully");
-}).catch((err) => {
-    logger.error("Error initializing authorized API :", err);
-});
-
-
 /* Routes and Middleware */
 app.use(limiter);
 app.use(express.json());
+
+app.use('/handshake', handshakeRoutes);
 
 app.use('/user/', userRoutes);
 app.use('/token/', tokenRoutes);
 app.use('/password/', passwordRoutes);
 
-app.use('/handshake', handshakeRoutes);
-
 app.use(errorHandler);
+
+
+
+/* Authorized APIs Handshake */
+if (config.handshake_authorized_api) {
+    /* initialize default authorized APIs */
+    saveDefaultAuthorizedApisToDatabase().then((result) => {
+        if (result) {
+            /* Handshake to other services */
+            handshakeAuthorizedApis().then(() => {
+                logger.info("Handshake with authorized APIs completed.");
+            }).catch((err: Error) => {
+                logger.error("Handshake with authorized APIs completed :", err.message);
+            });
+        }
+    });
+}
 
 
 /* Create swagger json file */
