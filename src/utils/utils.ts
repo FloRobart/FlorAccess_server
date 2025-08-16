@@ -2,13 +2,26 @@ import { randomBytes } from "node:crypto";
 import config from "../config/config";
 
 
+
+/**
+ * Gets a valid port number
+ * @param val Port number
+ * @returns Valid port number or null if the port number is not a number
+ */
+export function normalizePort(val: string): number | null {
+    var port = parseInt(val.replace(" ", ""), 10);
+    if (isNaN(port)) { return null; }
+    return Math.max(0, Math.min(port, 65535));
+}
+
+
 /**
  * Generates a random token of specified length.
  * @param {number} userId - The ID of the user to include in the token.
  * @param {number} [length] - The length of the token to generate.
  * @returns {string} A hexadecimal string representing the token.
  */
-export function generateToken(userId: number, length=config.token_length): string {
+export function generateUserToken(userId: number, length: number=config.token_length): string {
     return Buffer.from(randomBytes(length)).toString('hex') + "." + (Date.now() + (config.token_expiration * 1000)) + "." + userId;
 }
 
@@ -62,6 +75,25 @@ export function isValidRequestBody(body: any, requiredFields: string[]): boolean
 }
 
 
+/**
+ * Checks if the provided value is valid.
+ * @param value Value to check
+ * @returns True if the value is valid, false otherwise.
+ */
 function isValidType(value: any): boolean {
     return value !== undefined && value !== null && (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean');
+}
+
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+
+/**
+ * Generates a random API token.
+ * @param length Length of the token to generate
+ * @returns A hexadecimal string representing the token.
+ */
+export function generateApiToken(length=128): string {
+    sleep(Math.random() * 300).then(() => {});
+    return Buffer.from(randomBytes(length)).toString('hex');
 }

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import * as Users from '../models/usersDao';
+import * as Users from '../database/usersDao';
 import * as logger from '../utils/logger';
 import config from '../config/config';
 import JWT from 'jsonwebtoken';
@@ -15,7 +15,7 @@ import { isValidEmail, isValidRequestBody } from '../utils/utils';
  * @param res Return whether the email exists or not
  * @param next NextFunction
  */
-export const verifyEmail = (req: Request, res: Response, next: NextFunction) => {
+export const verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const email = Array.isArray(req.params.email) ? req.params.email[req.params.email.length-1] : req.params.email;
         if (!email || typeof email !== 'string' || !isValidEmail(email)) {
@@ -45,7 +45,7 @@ export const verifyEmail = (req: Request, res: Response, next: NextFunction) => 
  * @param res Return JWT for authentication or error
  * @param next NextFunction
  */
-export const registerUser = (req: Request, res: Response, next: NextFunction) => {
+export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
     /* Verify body request */
     if (!isValidRequestBody(req.body, ['email'])) {
         res.status(400).json({ error: 'Invalid request body.' });
@@ -95,7 +95,7 @@ export const registerUser = (req: Request, res: Response, next: NextFunction) =>
  * @param res Response
  * @param next NextFunction
  */
-export const updateUserById = (req: Request, res: Response, next: NextFunction) => {
+export const updateUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         /* Get user id from JWT */
         const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as { userId: number,
@@ -137,7 +137,7 @@ export const updateUserById = (req: Request, res: Response, next: NextFunction) 
  * @param res Response
  * @param next NextFunction
  */
-export const deleteUserById = (req: Request, res: Response, next: NextFunction) => {
+export const deleteUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         /* Get user id from JWT */
         const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as { userId: number,
