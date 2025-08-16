@@ -7,7 +7,7 @@ const router = Router();
 
 
 
-router.post('/', handshake);
+router.get('/', handshake);
 
 
 
