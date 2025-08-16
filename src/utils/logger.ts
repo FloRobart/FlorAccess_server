@@ -2,20 +2,23 @@ import config from '../config/config';
 
 
 const ENABLE_ENV: Record<string, number> = {
-    "default": 4,
+    "default": 5,
 
-    "developpement": 4,
-    "dev": 4,
-    "debug": 4,
-    "local": 4,
-    "local-dev": 4,
-    "verbose": 4,
+    "developpement": 5,
+    "dev": 5,
+    "debug": 5,
+    "local": 5,
+    "local-dev": 5,
+    "verbose": 5,
 
-    "production": 3,
-    "prod": 3,
-    "info": 3,
+    "production": 4,
+    "prod": 4,
+    "info": 4,
 
-    "success": 2,
+    "success": 3,
+
+    "warn": 2,
+    "warning": 2,
 
     "error": 1,
     "error-only": 1,
@@ -26,10 +29,11 @@ const ENABLE_ENV: Record<string, number> = {
     "disable": 0,
 };
 
-const errorMessage = ` [❌] ${config.app_name} - ERROR |`;
+const errorMessage   = ` [❌] ${config.app_name} - ERROR   |`;
+const warningMessage = ` [⚠️] ${config.app_name} - WARNING |`;
 const successMessage = ` [✅] ${config.app_name} - SUCCESS |`;
-const infoMessage = ` [❕] ${config.app_name} - INFO |`;
-const debugMessage = ` [🐛] ${config.app_name} - DEBUG |`;
+const infoMessage    = ` [❕] ${config.app_name} - INFO    |`;
+const debugMessage   = ` [🐛] ${config.app_name} - DEBUG   |`;
 
 
 /**
@@ -37,9 +41,10 @@ const debugMessage = ` [🐛] ${config.app_name} - DEBUG |`;
  * @description
  * - If APP_ENV is 0, no logs will be displayed.
  * - If APP_ENV is 1, only error logs will be displayed.
- * - If APP_ENV is 2, success and error logs will be displayed.
- * - If APP_ENV is 3, info, success, and error logs will be displayed.
- * - If APP_ENV is 4, debug, info, success, and error logs will be displayed.
+ * - If APP_ENV is 2, warning and error logs will be displayed.
+ * - If APP_ENV is 3, success, warning and error logs will be displayed.
+ * - If APP_ENV is 4, info, success, warning and error logs will be displayed.
+ * - If APP_ENV is 5, debug, info, success, warning and error logs will be displayed.
  * @param args elements to log
  */
 export function error(...args: any[]) {
@@ -53,13 +58,31 @@ export function error(...args: any[]) {
  * @description
  * - If APP_ENV is 0, no logs will be displayed.
  * - If APP_ENV is 1, only error logs will be displayed.
- * - If APP_ENV is 2, success and error logs will be displayed.
- * - If APP_ENV is 3, info, success, and error logs will be displayed.
- * - If APP_ENV is 4, debug, info, success, and error logs will be displayed.
+ * - If APP_ENV is 2, warning and error logs will be displayed.
+ * - If APP_ENV is 3, success, warning and error logs will be displayed.
+ * - If APP_ENV is 4, info, success, warning and error logs will be displayed.
+ * - If APP_ENV is 5, debug, info, success, warning and error logs will be displayed.
+ * @param args elements to log
+ */
+export function warning(...args: any[]) {
+    if (ENABLE_ENV[config.app_env] >= 2) {
+        console.warn(warningMessage, ...args);
+    }
+}
+
+/**
+ * Logger function to log messages based on the environment level.
+ * @description
+ * - If APP_ENV is 0, no logs will be displayed.
+ * - If APP_ENV is 1, only error logs will be displayed.
+ * - If APP_ENV is 2, warning and error logs will be displayed.
+ * - If APP_ENV is 3, success, warning and error logs will be displayed.
+ * - If APP_ENV is 4, info, success, warning and error logs will be displayed.
+ * - If APP_ENV is 5, debug, info, success, warning and error logs will be displayed.
  * @param args elements to log
  */
 export function success(...args: any[]) {
-    if (ENABLE_ENV[config.app_env] >= 2) {
+    if (ENABLE_ENV[config.app_env] >= 3) {
         console.log(successMessage, ...args);
     }
 }
@@ -69,13 +92,14 @@ export function success(...args: any[]) {
  * @description
  * - If APP_ENV is 0, no logs will be displayed.
  * - If APP_ENV is 1, only error logs will be displayed.
- * - If APP_ENV is 2, success and error logs will be displayed.
- * - If APP_ENV is 3, info, success, and error logs will be displayed.
- * - If APP_ENV is 4, debug, info, success, and error logs will be displayed.
+ * - If APP_ENV is 2, warning and error logs will be displayed.
+ * - If APP_ENV is 3, success, warning and error logs will be displayed.
+ * - If APP_ENV is 4, info, success, warning and error logs will be displayed.
+ * - If APP_ENV is 5, debug, info, success, warning and error logs will be displayed.
  * @param args elements to log
  */
 export function info(...args: any[]) {
-    if (ENABLE_ENV[config.app_env] >= 3) {
+    if (ENABLE_ENV[config.app_env] >= 4) {
         console.info(infoMessage, ...args);
     }
 }
@@ -85,13 +109,14 @@ export function info(...args: any[]) {
  * @description
  * - If APP_ENV is 0, no logs will be displayed.
  * - If APP_ENV is 1, only error logs will be displayed.
- * - If APP_ENV is 2, success and error logs will be displayed.
- * - If APP_ENV is 3, info, success, and error logs will be displayed.
- * - If APP_ENV is 4, debug, info, success, and error logs will be displayed.
+ * - If APP_ENV is 2, warning and error logs will be displayed.
+ * - If APP_ENV is 3, success, warning and error logs will be displayed.
+ * - If APP_ENV is 4, info, success, warning and error logs will be displayed.
+ * - If APP_ENV is 5, debug, info, success, warning and error logs will be displayed.
  * @param args elements to log
  */
 export function debug(...args: any[]) {
-    if (ENABLE_ENV[config.app_env] >= 4) {
+    if (ENABLE_ENV[config.app_env] >= 5) {
         console.debug(debugMessage, ...args);
     }
 }
