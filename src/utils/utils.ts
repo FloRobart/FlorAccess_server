@@ -17,12 +17,12 @@ export function normalizePort(val: string): number | null {
 
 /**
  * Generates a random token of specified length.
- * @param {number} userId - The ID of the user to include in the token.
+ * @param {number} userid - The ID of the user to include in the token.
  * @param {number} [length] - The length of the token to generate.
  * @returns {string} A hexadecimal string representing the token.
  */
-export function generateUserToken(userId: number, length: number=config.token_length): string {
-    return Buffer.from(randomBytes(length)).toString('hex') + "." + (Date.now() + (config.token_expiration * 1000)) + "." + userId;
+export function generateUserToken(userid: number, length: number=config.token_length): string {
+    return Buffer.from(randomBytes(length)).toString('hex') + "." + (Date.now() + (config.token_expiration * 1000)) + "." + userid;
 }
 
 
@@ -82,18 +82,4 @@ export function isValidRequestBody(body: any, requiredFields: string[]): boolean
  */
 function isValidType(value: any): boolean {
     return value !== undefined && value !== null && (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean');
-}
-
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-
-/**
- * Generates a random API token.
- * @param length Length of the token to generate
- * @returns A hexadecimal string representing the token.
- */
-export function generateApiToken(length=128): string {
-    sleep(Math.random() * 300).then(() => {});
-    return Buffer.from(randomBytes(length)).toString('hex');
 }
