@@ -3,7 +3,7 @@ import * as Users from '../database/usersDao';
 import { generateUserToken, isValidEmail, isValidRequestBody } from '../utils/utils';
 import * as logger from '../utils/logger';
 import config from '../config/config';
-import { sendEmailConnexion } from '../mail/connexionMail';
+import { sendTokenEmail } from '../mail/tokenMail';
 import JWT from 'jsonwebtoken';
 
 
@@ -40,8 +40,8 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
 
                 /* Save token */
                 try {
-                    Users.updateUserById(user.users_id, {users_token: token}).then((result) => {
-                        user.users_token = result.users_token;
+                    Users.updateUser(user).then((result) => {
+                        user.users_secret = result.users_secret;
                     }).catch((err) => {
                         logger.error("Failed to update token :", err);
                         next("Failed to update token.");
@@ -54,7 +54,7 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
                 }
 
                 /* Send token by email */
-                sendEmailConnexion(email, appName, token).then(() => { // add route to the email
+                sendTokenEmail(email, appName, token).then(() => { // add route to the email
                     res.status(200).json({ message: 'Token sent successfully' });
                 }).catch((err) => {
                     logger.error("Failed to send email :", err);
@@ -74,114 +74,3 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
         next();
     }
 };
-
-/**
- * Generates a JWT for the user based on the provided information.
- * @POST /jwt
- * @param req Request
- * @param req.query.email Email address of the user
- * @param req.query.token Token for verification
- * @param res Return JWT or error
- * @param next NextFunction
- */
-export const getJwt = (req: Request, res: Response, next: NextFunction) => {
-    try {
-        /* Verify body request */
-        const email = req.query.email instanceof Array ? req.query.email[req.query.email.length-1] : req.query.email;
-        const token = req.query.token instanceof Array ? req.query.token[req.query.token.length-1] : req.query.token;
-        if (!email || typeof email !== 'string' || !token || typeof token !== 'string') {
-            res.status(400).json({ error: 'Invalid email address or token.' });
-            return;
-        }
-        logger.debug("getJwt email :", email);
-        logger.debug("getJwt token :", token);
-
-        /* Get user informations */
-        Users.getUserByEmailToken(email, token).then((user) => {
-            if (!user) {
-                res.status(400).json({ error: 'Invalid email or token.' });
-                return;
-            }
-            logger.debug("getJwt user :", user);
-
-            /* Verify token expiration */
-            const tokenParts = token.split('.');
-            if (tokenParts.length !== 3 || isNaN(Number(tokenParts[1])) || Date.now() > Number(tokenParts[1])) {
-                res.status(400).json({ error: 'Token has expired.' });
-                return;
-            }
-
-            /* Verify user id */
-            if (user.users_id !== Number(tokenParts[2])) {
-                res.status(400).json({ error: 'Invalid email or token.' });
-                return;
-            }
-
-            /* Generate JWT */
-            logger.debug("adresse ip :", req.ip);
-            const jwtPayload = {
-                userId: user.users_id,
-                email: user.users_email,
-                name: user.users_name || '',
-                ip: req.ip,
-            };
-            const jwt: string = JWT.sign(jwtPayload, config.jwt_signing_key, {
-                expiresIn: config.jwt_expiration, // Set expiration time from config
-            });
-            logger.debug("Generated JWT:", jwt);
-
-            /* Return JWT */
-            res.status(200).json({ jwt: jwt });
-        }).catch((err) => {
-            logger.error(err);
-            res.status(400).json({ error: 'User not found !' });
-            return;
-        });
-    } catch (error) {
-        next(error);
-    }
-}
-
-/**
- * Verify JWT passed in url params
- * @GET /jwt
- * @param req Request
- * @param req.params.jwt JWT to check
- * @param res Return JWT or error
- * @param next NextFunction
- */
-export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
-    try {
-        /* Verify headers */
-        if (!req.headers.authorization) {
-            res.status(400).json({ error: 'Invalid Authorization header.' });
-            return;
-        }
-
-        const authHeader = req.headers.authorization;
-        const authParts = authHeader.split('.');
-
-
-        /* Verify body request */
-        const jwt = req.params.jwt;
-        if (!jwt || typeof jwt !== 'string') {
-            res.status(400).json({ error: 'Invalid JWT.' });
-            return;
-        }
-
-        /* Verify JWT */
-        JWT.verify(jwt, config.jwt_signing_key, (err, decoded) => {
-            if (err) {
-                res.status(200).json({ 
-                    valid: false,
-                    error: 'Invalid or expired JWT.'
-                });
-                return;
-            }
-
-            res.status(200).json({ valid: true });
-        });
-    } catch (error) {
-        next(error);
-    }
-}
