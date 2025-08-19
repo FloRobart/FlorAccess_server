@@ -3,7 +3,7 @@ import { createHash } from 'crypto';
 import * as logger from '../utils/logger';
 import config from '../config/config';
 import { getAuthorizedApiByName, updateAuthorizedApi } from '../database/authorizedApiDao';
-import { AuthorizedApi } from '../models/AuthorizedApi';
+import { AuthorizedApi } from '../models/AuthorizedApiModel';
 
 
 
@@ -32,14 +32,14 @@ export const handshake = async (req: Request, res: Response, next: NextFunction)
         const apiName = params[0];
         const apiPrivateTokenHash = params[1];
         const apiLastAccess = parseInt(params[2], 10);
-        const savedApi: AuthorizedApi | false = await getAuthorizedApiByName(apiName);
+        const savedApi: AuthorizedApi | null = await getAuthorizedApiByName(apiName);
 
         if (params.length !== 3) {
             res.status(422).send();
             return;
         }
 
-        if (!apiName || !apiPrivateTokenHash || isNaN(apiLastAccess) || savedApi === false) {
+        if (!apiName || !apiPrivateTokenHash || isNaN(apiLastAccess) || savedApi === null) {
             res.status(400).send();
             return;
         }
