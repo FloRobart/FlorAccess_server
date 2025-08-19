@@ -4,37 +4,40 @@ import * as logger from '../utils/logger';
 import config from '../config/config';
 import JWT from 'jsonwebtoken';
 import { isValidEmail, isValidRequestBody } from '../utils/utils';
+import { getJwt } from '../utils/securities';
 
 
 
-/**
- * Verifies the user's email and generates a JWT.
- * @GET /user/existing/:email
- * @param req Request
- * @param req.params.email Email address to verify
- * @param res Return whether the email exists or not
- * @param next NextFunction
- */
-export const verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
+export const logoutUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const email = Array.isArray(req.params.email) ? req.params.email[req.params.email.length-1] : req.params.email;
-        if (!email || typeof email !== 'string' || !isValidEmail(email)) {
-            res.status(400).json({ error: 'Invalid email address.' });
+        /* Invalidate JWT */
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            res.status(401).json({ error: 'Unauthorized. Invalid or missing JWT token' });
             return;
         }
-        
-        /* Get count user email */
-        Users.getUserCountByEmail(email).then((count) => {
-            res.status(200).json({ email: email, exists: Boolean(count) });
-        }).catch((err) => {
-            logger.error(err);
-            res.status(400).json({ error: 'User not found !' });
-            return;
+
+        JWT.verify(token, config.jwt_signing_key, (err) => {
+            if (err) {
+                res.status(401).json({ error: 'Unauthorized. Invalid or expired JWT token' });
+                return;
+            }
+
+            res.status(202).json({ message: 'User logout comming soon.' });
+            // /* Logout user */
+            // Users.logoutUser(token).then(() => {
+            //     res.status(200).json({ message: 'User logged out successfully.' });
+            // }).catch((err) => {
+            //     logger.error(err);
+            //     res.status(500).json({ error: 'Internal server error.' });
+            // });
         });
     } catch (error) {
+        logger.error(error);
+        res.status(500).json({ error: 'Internal server error.' });
         next(error);
     }
-}
+};
 
 /**
  * Registers a new user with the provided information.
@@ -61,21 +64,14 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 
     try {
         /* Save and get user informations */
-        Users.createUser(email, null, name).then((user) => {
+        Users.createUser(email, null, name).then(async (user) => {
             /* Generate JWT */
-            const jwtPayload = {
-                userId: user.users_id,
-                email: user.users_email,
-                name: user.users_name || '',
-                ip: req.ip,
-            };
-            const jwt: string = JWT.sign(jwtPayload, config.jwt_signing_key, {
-                expiresIn: config.jwt_expiration,
-            });
+            const jwt = await getJwt(user);
+
             logger.debug("Generated JWT:", jwt);
 
             /* Return JWT */
-            res.json({ jwt: jwt });
+            res.status(201).json({ jwt: jwt });
         }).catch((err) => {
             logger.error(err);
             res.status(400).json({ error: 'User not created !' });
@@ -98,24 +94,16 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 export const updateUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         /* Get user id from JWT */
-        const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as { userId: number,
+        const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as { userid: number,
             email: string,
             name: string,
             ip: string
         };
-        const id = jwtPayload.userId;
+        const id = jwtPayload.userid;
 
         /* Update user by id */
-        Users.updateUserById(id, req.body).then((user) => {
-            const newJwtPayload = {
-                userId: user.users_id,
-                email: user.users_email,
-                name: user.users_name || '',
-                ip: req.ip,
-            };
-            const newJwt: string = JWT.sign(newJwtPayload, config.jwt_signing_key, {
-                expiresIn: config.jwt_expiration,
-            });
+        Users.updateUserById(id, req.body).then(async (user) => {
+            const newJwt: string = await getJwt(user);
 
             res.status(200).json({ jwt: newJwt, updated: true });
         }).catch((err: any) => {
@@ -140,12 +128,12 @@ export const updateUserById = async (req: Request, res: Response, next: NextFunc
 export const deleteUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         /* Get user id from JWT */
-        const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as { userId: number,
+        const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as { userid: number,
             email: string,
             name: string,
             ip: string
         };
-        const id = jwtPayload.userId;
+        const id = jwtPayload.userid;
 
         /* Delete user by id */
         Users.deleteUserById(id).then(() => {
