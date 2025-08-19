@@ -1,7 +1,9 @@
 import dotenv from 'dotenv';
 import { normalizePort } from '../utils/utils';
 import * as logger from '../utils/logger';
-import { AuthorizedApi } from '../models/AuthorizedApi';
+import { AuthorizedApi } from '../models/AuthorizedApiModel';
+import { type StringValue } from 'ms';
+import ms from 'ms';
 
 dotenv.config();
 
@@ -20,7 +22,6 @@ interface Config {
 
     /* JWT */
     readonly jwt_signing_key: string;
-    readonly jwt_encryption_key: string;
     readonly jwt_expiration: number;
 
     /* Email */
@@ -29,11 +30,13 @@ interface Config {
     readonly mail_password?: string;
 
     /* Security */
+    readonly hash_rounds: number;
     readonly token_length: number;
     readonly token_expiration: number;
     readonly request_limit_per_second: number;
     readonly request_limit_time: number;
     readonly hash_algorithm: string;
+    readonly code_data_set: string;
 
     /* Handshake authorized API */
     readonly handshake_static_token: string;
@@ -56,9 +59,8 @@ const config: Config = {
     db_uri: process.env.DB_URI || "postgresql://postgres:postgres@localhost:5432/postgres",
     
     /* JWT */
-    jwt_signing_key: process.env.JWT_SIGNING_KEY || 'your_jwt_signing_key',
-    jwt_encryption_key: process.env.JWT_ENCRYPTION_KEY || 'your_jwt_encryption_key',
-    jwt_expiration: process.env.JWT_EXPIRATION ? Number(process.env.JWT_EXPIRATION) : 3600, // Default to 1 hour
+    jwt_signing_key: process.env.JWT_SIGNING_KEY || '',
+    jwt_expiration: ms((process.env.JWT_EXPIRATION as StringValue) || "1d"),
 
     /* Email */
     mail_service: process.env.MAIL_SERVICE || 'gmail',
@@ -66,11 +68,13 @@ const config: Config = {
     mail_password: process.env.MAIL_PASSWORD,
 
     /* Security */
+    hash_rounds: Math.round(Number(process.env.HASH_ROUNDS)) || 10,
     token_length: Math.round(Number(process.env.TOKEN_LENGTH)) || 128,
     token_expiration: Math.round(Number(process.env.TOKEN_EXPIRATION)) || 3600,
     request_limit_per_second: Math.round(Number(process.env.REQUEST_LIMIT_PER_SECOND)) || 1,
     request_limit_time: Math.round(Number(process.env.REQUEST_LIMIT_TIME)) || 900,
     hash_algorithm: process.env.HASH_ALGORITHM || 'sha256',
+    code_data_set: process.env.CODE_DATA_SET || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
 
     /* Handshake authorized API */
     handshake_static_token: process.env.HANDSHAKE_STATIC_TOKEN || '',
