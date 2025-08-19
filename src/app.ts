@@ -11,6 +11,8 @@ import { limiter } from './middlewares/rateLimiter';
 import handshakeRoutes from './routes/handshakeRoutes';
 import { handshakeAuthorizedApis } from './services/handshakeAutorizedApis.service';
 import { saveDefaultAuthorizedApisToDatabase } from './config/authorizedApi';
+import codeRoutes from './routes/codeRoutes';
+import jwtRoutes from './routes/jwtRoutes';
 
 
 
@@ -65,9 +67,12 @@ app.use(express.json());
 
 app.use('/handshake', handshakeRoutes);
 
-app.use('/user/', userRoutes);
-app.use('/token/', tokenRoutes);
-app.use('/password/', passwordRoutes);
+app.use('/code', codeRoutes);
+app.use('/user', userRoutes);
+app.use('/token', tokenRoutes);
+app.use('/password', passwordRoutes);
+
+app.use('/jwt', jwtRoutes);
 
 app.use(errorHandler);
 
