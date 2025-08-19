@@ -9,10 +9,10 @@
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts",
     "lint": "eslint 'src/**/*.ts'",
 
-    "db-start": "docker build -t floraccess-db-image ./Database --build-arg postgres && docker run --name floraccess-db-container -p 5430:5432 -e POSTGRES_PASSWORD=postgres -d floraccess-db-image",
+    "db-start": "docker build -t floraccess-db-image ./Database --build-arg postgres && docker run --name floraccess-db-container -p 18100:5432 -e POSTGRES_PASSWORD=postgres -d floraccess-db-image",
     "db-stop": "docker container stop floraccess-db-container && docker container rm floraccess-db-container && docker image rm floraccess-db-image",
     "db-logs": "docker logs floraccess-db-container",
-    "db-connect": "psql -U postgres -h localhost floraccess -p 5430"
+    "db-connect": "psql -U postgres -h localhost floraccess -p 18100"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
   "devDependencies": {
     "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/ms": "^2.1.0",
     "@types/node": "^22.15.23",
     "@types/nodemailer": "^6.4.17",
     "@types/pg": "^8.15.2",
@@ -39,10 +40,12 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "argon2": "^0.44.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "jsonwebtoken": "^9.0.2",
+    "ms": "^2.1.3",
     "nodemailer": "^7.0.3",
     "pg": "^8.16.0",
     "swagger-jsdoc": "^6.2.8",
