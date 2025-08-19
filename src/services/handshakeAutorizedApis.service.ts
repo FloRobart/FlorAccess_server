@@ -1,5 +1,5 @@
 import { getAllAuthorizedApi, updateAuthorizedApi } from '../database/authorizedApiDao';
-import { AuthorizedApi } from '../models/AuthorizedApi';
+import { AuthorizedApi } from '../models/AuthorizedApiModel';
 import http from 'http';
 import * as logger from '../utils/logger';
 import config from '../config/config';
@@ -11,9 +11,9 @@ import { generateApiToken } from '../utils/utils';
  * Initializes the authorized API by creating the necessary database table.
  */
 export async function handshakeAuthorizedApis(): Promise<boolean> {
-    return getAllAuthorizedApi().then((apis: AuthorizedApi[]) => {
+    return getAllAuthorizedApi().then(async (apis: AuthorizedApi[]) => {
         for (const api of apis) {
-            let token: string = generateApiToken(config.token_length);
+            let token: string = await generateApiToken(config.token_length);
             let timestamp: number = Date.now();
 
             const params = Buffer.from(`${api.api_name}.${token}.${timestamp}`).toString("base64");

@@ -1,5 +1,5 @@
 import { executeQuery } from './database';
-import { AuthorizedApi } from '../models/AuthorizedApi';
+import { AuthorizedApi } from '../models/AuthorizedApiModel';
 
 
 
@@ -66,7 +66,7 @@ export async function getAuthorizedApiByNameUrl(api_name: string, api_url: strin
  * @param api_name The name of the API.
  * @returns A promise that resolves to the authorized API object if found, otherwise throws an error.
  */
-export async function getAuthorizedApiByName(api_name: string): Promise<AuthorizedApi|false> {
+export async function getAuthorizedApiByName(api_name: string): Promise<AuthorizedApi|null> {
     if (!api_name || typeof api_name !== 'string') { throw new Error('Invalid API name.'); }
 
     let query = "SELECT * FROM authorizedapi WHERE api_name=$1 LIMIT 1;";
@@ -74,7 +74,7 @@ export async function getAuthorizedApiByName(api_name: string): Promise<Authoriz
 
     return executeQuery({text: query, values: values}).then((rows) => {
         if (rows === null) { throw new Error("Database query failed."); }
-        if (rows.length === 0) { return false; }
+        if (rows.length === 0) { return null; }
 
         return rows[0] as AuthorizedApi;
     }).catch((err: Error) => {
