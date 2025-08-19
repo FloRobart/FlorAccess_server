@@ -1,5 +1,6 @@
 import { executeQuery } from '../database/database';
 import * as logger from '../utils/logger';
+import { User } from '../models/UsersModel';
 
 
 
@@ -13,7 +14,7 @@ import * as logger from '../utils/logger';
 export async function createUser(email: string, token: string|null, name: string|undefined): Promise<User> {
     if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
 
-    let query = "INSERT INTO users (users_email, users_token, users_name) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *";
+    let query = "INSERT INTO users (users_email, users_secret, users_name) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *";
     let values = [email, token, name||null];
 
     return executeQuery({text: query, values: values}).then((rows) => {
@@ -21,8 +22,8 @@ export async function createUser(email: string, token: string|null, name: string
         if (rows.length === 0) { throw new Error('Failed to create user.'); }
 
         return rows[0] as User;
-    }).catch((err) => {
-        throw new Error(`Database error: ${err.message}`);
+    }).catch((err: Error) => {
+        throw err;
     });
 }
 
@@ -36,7 +37,7 @@ export async function getUserByEmailToken(email: string, token: string): Promise
     if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
     if (!token || typeof token !== 'string') { throw new Error('Invalid token.'); }
 
-    let query = "SELECT * FROM users WHERE users_email = $1 AND users_token = $2";
+    let query = "SELECT * FROM users WHERE users_email = $1 AND users_secret = $2";
     let values = [email, token];
 
     return executeQuery({text: query, values: values}).then((rows) => {
@@ -60,9 +61,6 @@ export async function getUserByEmail(email: string): Promise<User> {
     const query = "SELECT * FROM users WHERE users_email = $1";
     const values = [email]
 
-    logger.debug("getUserByEmail query :", query);
-    logger.debug("getUserByEmail values :", values);
-
     return executeQuery({text: query, values: values}).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this email.'); }
@@ -81,14 +79,14 @@ export async function getUserByEmail(email: string): Promise<User> {
 export async function getUserTokenByEmail(email: string): Promise<string> {
     if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
 
-    let query = "SELECT users_token FROM users WHERE users_email = $1";
+    let query = "SELECT users_secret FROM users WHERE users_email = $1";
     let values = [email]
 
     return executeQuery({text: query, values: values}).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this email.'); }
 
-        return rows[0].users_token;
+        return rows[0].users_secret;
     }).catch((err) => {
         throw new Error(`Database error: ${err.message}`);
     });
@@ -113,6 +111,39 @@ export async function getUserCountByEmail(email: string): Promise<number> {
         throw new Error(`Database error: ${err.message}`);
     });
 }
+
+
+/**
+ * Updates or a user in the database.
+ * @param user The user object containing the updated user information.
+ * @returns A promise that resolves to the updated user object.
+ */
+export async function updateUser(user: User): Promise<User> {
+    if (!user || !user.users_email || typeof user.users_email !== 'string') { throw new Error('Invalid user object.'); }
+
+    // Utilisation d'UPSERT pour créer ou mettre à jour l'utilisateur
+    const query = `INSERT INTO users (users_email, users_name, users_authmethod, users_password, users_secret, users_ip)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (users_email)
+        DO UPDATE SET
+            users_name = EXCLUDED.users_name,
+            users_authmethod = EXCLUDED.users_authmethod,
+            users_password = EXCLUDED.users_password,
+            users_secret = EXCLUDED.users_secret,
+            users_ip = EXCLUDED.users_ip
+        RETURNING *`;
+    const values = [user.users_email, user.users_name, user.users_authmethod, user.users_password, user.users_secret, user.users_ip];
+
+    return executeQuery({text: query, values: values}).then((rows) => {
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('Failed to create or update user.'); }
+
+        return rows[0] as User;
+    }).catch((err: Error) => {
+        throw err;
+    });
+}
+
 
 /**
  * Updates a user in the database by ID.
@@ -177,28 +208,15 @@ export async function deleteUserById(id: number): Promise<User> {
 
 
 /**
- * User interface representing the structure of a user in the database.
- */
-export interface User {
-    users_id: number;
-    users_email: string;
-    users_name?: string;
-    users_password?: string;
-    users_token?: string;
-    createdAt: Date;
-    updatedAt: Date;
-}
-
-/**
  * Interface representing the values that can be updated in a user record.
  * @param users_email The email address of the user.
  * @param users_name The name of the user.
  * @param users_password The password of the user.
- * @param users_token The authentication token of the user.
+ * @param users_secret The authentication token of the user.
  */
 interface UpdatedValues {
     users_email?: string,
     users_name?: string,
     users_password?: string,
-    users_token?: string
+    users_secret?: string
 }

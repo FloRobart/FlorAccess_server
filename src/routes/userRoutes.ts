@@ -1,53 +1,42 @@
 import { Router } from 'express';
-import { updateUserById, deleteUserById, verifyEmail, registerUser } from '../controllers/userController';
+import { updateUserById, deleteUserById, registerUser, logoutUser } from '../controllers/userController';
 
 
 const router = Router();
 
+
+
 /**
- * TODO : Routes deleted because they cause data leakage problems
- *
- * /user/existing/{email}:
- *   get:
+ * @swagger
+ * /user/logout:
+ *   post:
  *     tags:
  *       - User
- *     summary: Verify if email is valid (if user exists)
- *     description: Check if the provided email address is associated with an existing user. If the user exists '1' is returned, otherwise '0' is returned.
+ *     summary: Logout a user
+ *     description: Logout a user by invalidating the authentication token.
  *     parameters:
- *       - in: path
- *         name: email
+ *       - in: headers
+ *         name: Authorization
  *         required: true
- *         description: The email address to verify
+ *         description: JWT token for user authentication
  *         schema:
  *           type: string
- *           format: email
- *           example: "john.doe@mail.com"
+ *           example: "Bearer your_jwt_token_here"
  *     responses:
  *       200:
- *         description: Email verification result. true if user exists, false if user does not exist
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               required:
- *                 - email
- *                 - exists
- *               properties:
- *                 email:
- *                   type: string
- *                   format: email
- *                   description: The email address that was verified
- *                   example: "john.doe@mail.com"
- *                 exists:
- *                   type: boolean
- *                   description: Indicates if the user exists (true) or not (false)
- *                   example: true
+ *         description: User logged out successfully
  *       400:
  *         description: Bad request. Change your request to fix this error
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#components/schemas/error400'
+ *       401:
+ *         description: Unauthorized. Invalid or missing JWT token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#components/schemas/error401'
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -55,7 +44,7 @@ const router = Router();
  *             schema:
  *               $ref: '#components/schemas/error500'
  */
-// router.get('/existing/:email', verifyEmail);
+router.get('/logout', logoutUser);
 
 
 /**
