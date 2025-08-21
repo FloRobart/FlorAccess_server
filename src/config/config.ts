@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 import { normalizePort } from '../utils/utils';
-import * as logger from '../utils/logger';
 import { AuthorizedApi } from '../models/AuthorizedApiModel';
 import { type StringValue } from 'ms';
 import ms from 'ms';
@@ -54,10 +53,10 @@ const config: Config = {
     host_name: process.env.HOST_NAME || 'localhost',
     base_url: process.env.BASE_URL || 'http://localhost',
     app_env: process.env.APP_ENV || 'default',
-    
+
     /* Database */
     db_uri: process.env.DB_URI || "postgresql://postgres:postgres@localhost:5432/postgres",
-    
+
     /* JWT */
     jwt_signing_key: process.env.JWT_SIGNING_KEY || '',
     jwt_expiration: ms((process.env.JWT_EXPIRATION as StringValue) || "1d"),
@@ -100,7 +99,7 @@ function parseDefaultAuthorizedApis(default_authorized_apis: string): Authorized
             }));
         }
     } catch (error) {
-        logger.error("Error parsing DEFAULT_AUTHORIZED_APIS :", error);
+        console.error("Error parsing DEFAULT_AUTHORIZED_APIS :", error);
     }
     return [];
 }
