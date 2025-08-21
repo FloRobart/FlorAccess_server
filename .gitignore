@@ -3,3 +3,4 @@ vendor
 storage
 public/storage
 .env
+dist
