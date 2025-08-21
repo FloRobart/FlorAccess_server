@@ -28,7 +28,7 @@ const swaggerOptions = {
     swaggerDefinition: {
         openapi: '3.0.0',
         info: {
-            title: 'Floraccess API',
+            title: `${config.app_name} API`,
             version: '2.0.0',
             description: 'API documentation',
         },
@@ -38,7 +38,7 @@ const swaggerOptions = {
             },
         ],
     },
-    apis: [`${__dirname}/routes/*.ts`, `${__dirname}/swagger/*.ts`], // files containing annotations as above
+    apis: [`${__dirname}/routes/*.ts`, `${__dirname}/swagger/*.ts`, `${__dirname}/routes/*.js`, `${__dirname}/swagger/*.js`], // files containing annotations as above
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
