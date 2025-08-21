@@ -1,0 +1,70 @@
+services:
+  floraccess-db:
+    build:
+      context: ./Database
+      dockerfile: Dockerfile
+    image: floraccess-db:latest
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./Database:/docker-entrypoint-initdb.d
+    networks:
+      - floraccess-net
+    healthcheck:
+      test: ['CMD-SHELL', 'psql -U postgres -d floraccess']
+      interval: 5s
+      timeout: 30s
+      retries: 5
+
+  floraccess-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: floraccess-app:latest
+    restart: always
+    environment:
+      APP_NAME: ${APP_NAME}
+      APP_PORT: ${APP_PORT}
+      HOST_NAME: ${HOST_NAME}
+      BASE_URL: ${BASE_URL}
+      APP_ENV: ${APP_ENV}
+
+      DB_URI: postgresql://${DB_USER}:${DB_PASSWORD}@floraccess-db:5432/${DB_NAME}
+
+      JWT_SIGNING_KEY: ${JWT_SIGNING_KEY}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+
+      MAIL_SERVICE: ${MAIL_SERVICE}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+      HASH_ROUNDS: ${HASH_ROUNDS}
+      TOKEN_LENGTH: ${TOKEN_LENGTH}
+      TOKEN_EXPIRATION: ${TOKEN_EXPIRATION}
+      REQUEST_LIMIT_PER_SECOND: ${REQUEST_LIMIT_PER_SECOND}
+      REQUEST_LIMIT_TIME: ${REQUEST_LIMIT_TIME}
+      HASH_ALGORITHM: ${HASH_ALGORITHM}
+      CODE_DATA_SET: ${CODE_DATA_SET}
+
+      HANDSHAKE_STATIC_TOKEN: ${HANDSHAKE_STATIC_TOKEN}
+      HANDSHAKE_AUTHORIZED_API: ${HANDSHAKE_AUTHORIZED_API}
+
+      DEFAULT_AUTHORIZED_APIS: ${DEFAULT_AUTHORIZED_APIS}
+    depends_on:
+      floraccess-db:
+        condition: service_healthy
+    networks:
+      - floraccess-net
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+
+volumes:
+  db_data:
+
+networks:
+  floraccess-net:
+    driver: bridge
