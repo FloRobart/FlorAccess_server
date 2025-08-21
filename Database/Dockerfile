@@ -1,9 +1,7 @@
 FROM postgres
 
-ARG POSTGRES_PASSWORD
-
 ENV POSTGRES_USER=postgres
-ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+ENV POSTGRES_PASSWORD=postgres
 ENV POSTGRES_DB=floraccess
 
 COPY *.sql /docker-entrypoint-initdb.d/
