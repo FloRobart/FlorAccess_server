@@ -59,8 +59,9 @@ services:
         condition: service_healthy
     networks:
       - floraccess-net
+      - flower_garden-net
     ports:
-      - ${APP_PORT}:${APP_PORT}
+      - ${APP_PORT}:80
 
 volumes:
   db_data:
@@ -68,3 +69,5 @@ volumes:
 networks:
   floraccess-net:
     driver: bridge
+  flower_garden-net:
+    external: true
