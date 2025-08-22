@@ -45,11 +45,10 @@ interface Config {
     readonly default_authorized_apis: AuthorizedApi[];
 }
 
-const DEFAULT_PORT: number = 8080;
 const config: Config = {
     /* Application configuration */
     app_name: process.env.APP_NAME || 'Éconoris',
-    app_port: normalizePort(process.env.APP_PORT || String(DEFAULT_PORT)) || DEFAULT_PORT,
+    app_port: 80,
     host_name: process.env.HOST_NAME || 'localhost',
     base_url: process.env.BASE_URL || 'http://localhost',
     app_env: process.env.APP_ENV || 'default',
