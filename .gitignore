@@ -1,6 +1,7 @@
+.*
 node_modules
-vendor
-storage
-public/storage
-.env
 dist
+
+
+!.*.example
+!.gitignore
