@@ -15,16 +15,16 @@ services:
     networks:
       - floraccess-net
     healthcheck:
-      test: ['CMD-SHELL', 'psql -U postgres -d floraccess']
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} || exit 1"]
       interval: 5s
       timeout: 30s
       retries: 5
 
-  floraccess-app:
+  floraccess-server:
     build:
       context: .
       dockerfile: Dockerfile
-    image: floraccess-app:latest
+    image: floraccess-server:latest
     restart: always
     environment:
       APP_NAME: ${APP_NAME}
@@ -33,7 +33,11 @@ services:
       BASE_URL: ${BASE_URL}
       APP_ENV: ${APP_ENV}
 
-      DB_URI: postgresql://${DB_USER}:${DB_PASSWORD}@floraccess-db:5432/${DB_NAME}
+      DB_SCHEME: ${DB_SCHEME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: ${DB_HOST}
 
       JWT_SIGNING_KEY: ${JWT_SIGNING_KEY}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
