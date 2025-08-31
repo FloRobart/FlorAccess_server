@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
-import { normalizePort } from '../utils/utils';
 import { AuthorizedApi } from '../models/AuthorizedApiModel';
 import { type StringValue } from 'ms';
 import ms from 'ms';
+
 
 dotenv.config();
 
@@ -47,14 +47,14 @@ interface Config {
 
 const config: Config = {
     /* Application configuration */
-    app_name: process.env.APP_NAME || 'Éconoris',
+    app_name: process.env.APP_NAME || 'Floraccess',
     app_port: 80,
     host_name: process.env.HOST_NAME || 'localhost',
     base_url: process.env.BASE_URL || 'http://localhost',
     app_env: process.env.APP_ENV || 'default',
 
     /* Database */
-    db_uri: process.env.DB_URI || "postgresql://postgres:postgres@localhost:5432/postgres",
+    db_uri: `${process.env.DB_SCHEME}://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:5432/${process.env.DB_NAME}`,
 
     /* JWT */
     jwt_signing_key: process.env.JWT_SIGNING_KEY || '',
