@@ -13,6 +13,7 @@ import { handshakeAuthorizedApis } from './services/handshakeAutorizedApis.servi
 import { saveDefaultAuthorizedApisToDatabase } from './config/authorizedApi';
 import codeRoutes from './routes/codeRoutes';
 import jwtRoutes from './routes/jwtRoutes';
+import cors from 'cors';
 
 
 
@@ -67,12 +68,12 @@ app.use(express.json());
 
 app.use('/handshake', handshakeRoutes);
 
-app.use('/code', codeRoutes);
-app.use('/user', userRoutes);
-app.use('/token', tokenRoutes);
-app.use('/password', passwordRoutes);
+app.use('/code', cors(config.corsOptions), codeRoutes);
+app.use('/user', cors(config.corsOptions), userRoutes);
+app.use('/token', cors(config.corsOptions), tokenRoutes);
+app.use('/password', cors(config.corsOptions), passwordRoutes);
 
-app.use('/jwt', jwtRoutes);
+app.use('/jwt', cors(config.corsOptions), jwtRoutes);
 
 app.use(errorHandler);
 

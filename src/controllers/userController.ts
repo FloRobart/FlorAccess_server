@@ -4,10 +4,67 @@ import * as logger from '../utils/logger';
 import config from '../config/config';
 import JWT from 'jsonwebtoken';
 import { isValidEmail, isValidRequestBody } from '../utils/utils';
-import { getJwt } from '../utils/securities';
+import { getJwt, verifyJwt } from '../utils/securities';
+import { User } from '../models/UsersModel';
 
 
 
+/**
+ * Retrieves user information from the JWT in the request headers.
+ * @GET /jwt/user
+ * @param req Request
+ * @param req.headers.authorization Authorization header containing the API token
+ * @param req.query.jwt JWT to verify
+ * @param res Response
+ * @param next NextFunction
+ * @returns User information or error response
+ */
+export const getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        /* Verify headers */
+        if (!req.headers.authorization) {
+            res.status(401).send();
+            return;
+        }
+
+        const authHeader: string[] = req.headers.authorization.split(' ');
+        if (authHeader.length !== 2 || authHeader[0] !== 'Bearer') {
+            res.status(401).send();
+            return;
+        }
+
+        const jwt: string = authHeader[1];
+
+        /* Verify JWT */
+        verifyJwt(jwt).then((user: User|null) => {
+            if (!user || !user.users_id) {
+                res.status(401).json({ error: 'Invalid or expired JWT.' });
+                return;
+            }
+            res.status(200).json({
+                userid: user.users_id,
+                email: user.users_email,
+                name: user.users_name,
+                authmethod: user.users_authmethod,
+            });
+        }).catch((err: Error) => {
+            logger.error("JWT verification error :", err);
+            next(err);
+        });
+    } catch (error) {
+        logger.error("Error in getUserFromJwt :", error);
+        next(error);
+    }
+}
+
+/**
+ * Logs out a user by invalidating the JWT token.
+ * @POST /user/logout
+ * @param req Request
+ * @param res Response
+ * @param next NextFunction
+ * @returns Success message or error response
+ */
 export const logoutUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
         /* Invalidate JWT */
@@ -17,20 +74,20 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
             return;
         }
 
-        JWT.verify(token, config.jwt_signing_key, (err) => {
-            if (err) {
-                res.status(401).json({ error: 'Unauthorized. Invalid or expired JWT token' });
+        verifyJwt(token).then((user: User|null) => {
+            if (!user || !user.users_id) {
+                res.status(401).json({ error: 'Invalid or expired JWT.' });
                 return;
             }
 
-            res.status(202).json({ message: 'User logout comming soon.' });
-            // /* Logout user */
-            // Users.logoutUser(token).then(() => {
-            //     res.status(200).json({ message: 'User logged out successfully.' });
-            // }).catch((err) => {
-            //     logger.error(err);
-            //     res.status(500).json({ error: 'Internal server error.' });
-            // });
+            res.status(200).json({
+                email: user.users_email,
+                name: user.users_name,
+                authmethod: user.users_authmethod,
+            });
+        }).catch((err: Error) => {
+            logger.error("JWT verification error :", err);
+            next(err);
         });
     } catch (error) {
         logger.error(error);

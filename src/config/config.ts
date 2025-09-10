@@ -43,6 +43,14 @@ interface Config {
 
     /* Default Authorized APIs */
     readonly default_authorized_apis: AuthorizedApi[];
+
+    /* CORS */
+    readonly corsOptions: {
+        origin: string[];
+        methods: string[];
+        credentials: boolean;
+        allowedHeaders: string[];
+    };
 }
 
 const config: Config = {
@@ -80,6 +88,14 @@ const config: Config = {
 
     /* Default Authorized APIs */
     default_authorized_apis: parseDefaultAuthorizedApis(process.env.DEFAULT_AUTHORIZED_APIS || '[]'),
+
+    /* CORS */
+    corsOptions: {
+        origin: (process.env.CORS_ALLOWED_ORIGINS || '').split(',').map(origin => origin.trim()),
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization'],
+    },
 };
 
 
