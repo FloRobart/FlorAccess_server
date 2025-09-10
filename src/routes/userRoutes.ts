@@ -1,9 +1,52 @@
 import { Router } from 'express';
-import { updateUserById, deleteUserById, registerUser, logoutUser } from '../controllers/userController';
+import { updateUserById, deleteUserById, registerUser, logoutUser, getUserProfile } from '../controllers/userController';
 
 
 const router = Router();
 
+
+
+/**
+ * @swagger
+ * /user/profile:
+ *   get:
+ *     tags:
+ *       - API routes
+ *     summary: Get user information from JWT
+ *     description: Retrieve information about the authenticated user.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT Token
+ *         schema:
+ *           type: string
+ *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     responses:
+ *       200:
+ *         description: User information retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 email:
+ *                   type: string
+ *                   example: "user@example.com"
+ *                 name:
+ *                   type: string
+ *                   example: "John Doe"
+ *                 authmethod:
+ *                   type: string
+ *                   example: "password"
+ *       401:
+ *         description: Unauthorized access.
+ *       422:
+ *         description: Invalid request parameters.
+ *       500:
+ *         description: Internal server error.
+ */
+router.get('/profile', getUserProfile);
 
 
 /**
@@ -44,7 +87,7 @@ const router = Router();
  *             schema:
  *               $ref: '#components/schemas/error500'
  */
-router.get('/logout', logoutUser);
+router.post('/logout', logoutUser);
 
 
 /**
