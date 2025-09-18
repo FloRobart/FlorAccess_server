@@ -2,8 +2,10 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Copier le reste du code
-COPY . .
+# Copier le code source
+COPY tsconfig.json ./
+COPY package*.json ./
+COPY ./src ./src
 
 # Installer les dépendances
 RUN npm ci
@@ -22,4 +24,4 @@ RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
 
 # Par défaut : lance le serveur
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/server.js"]
