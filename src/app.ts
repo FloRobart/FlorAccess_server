@@ -36,6 +36,8 @@ connectToDatabase(config.db_uri).then(() => {
 app.use(limiter);
 app.use(express.json());
 
+app.get('/', (_req, res) => { res.status(200).send('HEALTH CHECK') });
+
 app.use('/handshake', handshakeRoutes);
 
 app.use('/code', cors(config.corsOptions), codeRoutes);
