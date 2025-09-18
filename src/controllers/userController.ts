@@ -125,8 +125,6 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
             /* Generate JWT */
             const jwt = await getJwt(user);
 
-            logger.debug("Generated JWT:", jwt);
-
             /* Return JWT */
             res.status(201).json({ jwt: jwt });
         }).catch((err) => {
@@ -151,7 +149,8 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 export const updateUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         /* Get user id from JWT */
-        const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as { userid: number,
+        const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as {
+            userid: number,
             email: string,
             name: string,
             ip: string
@@ -185,7 +184,8 @@ export const updateUserById = async (req: Request, res: Response, next: NextFunc
 export const deleteUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         /* Get user id from JWT */
-        const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as { userid: number,
+        const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as {
+            userid: number,
             email: string,
             name: string,
             ip: string

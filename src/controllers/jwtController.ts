@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as Users from '../database/usersDao';
-import { generateUserToken, isValidEmail, isValidRequestBody } from '../utils/utils';
 import * as logger from '../utils/logger';
 import config from '../config/config';
-import { sendTokenEmail } from '../mail/tokenMail';
 import JWT from 'jsonwebtoken';
 import { getAuthorizedApiByName } from '../database/authorizedApiDao';
 import { AuthorizedApi } from '../models/AuthorizedApiModel';
@@ -30,8 +28,6 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
             res.status(400).json({ error: 'Invalid email address or token.' });
             return;
         }
-        logger.debug("getJwt email :", email);
-        logger.debug("getJwt token :", token);
 
         /* Get user informations */
         Users.getUserByEmailToken(email, token).then((user) => {
@@ -39,7 +35,6 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
                 res.status(400).json({ error: 'Invalid email or token.' });
                 return;
             }
-            logger.debug("getJwt user :", user);
 
             /* Verify token expiration */
             const tokenParts = token.split('.');
@@ -55,7 +50,6 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
             }
 
             /* Generate JWT */
-            logger.debug("adresse ip :", req.ip);
             const jwtPayload = {
                 userid: user.users_id,
                 email: user.users_email,
@@ -63,7 +57,6 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
                 ip: req.ip,
             };
             const jwt: string = JWT.sign(jwtPayload, config.jwt_signing_key);
-            logger.debug("Generated JWT:", jwt);
 
             /* Return JWT */
             res.status(200).json({ jwt: jwt });
@@ -94,8 +87,6 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         }
 
         const authHeader = req.headers.authorization;
-        const authParts = authHeader.split('.');
-
 
         /* Verify body request */
         const jwt = req.params.jwt;
@@ -107,7 +98,7 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         /* Verify JWT */
         JWT.verify(jwt, config.jwt_signing_key, (err, decoded) => {
             if (err) {
-                res.status(200).json({ 
+                res.status(200).json({
                     valid: false,
                     error: 'Invalid or expired JWT.'
                 });
@@ -137,34 +128,29 @@ export const getUserFromJwt = async (req: Request, res: Response, next: NextFunc
         /* Verify headers */
         if (!req.headers.authorization) {
             res.status(401).send();
-            logger.debug("40X");
             return;
         }
 
         const authHeader: string[] = req.headers.authorization.split(' ');
         if (authHeader.length !== 2) {
             res.status(401).send();
-            logger.debug("40X");
             return;
         }
 
         const api: AuthorizedApi | null = await getAuthorizedApiByName(authHeader[0]);
         if (!api) {
             res.status(401).send();
-            logger.debug("40X");
             return;
         }
 
         if (api.api_privatetoken !== authHeader[1]) {
             res.status(401).send();
-            logger.debug("40X");
             return;
         }
 
         const jwtRaw = req.query.jwt instanceof Array ? req.query.jwt[req.query.jwt.length-1].toString() : req.query.jwt?.toString();
         if (!jwtRaw || typeof jwtRaw !== 'string') {
             res.status(400).json({ error: 'Invalid JWT.' });
-            logger.debug("40X");
             return;
         }
         const jwt: string = jwtRaw;
@@ -173,7 +159,6 @@ export const getUserFromJwt = async (req: Request, res: Response, next: NextFunc
         verifyJwt(jwt).then((user: User|null) => {
             if (!user || !user.users_id) {
                 res.status(422).json({ error: 'Invalid or expired JWT.' });
-                logger.debug("40X");
                 return;
             }
             res.status(200).json({
