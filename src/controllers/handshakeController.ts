@@ -4,6 +4,7 @@ import * as logger from '../utils/logger';
 import config from '../config/config';
 import { getAuthorizedApiByName, updateAuthorizedApi } from '../database/authorizedApiDao';
 import { AuthorizedApi } from '../models/AuthorizedApiModel';
+import { AppError } from '../models/ErrorModel';
 
 
 
@@ -18,13 +19,13 @@ import { AuthorizedApi } from '../models/AuthorizedApiModel';
 export const handshake = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.query['params'] || !req.headers['authorization']) {
-            res.status(400).send();
+            next(new AppError("Missing parameters or http headers", 400));
             return;
         }
 
         const authorizationToken = req.headers['authorization'].split(' ')[1];
         if (authorizationToken !== config.handshake_static_token) {
-            res.status(401).send();
+            next(new AppError("Unauthorized", 401));
             return;
         }
 
@@ -35,12 +36,12 @@ export const handshake = async (req: Request, res: Response, next: NextFunction)
         const savedApi: AuthorizedApi | null = await getAuthorizedApiByName(apiName);
 
         if (params.length !== 3) {
-            res.status(422).send();
+            next(new AppError("Invalid parameters", 422));
             return;
         }
 
         if (!apiName || !apiPrivateTokenHash || isNaN(apiLastAccess) || savedApi === null) {
-            res.status(400).send();
+            next(new AppError("Invalid parameters", 400));
             return;
         }
 
@@ -54,9 +55,9 @@ export const handshake = async (req: Request, res: Response, next: NextFunction)
             return;
         }
 
-        res.status(400).send();
-    } catch (error) {
-        logger.error('Error during handshake :', error);
-        next(error);
+        next(new AppError("Invalid token", 400));
+    } catch (err) {
+        logger.error('Error during handshake :', err);
+        next(new AppError());
     }
 };

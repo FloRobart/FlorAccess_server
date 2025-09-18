@@ -15,6 +15,7 @@ import codeRoutes from './routes/codeRoutes';
 import jwtRoutes from './routes/jwtRoutes';
 import cors from 'cors';
 import { ENABLE_ENV } from './config/enableenv';
+import { defaultRouteHandler } from './middlewares/defaultRouteHandler';
 
 
 
@@ -44,6 +45,7 @@ app.use('/password', cors(config.corsOptions), passwordRoutes);
 
 app.use('/jwt', cors(config.corsOptions), jwtRoutes);
 
+app.use(defaultRouteHandler);
 app.use(errorHandler);
 
 
