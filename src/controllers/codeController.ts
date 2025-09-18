@@ -21,13 +21,12 @@ import { User } from '../models/UsersModel';
  */
 export const loginRequest = async (req: Request, res: Response, next: NextFunction) => {
     /* Verify body request */
-    logger.debug("loginRequest body :", req.body);
     if (!isValidRequestBody(req.body, ['email'])) {
         res.status(400).json({ error: 'Invalid request body.' });
         return;
     }
-    const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length-1] : req.body.email;
-    const name = Array.isArray(req.body.name) ? req.body.name[req.body.name.length-1] : req.body.name;
+    const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length - 1] : req.body.email;
+    const name = Array.isArray(req.body.name) ? req.body.name[req.body.name.length - 1] : req.body.name;
     const appName = req.body.app_name || config.app_name;
 
     if (!isValidEmail(email) || !name) {
@@ -48,20 +47,20 @@ export const loginRequest = async (req: Request, res: Response, next: NextFuncti
 
         user.users_secret = await hashString(code);
         Users.updateUser(user).then(() => {
-                /* Send code by email */
-                sendCodeEmail(email, appName, code)
-                    .then(() => {
-                        res.status(200).json({ message: 'Code sent successfully' });
-                    })
-                    .catch((err: Error) => {
-                        next("Failed to send email.");
-                        return;
-                    });
-            })
-            .catch((err: Error) => {
-                next("Failed to update user.");
-                return;
-            });
+            /* Send code by email */
+            sendCodeEmail(email, appName, code)
+                .then(() => {
+                    res.status(200).json({ message: 'Code sent successfully' });
+                })
+                .catch((err: Error) => {
+                    next("Failed to send email.");
+                    return;
+                });
+        })
+        .catch((err: Error) => {
+            next("Failed to update user.");
+            return;
+        });
     } catch (error) {
         next("Internal server error.");
         return;
@@ -102,12 +101,11 @@ export const loginConfirmation = async (req: Request, res: Response, next: NextF
         }
 
         /* Verify code */
-        if (await verifyHash(code, user.users_secret))  {
+        if (await verifyHash(code, user.users_secret)) {
             user.users_secret = null; // Clear the secret after successful login
             user.users_connected = true; // Set user as connected
             user.users_authmethod = 'code'; // Ensure auth method is set to code
             Users.updateUser(user).then(async () => {
-                logger.debug("User authenticated successfully:", user);
                 res.status(200).json({ jwt: await getJwt(user) });
             }).catch((err: Error) => {
                 logger.error("Failed to update user:", err);
