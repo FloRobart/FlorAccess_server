@@ -6,6 +6,7 @@ import JWT from 'jsonwebtoken';
 import { isValidEmail, isValidRequestBody } from '../utils/utils';
 import { getJwt, verifyJwt } from '../utils/securities';
 import { User } from '../models/UsersModel';
+import { AppError } from '../models/ErrorModel';
 
 
 
@@ -23,13 +24,13 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
     try {
         /* Verify headers */
         if (!req.headers.authorization) {
-            res.status(401).send();
+            next(new AppError("Unauthorized", 401));
             return;
         }
 
         const authHeader: string[] = req.headers.authorization.split(' ');
         if (authHeader.length !== 2 || authHeader[0] !== 'Bearer') {
-            res.status(401).send();
+            next(new AppError("Unauthorized", 401));
             return;
         }
 
@@ -38,7 +39,7 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
         /* Verify JWT */
         verifyJwt(jwt).then((user: User|null) => {
             if (!user || !user.users_id) {
-                res.status(401).json({ error: 'Invalid or expired JWT.' });
+                next(new AppError("Invalid or expired JWT", 401));
                 return;
             }
             res.status(200).json({
@@ -48,12 +49,12 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
                 authmethod: user.users_authmethod,
             });
         }).catch((err: Error) => {
-            logger.error("JWT verification error :", err);
-            next(err);
+            logger.error(err);
+            next(new AppError());
         });
-    } catch (error) {
-        logger.error("Error in getUserFromJwt :", error);
-        next(error);
+    } catch (err) {
+        logger.error("Error in getUserFromProfile :", err);
+        next(new AppError());
     }
 }
 
@@ -70,13 +71,13 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
         /* Invalidate JWT */
         const token = req.headers.authorization?.split(' ')[1];
         if (!token) {
-            res.status(401).json({ error: 'Unauthorized. Invalid or missing JWT token' });
+            next(new AppError("Unauthorized", 401));
             return;
         }
 
         verifyJwt(token).then((user: User|null) => {
             if (!user || !user.users_id) {
-                res.status(401).json({ error: 'Invalid or expired JWT.' });
+                next(new AppError("Invalid or expired JWT", 401));
                 return;
             }
 
@@ -87,12 +88,11 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
             });
         }).catch((err: Error) => {
             logger.error("JWT verification error :", err);
-            next(err);
+            next(new AppError());
         });
-    } catch (error) {
-        logger.error(error);
-        res.status(500).json({ error: 'Internal server error.' });
-        next(error);
+    } catch (err) {
+        logger.error(err);
+        next(new AppError());
     }
 };
 
@@ -108,14 +108,14 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
     /* Verify body request */
     if (!isValidRequestBody(req.body, ['email'])) {
-        res.status(400).json({ error: 'Invalid request body.' });
+        next(new AppError("Invalid request body", 400));
         return;
     }
     const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length-1] : req.body.email;
     const name = Array.isArray(req.body.name) ? req.body.name[req.body.name.length-1] : req.body.name;
 
     if (!isValidEmail(email)) {
-        res.status(400).json({ error: 'Invalid email address.' });
+        next(new AppError("Invalid email address", 400));
         return;
     }
 
@@ -129,11 +129,11 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
             res.status(201).json({ jwt: jwt });
         }).catch((err) => {
             logger.error(err);
-            res.status(400).json({ error: 'User not created !' });
-            return;
+            next(new AppError("User not created", 400));
         });
-    } catch (error) {
-        next(error);
+    } catch (err) {
+        logger.error(err);
+        next(new AppError());
     }
 };
 
@@ -164,13 +164,11 @@ export const updateUserById = async (req: Request, res: Response, next: NextFunc
             res.status(200).json({ jwt: newJwt, updated: true });
         }).catch((err: any) => {
             logger.error(err);
-            res.status(400).json({ error: 'User not found or could not be updated.' });
-            return;
+            next(new AppError("User not found or could not be updated", 400));
         });
-    } catch (error) {
-        logger.error(error);
-        res.status(500).json({ error: 'Internal server error.' });
-        next(error);
+    } catch (err) {
+        logger.error(err);
+        next(new AppError());
     }
 }
 
@@ -197,13 +195,11 @@ export const deleteUserById = async (req: Request, res: Response, next: NextFunc
             res.status(200).json({ message: 'User deleted successfully.' });
         }).catch((err: any) => {
             logger.error(err);
-            res.status(400).json({ error: 'User not found or could not be deleted.' });
-            return;
+            next(new AppError("User not found or could not be deleted", 400));
         });
     }
-    catch (error) {
-        logger.error(error);
-        res.status(500).json({ error: 'Internal server error.' });
-        next(error);
+    catch (err) {
+        logger.error(err);
+        next(new AppError());
     }
 };

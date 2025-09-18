@@ -4,7 +4,7 @@ import { generateUserToken, isValidEmail, isValidRequestBody } from '../utils/ut
 import * as logger from '../utils/logger';
 import config from '../config/config';
 import { sendTokenEmail } from '../mail/tokenMail';
-import JWT from 'jsonwebtoken';
+import { AppError } from '../models/ErrorModel';
 
 
 
@@ -21,14 +21,14 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
     try {
         /* Verify body request */
         if (!isValidRequestBody(req.body, ['email'])) { // add verif for callback route
-            res.status(400).json({ error: 'Invalid request body.' });
+            next(new AppError("Invalid request body", 400));
             return;
         }
         const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length-1] : req.body.email;
         const appName = req.body.app_name || config.app_name;
 
         if (!isValidEmail(email)) {
-            res.status(400).json({ error: 'Invalid email address.' });
+            next(new AppError("Invalid email address", 400));
             return;
         }
 
@@ -44,12 +44,12 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
                         user.users_secret = result.users_secret;
                     }).catch((err) => {
                         logger.error("Failed to update token :", err);
-                        next("Failed to update token.");
+                        next(new AppError("Failed to update token", 500));
                         return;
                     });
-                } catch (error) {
-                    logger.error(error);
-                    next("Internal server error.");
+                } catch (err) {
+                    logger.error("Failed to update token 2 :", err);
+                    next(new AppError("Failed to update token", 500));
                     return;
                 }
 
@@ -58,19 +58,20 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
                     res.status(200).json({ message: 'Token sent successfully' });
                 }).catch((err) => {
                     logger.error("Failed to send email :", err);
-                    next("Failed to send email.");
+                    next(new AppError("Failed to send email", 500));
                     return;
                 });
             }).catch((err) => {
                 logger.error(err);
-                res.status(400).json({ error: 'User not found !' });
+                next(new AppError("User not found", 400));
                 return;
             });
-        } catch (error) {
-            logger.error(error);
-            next("Internal server error.");
+        } catch (err) {
+            logger.error(err);
+            next(new AppError());
         }
-    } catch (error) {
-        next();
+    } catch (err) {
+        logger.error(err);
+        next(new AppError());
     }
 };
