@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import * as logger from '../utils/logger';
 import config from '../config/config';
+import { ENABLE_ENV } from '../config/enableenv';
 
 
 
@@ -25,19 +26,34 @@ const mailOptions = {
  * @param subject The subject of the email
  * @param html The HTML content of the email
  */
-async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
     mailOptions.to = to;
     mailOptions.subject = subject;
     mailOptions.html = html;
 
-    transporter.sendMail(mailOptions, function(error: any, info: any) {
-        if (error) {
-            logger.error(error);
-        } else {
-            logger.success("Email sent successfully");
+    return transporter.sendMail(mailOptions).then((info) => {
+        if (ENABLE_ENV[config.app_env] === 5) {
+            logger.info('Email sent: ' + info.response);
         }
+        return true;
+    }).catch((err: Error) => {
+        logger.error('Error sending email: ' + err);
+        throw err;
     });
 }
 
 
 export default sendEmail;
+
+// function(err: Error | null, info: any) {
+//         if (err) {
+//             if (ENABLE_ENV[config.app_env] === 5) {
+//                 logger.debug("Email details:", mailOptions);
+//             }
+//             logger.error("Error sending email:", err);
+//             return false;
+//         } else {
+//             logger.success("Email sent successfully");
+//             return true;
+//         }
+//     }
