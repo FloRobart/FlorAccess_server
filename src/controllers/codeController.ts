@@ -55,13 +55,13 @@ export const loginRequest = async (req: Request, res: Response, next: NextFuncti
                 })
                 .catch((err: Error) => {
                     logger.error("Failed to send email:", err);
-                    next(new AppError("Failed to send email."));
+                    next(new AppError("Failed to send email.", 500));
                     return;
                 });
         })
         .catch((err: Error) => {
             logger.error("Failed to update user :", err);
-            next(new AppError("Failed to update user."));
+            next(new AppError("Failed to update user.", 500));
             return;
         });
     } catch (err) {
