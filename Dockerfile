@@ -2,12 +2,13 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Copie des fichiers nécessaires
-COPY package*.json tsconfig.json ./
-RUN npm ci
+# Copier le code source
+COPY tsconfig.json ./
+COPY package*.json ./
+COPY ./src ./src
 
-# Copier le reste du code
-COPY . .
+# Installer les dépendances
+RUN npm ci
 
 # Build TypeScript → JavaScript
 RUN npm run build
@@ -23,4 +24,4 @@ RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
 
 # Par défaut : lance le serveur
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/server.js"]

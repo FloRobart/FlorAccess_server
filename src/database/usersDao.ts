@@ -15,9 +15,9 @@ export async function createUser(email: string, token: string|null, name: string
     if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
 
     let query = "INSERT INTO users (users_email, users_secret, users_name) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *";
-    let values = [email, token, name||null];
+    let values = [email, token, name || null];
 
-    return executeQuery({text: query, values: values}).then((rows) => {
+    return executeQuery({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('Failed to create user.'); }
 
@@ -40,7 +40,7 @@ export async function getUserByEmailToken(email: string, token: string): Promise
     let query = "SELECT * FROM users WHERE users_email = $1 AND users_secret = $2";
     let values = [email, token];
 
-    return executeQuery({text: query, values: values}).then((rows) => {
+    return executeQuery({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this email and this token.'); }
 
@@ -61,7 +61,7 @@ export async function getUserByEmail(email: string): Promise<User> {
     const query = "SELECT * FROM users WHERE users_email = $1";
     const values = [email]
 
-    return executeQuery({text: query, values: values}).then((rows) => {
+    return executeQuery({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this email.'); }
 
@@ -82,7 +82,7 @@ export async function getUserTokenByEmail(email: string): Promise<string> {
     let query = "SELECT users_secret FROM users WHERE users_email = $1";
     let values = [email]
 
-    return executeQuery({text: query, values: values}).then((rows) => {
+    return executeQuery({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this email.'); }
 
@@ -102,7 +102,7 @@ export async function getUserCountByEmail(email: string): Promise<number> {
     let query = "SELECT COUNT(*) FROM users WHERE users_email = $1";
     let values = [email];
 
-    return executeQuery({text: query, values: values}).then((rows) => {
+    return executeQuery({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this email.'); }
 
@@ -134,7 +134,7 @@ export async function updateUser(user: User): Promise<User> {
         RETURNING *`;
     const values = [user.users_email, user.users_name, user.users_authmethod, user.users_password, user.users_secret, user.users_ip];
 
-    return executeQuery({text: query, values: values}).then((rows) => {
+    return executeQuery({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('Failed to create or update user.'); }
 
@@ -170,10 +170,7 @@ export async function updateUserById(id: number, updatedValues: UpdatedValues): 
     if (setClauses.length === 0) { throw new Error('No values to update.'); }
     query += setClauses.join(', ') + " WHERE users_id = $1 RETURNING *";
 
-    logger.debug("updateUserById query :", query);
-    logger.debug("updateUserById values :", values);
-
-    return executeQuery({text: query, values: values}).then((rows) => {
+    return executeQuery({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this id.'); }
 
@@ -195,7 +192,7 @@ export async function deleteUserById(id: number): Promise<User> {
     let query = "DELETE FROM users WHERE users_id = $1 RETURNING *";
     let values = [id];
 
-    return executeQuery({text: query, values: values}).then((rows) => {
+    return executeQuery({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this id.'); }
 
