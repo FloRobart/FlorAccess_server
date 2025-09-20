@@ -6,6 +6,7 @@ import config from '../config/config';
 import { sendCodeEmail } from '../mail/codeEmail';
 import { getJwt, hashString, verifyHash, generateCode } from '../utils/securities';
 import { User } from '../models/UsersModel';
+import { AppError } from '../models/ErrorModel';
 
 
 
@@ -21,17 +22,16 @@ import { User } from '../models/UsersModel';
  */
 export const loginRequest = async (req: Request, res: Response, next: NextFunction) => {
     /* Verify body request */
-    logger.debug("loginRequest body :", req.body);
     if (!isValidRequestBody(req.body, ['email'])) {
-        res.status(400).json({ error: 'Invalid request body.' });
+        next(new AppError("Invalid request body.", 400));
         return;
     }
-    const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length-1] : req.body.email;
-    const name = Array.isArray(req.body.name) ? req.body.name[req.body.name.length-1] : req.body.name;
+    const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length - 1] : req.body.email;
+    const name = Array.isArray(req.body.name) ? req.body.name[req.body.name.length - 1] : req.body.name;
     const appName = req.body.app_name || config.app_name;
 
     if (!isValidEmail(email) || !name) {
-        res.status(400).json({ error: 'Invalid email address or name.' });
+        next(new AppError("Invalid email address or name.", 400));
         return;
     }
 
@@ -48,22 +48,25 @@ export const loginRequest = async (req: Request, res: Response, next: NextFuncti
 
         user.users_secret = await hashString(code);
         Users.updateUser(user).then(() => {
-                /* Send code by email */
-                sendCodeEmail(email, appName, code)
-                    .then(() => {
-                        res.status(200).json({ message: 'Code sent successfully' });
-                    })
-                    .catch((err: Error) => {
-                        next("Failed to send email.");
-                        return;
-                    });
-            })
-            .catch((err: Error) => {
-                next("Failed to update user.");
-                return;
-            });
-    } catch (error) {
-        next("Internal server error.");
+            /* Send code by email */
+            sendCodeEmail(email, appName, code)
+                .then(() => {
+                    res.status(200).json({ message: 'Code sent successfully' });
+                })
+                .catch((err: Error) => {
+                    logger.error("Failed to send email:", err);
+                    next(new AppError("Failed to send email.", 500));
+                    return;
+                });
+        })
+        .catch((err: Error) => {
+            logger.error("Failed to update user :", err);
+            next(new AppError("Failed to update user.", 500));
+            return;
+        });
+    } catch (err) {
+        logger.error(err);
+        next(new AppError());
         return;
     }
 };
@@ -81,14 +84,14 @@ export const loginRequest = async (req: Request, res: Response, next: NextFuncti
 export const loginConfirmation = async (req: Request, res: Response, next: NextFunction) => {
     /* Verify body request */
     if (!isValidRequestBody(req.body, ['email', 'code'])) {
-        res.status(400).json({ error: 'Invalid request body.' });
+        next(new AppError("Invalid request body", 400));
         return;
     }
     const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length-1] : req.body.email;
     const code = (Array.isArray(req.body.code) ? req.body.code[req.body.code.length-1] : req.body.code).toString().trim().toUpperCase();
 
     if (!isValidEmail(email)) {
-        res.status(400).json({ error: 'Invalid email address.' });
+        next(new AppError("Invalid email address", 400));
         return;
     }
 
@@ -97,31 +100,28 @@ export const loginConfirmation = async (req: Request, res: Response, next: NextF
         const user = await Users.getUserByEmail(email);
 
         if (!user || !user.users_secret) {
-            res.status(400).json({ error: 'User not found.' });
+            next(new AppError("User not found", 400));
             return;
         }
 
         /* Verify code */
-        if (await verifyHash(code, user.users_secret))  {
+        if (await verifyHash(code, user.users_secret)) {
             user.users_secret = null; // Clear the secret after successful login
             user.users_connected = true; // Set user as connected
             user.users_authmethod = 'code'; // Ensure auth method is set to code
             Users.updateUser(user).then(async () => {
-                logger.debug("User authenticated successfully:", user);
                 res.status(200).json({ jwt: await getJwt(user) });
             }).catch((err: Error) => {
-                logger.error("Failed to update user:", err);
-                res.status(500).json({ error: 'Internal server error.' });
-                next(err);
+                logger.error("Failed to update user :", err);
+                next(new AppError());
                 return;
             });
         } else {
-            res.status(401).json({ error: 'Invalid code.' });
+            next(new AppError("Invalid code", 401));
             return;
         }
-
-    } catch (error) {
-        logger.error(error);
-        next("Internal server error.");
+    } catch (err) {
+        logger.error(err);
+        next(new AppError());
     }
 };

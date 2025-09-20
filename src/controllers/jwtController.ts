@@ -1,14 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import * as Users from '../database/usersDao';
-import { generateUserToken, isValidEmail, isValidRequestBody } from '../utils/utils';
 import * as logger from '../utils/logger';
 import config from '../config/config';
-import { sendTokenEmail } from '../mail/tokenMail';
 import JWT from 'jsonwebtoken';
 import { getAuthorizedApiByName } from '../database/authorizedApiDao';
 import { AuthorizedApi } from '../models/AuthorizedApiModel';
 import { verifyJwt } from '../utils/securities';
 import { User } from '../models/UsersModel';
+import { AppError } from '../models/ErrorModel';
 
 
 
@@ -27,35 +26,31 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
         const email = req.query.email instanceof Array ? req.query.email[req.query.email.length-1] : req.query.email;
         const token = req.query.token instanceof Array ? req.query.token[req.query.token.length-1] : req.query.token;
         if (!email || typeof email !== 'string' || !token || typeof token !== 'string') {
-            res.status(400).json({ error: 'Invalid email address or token.' });
+            next(new AppError("Invalid email address or token.", 400));
             return;
         }
-        logger.debug("getJwt email :", email);
-        logger.debug("getJwt token :", token);
 
         /* Get user informations */
         Users.getUserByEmailToken(email, token).then((user) => {
             if (!user) {
-                res.status(400).json({ error: 'Invalid email or token.' });
+                next(new AppError("Invalid email or token.", 400));
                 return;
             }
-            logger.debug("getJwt user :", user);
 
             /* Verify token expiration */
             const tokenParts = token.split('.');
             if (tokenParts.length !== 3 || isNaN(Number(tokenParts[1])) || Date.now() > Number(tokenParts[1])) {
-                res.status(400).json({ error: 'Token has expired.' });
+                next(new AppError("Token has expired.", 400));
                 return;
             }
 
             /* Verify user id */
             if (user.users_id !== Number(tokenParts[2])) {
-                res.status(400).json({ error: 'Invalid email or token.' });
+                next(new AppError("Invalid email or token.", 400));
                 return;
             }
 
             /* Generate JWT */
-            logger.debug("adresse ip :", req.ip);
             const jwtPayload = {
                 userid: user.users_id,
                 email: user.users_email,
@@ -63,17 +58,17 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
                 ip: req.ip,
             };
             const jwt: string = JWT.sign(jwtPayload, config.jwt_signing_key);
-            logger.debug("Generated JWT:", jwt);
 
             /* Return JWT */
             res.status(200).json({ jwt: jwt });
         }).catch((err) => {
             logger.error(err);
-            res.status(400).json({ error: 'User not found !' });
+            next(new AppError("User not found", 404));
             return;
         });
-    } catch (error) {
-        next(error);
+    } catch (err) {
+        logger.error("Error in getJwt :", err);
+        next(new AppError());
     }
 }
 
@@ -89,25 +84,21 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
     try {
         /* Verify headers */
         if (!req.headers.authorization) {
-            res.status(400).json({ error: 'Invalid Authorization header.' });
+            next(new AppError("Invalid Authorization header.", 400));
             return;
         }
-
-        const authHeader = req.headers.authorization;
-        const authParts = authHeader.split('.');
-
 
         /* Verify body request */
         const jwt = req.params.jwt;
         if (!jwt || typeof jwt !== 'string') {
-            res.status(400).json({ error: 'Invalid JWT.' });
+            next(new AppError("Invalid JWT.", 400));
             return;
         }
 
         /* Verify JWT */
         JWT.verify(jwt, config.jwt_signing_key, (err, decoded) => {
             if (err) {
-                res.status(200).json({ 
+                res.status(200).json({
                     valid: false,
                     error: 'Invalid or expired JWT.'
                 });
@@ -116,8 +107,9 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
 
             res.status(200).json({ valid: true });
         });
-    } catch (error) {
-        next(error);
+    } catch (err) {
+        logger.error("Error in verifyToken :", err);
+        next(new AppError());
     }
 }
 
@@ -136,35 +128,30 @@ export const getUserFromJwt = async (req: Request, res: Response, next: NextFunc
     try {
         /* Verify headers */
         if (!req.headers.authorization) {
-            res.status(401).send();
-            logger.debug("40X");
+            next(new AppError("Unauthorized", 401));
             return;
         }
 
         const authHeader: string[] = req.headers.authorization.split(' ');
         if (authHeader.length !== 2) {
-            res.status(401).send();
-            logger.debug("40X");
+            next(new AppError("Unauthorized", 401));
             return;
         }
 
         const api: AuthorizedApi | null = await getAuthorizedApiByName(authHeader[0]);
         if (!api) {
-            res.status(401).send();
-            logger.debug("40X");
+            next(new AppError("Unauthorized", 401));
             return;
         }
 
         if (api.api_privatetoken !== authHeader[1]) {
-            res.status(401).send();
-            logger.debug("40X");
+            next(new AppError("Unauthorized", 401));
             return;
         }
 
         const jwtRaw = req.query.jwt instanceof Array ? req.query.jwt[req.query.jwt.length-1].toString() : req.query.jwt?.toString();
         if (!jwtRaw || typeof jwtRaw !== 'string') {
-            res.status(400).json({ error: 'Invalid JWT.' });
-            logger.debug("40X");
+            next(new AppError("Invalid JWT.", 400));
             return;
         }
         const jwt: string = jwtRaw;
@@ -172,8 +159,7 @@ export const getUserFromJwt = async (req: Request, res: Response, next: NextFunc
         /* Verify JWT */
         verifyJwt(jwt).then((user: User|null) => {
             if (!user || !user.users_id) {
-                res.status(422).json({ error: 'Invalid or expired JWT.' });
-                logger.debug("40X");
+                next(new AppError("Invalid or expired JWT", 422));
                 return;
             }
             res.status(200).json({
@@ -184,10 +170,10 @@ export const getUserFromJwt = async (req: Request, res: Response, next: NextFunc
             });
         }).catch((err: Error) => {
             logger.error("JWT verification error :", err);
-            next(err);
+            next(new AppError());
         });
-    } catch (error) {
-        logger.error("Error in getUserFromJwt :", error);
-        next(error);
+    } catch (err) {
+        logger.error("Error in getUserFromJwt :", err);
+        next(new AppError());
     }
 }

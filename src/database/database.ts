@@ -64,7 +64,6 @@ export async function closeDatabaseConnection(): Promise<boolean> {
  */
 export async function executeQuery(query: Query): Promise<any[]|null> {
     try {
-        logger.debug("Executing query:", query.text);
         const res = await client.query(query);
         return res.rows || [];
     } catch (err) {
