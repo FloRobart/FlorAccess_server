@@ -70,6 +70,7 @@ export const htmlTokenEmailTemplate = (appName: string, route: string): string =
  * @returns The HTML template as a string
  */
 export const htmlCodeEmailTemplate = (appName: string, code: string): string => {
+    const currentYear = new Date().getFullYear();
     return `
     <!DOCTYPE html>
     <html lang="fr">
@@ -88,17 +89,16 @@ export const htmlCodeEmailTemplate = (appName: string, code: string): string => 
                         <!-- Entête de l'email -->
                         <tr>
                             <td class="header" style="background-color: #721414; padding: 40px; text-align: center; color: white; font-size: 24px;">
-                                Connexion avec ${appName}
+                                <h1>Connexion avec ${appName}</h1>
                             </td>
                         </tr>
 
                         <!-- Contenu de l'email -->
                         <tr>
                             <td style="padding: 0px 40px 0px 40px; text-align: center;">
-                                <h1>Connexion avec ${appName}</h1>
-                                <p>Confirmer votre connexion en copiant le code suivant :</p>
+                                <h2>Confirmer votre connexion en copiant le code suivant :</h2>
                                 <p style="font-weight: bold;font-size: 32px;">${code.toString().replace(/(\d{2})(?=\d)/g, '$1 ')}</p>
-                                <p>Collez ce code dans l'application pour vous connecter.</p>
+                                <h2>Collez ce code dans l'application pour vous connecter.</h2>
 
                                 <br>
 
@@ -109,7 +109,7 @@ export const htmlCodeEmailTemplate = (appName: string, code: string): string => 
                         <!-- Footer de l'email -->
                         <tr>
                             <td class="footer" style="background-color: #333333; padding: 40px; text-align: center; color: white; font-size: 14px;">
-                                <span>Copyright © 2024 - <script>document.write(new Date().getFullYear())</script>
+                                <span>Copyright © ${currentYear} - </span>
                                 <a href="https://florobart.github.io/" target="_blank"><b>Floris Robart</b></a>
                             </td>
                         </tr>
