@@ -97,7 +97,7 @@ export const htmlCodeEmailTemplate = (appName: string, code: string): string => 
                             <td style="padding: 0px 40px 0px 40px; text-align: center;">
                                 <h1>Connexion avec ${appName}</h1>
                                 <p>Confirmer votre connexion en copiant le code suivant :</p>
-                                <p style="font-weight: bold;">${code}</p>
+                                <p style="font-weight: bold;font-size: 32px;">${code.toString().replace(/(\d{2})(?=\d)/g, '$1 ')}</p>
                                 <p>Collez ce code dans l'application pour vous connecter.</p>
 
                                 <br>
