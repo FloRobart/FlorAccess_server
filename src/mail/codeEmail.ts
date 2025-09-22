@@ -1,7 +1,6 @@
 import config from '../config/config';
 import sendEmail from './mailer';
 import { htmlCodeEmailTemplate } from './mailTemplate';
-import * as logger from '../utils/logger';
 
 
 
@@ -18,10 +17,9 @@ export async function sendCodeEmail(to: string, app_name: string, code: string):
 
     const html = htmlCodeEmailTemplate(appName, code);
 
-    return sendEmail(to, `Connexion avec ${appName}`, html).then((result) => {
+    return sendEmail(to, `Votre code pour ${appName} : ${code}`, html).then((result) => {
         return result;
     }).catch((err: Error) => {
-        logger.debug("HAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
         throw err;
     });
 }
