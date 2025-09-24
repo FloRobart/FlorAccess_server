@@ -89,16 +89,16 @@ export const htmlCodeEmailTemplate = (appName: string, code: string): string => 
                         <!-- Entête de l'email -->
                         <tr>
                             <td class="header" style="background-color: #721414; padding: 40px; text-align: center; color: white; font-size: 24px;">
-                                <h1>Connexion avec ${appName}</h1>
+                                <h2>Connexion avec ${appName}</h2>
                             </td>
                         </tr>
 
                         <!-- Contenu de l'email -->
                         <tr>
                             <td style="padding: 0px 40px 0px 40px; text-align: center;">
-                                <h2>Confirmer votre connexion en copiant le code suivant :</h2>
+                                <h3>Confirmer votre connexion en copiant le code suivant :</h3>
                                 <p style="font-weight: bold;font-size: 32px;">${code.toString().replace(/(\d{2})(?=\d)/g, '$1 ')}</p>
-                                <h2>Collez ce code dans l'application pour vous connecter.</h2>
+                                <h3>Collez ce code dans l'application pour vous connecter.</h3>
 
                                 <br>
 
