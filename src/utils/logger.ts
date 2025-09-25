@@ -1,5 +1,6 @@
 import config from '../config/config';
 import { ENABLE_ENV } from '../config/enableenv';
+import { sendErrorEmail } from '../email/errorEmail';
 
 
 
@@ -25,6 +26,14 @@ const debugMessage = ` [🐛] ${config.app_name} - DEBUG   |`;
 export function error(...args: any[]) {
     if (ENABLE_ENV[config.app_env] >= 1) {
         console.error(errorMessage, ...args);
+
+        if (ENABLE_ENV[config.app_env] === 4) {
+            sendErrorEmail(...args).then(() => {
+                success("Error email sent successfully !");
+            }).catch((err: Error) => {
+                console.error(errorMessage, "Failed to send error email :", err);
+            });
+        }
     }
 }
 

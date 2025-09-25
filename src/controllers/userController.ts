@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import * as Users from '../database/usersDao';
-import * as logger from '../utils/logger';
 import config from '../config/config';
 import JWT from 'jsonwebtoken';
 import { isValidEmail, isValidRequestBody } from '../utils/utils';
@@ -24,13 +23,13 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
     try {
         /* Verify headers */
         if (!req.headers.authorization) {
-            next(new AppError("Unauthorized", 401));
+            next(new AppError({message: "Unauthorized", httpStatus: 401}));
             return;
         }
 
         const authHeader: string[] = req.headers.authorization.split(' ');
         if (authHeader.length !== 2 || authHeader[0] !== 'Bearer') {
-            next(new AppError("Unauthorized", 401));
+            next(new AppError({message: "Unauthorized", httpStatus: 401}));
             return;
         }
 
@@ -39,7 +38,7 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
         /* Verify JWT */
         verifyJwt(jwt).then((user: User|null) => {
             if (!user || !user.users_id) {
-                next(new AppError("Invalid or expired JWT", 401));
+                next(new AppError({message: "Invalid or expired JWT", httpStatus: 401}));
                 return;
             }
             res.status(200).json({
@@ -49,12 +48,10 @@ export const getUserProfile = async (req: Request, res: Response, next: NextFunc
                 authmethod: user.users_authmethod,
             });
         }).catch((err: Error) => {
-            logger.error(err);
-            next(new AppError());
+            next(new AppError({stackTrace: err}));
         });
     } catch (err) {
-        logger.error("Error in getUserFromProfile :", err);
-        next(new AppError());
+        next(new AppError({stackTrace: err}));
     }
 }
 
@@ -71,13 +68,13 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
         /* Invalidate JWT */
         const token = req.headers.authorization?.split(' ')[1];
         if (!token) {
-            next(new AppError("Unauthorized", 401));
+            next(new AppError({message: "Unauthorized", httpStatus: 401}));
             return;
         }
 
         verifyJwt(token).then((user: User|null) => {
             if (!user || !user.users_id) {
-                next(new AppError("Invalid or expired JWT", 401));
+                next(new AppError({message: "Invalid or expired JWT", httpStatus: 401}));
                 return;
             }
 
@@ -87,12 +84,10 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
                 authmethod: user.users_authmethod,
             });
         }).catch((err: Error) => {
-            logger.error("JWT verification error :", err);
-            next(new AppError());
+            next(new AppError({stackTrace: err}));
         });
     } catch (err) {
-        logger.error(err);
-        next(new AppError());
+        next(new AppError({stackTrace: err}));
     }
 };
 
@@ -108,33 +103,27 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
     /* Verify body request */
     if (!isValidRequestBody(req.body, ['email'])) {
-        next(new AppError("Invalid request body", 400));
+        next(new AppError({message: "Invalid request body", httpStatus: 400}));
         return;
     }
     const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length-1] : req.body.email;
     const name = Array.isArray(req.body.name) ? req.body.name[req.body.name.length-1] : req.body.name;
 
     if (!isValidEmail(email)) {
-        next(new AppError("Invalid email address", 400));
+        next(new AppError({message: "Invalid email address", httpStatus: 400}));
         return;
     }
 
-    try {
-        /* Save and get user informations */
-        Users.createUser(email, null, name).then(async (user) => {
-            /* Generate JWT */
-            const jwt = await getJwt(user);
+    /* Save and get user informations */
+    Users.createUser(email, null, name).then(async (user) => {
+        /* Generate JWT */
+        const jwt = await getJwt(user);
 
-            /* Return JWT */
-            res.status(201).json({ jwt: jwt });
-        }).catch((err) => {
-            logger.error(err);
-            next(new AppError("User not created", 400));
-        });
-    } catch (err) {
-        logger.error(err);
-        next(new AppError());
-    }
+        /* Return JWT */
+        res.status(201).json({ jwt: jwt });
+    }).catch((err: Error) => {
+        next(new AppError({message: "User not created", httpStatus: 400, stackTrace: err}));
+    });
 };
 
 /**
@@ -162,13 +151,11 @@ export const updateUserById = async (req: Request, res: Response, next: NextFunc
             const newJwt: string = await getJwt(user);
 
             res.status(200).json({ jwt: newJwt, updated: true });
-        }).catch((err: any) => {
-            logger.error(err);
-            next(new AppError("User not found or could not be updated", 400));
+        }).catch((err: Error) => {
+            next(new AppError({message: "User not found or could not be updated", httpStatus: 400, stackTrace: err}));
         });
     } catch (err) {
-        logger.error(err);
-        next(new AppError());
+        next(new AppError({stackTrace: err}));
     }
 }
 
@@ -193,13 +180,11 @@ export const deleteUserById = async (req: Request, res: Response, next: NextFunc
         /* Delete user by id */
         Users.deleteUserById(id).then(() => {
             res.status(200).json({ message: 'User deleted successfully.' });
-        }).catch((err: any) => {
-            logger.error(err);
-            next(new AppError("User not found or could not be deleted", 400));
+        }).catch((err: Error) => {
+            next(new AppError({message: "User not found or could not be deleted", httpStatus: 400, stackTrace: err}));
         });
     }
     catch (err) {
-        logger.error(err);
-        next(new AppError());
+        next(new AppError({stackTrace: err}));
     }
 };

@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import * as Users from '../database/usersDao';
 import { generateUserToken, isValidEmail, isValidRequestBody } from '../utils/utils';
-import * as logger from '../utils/logger';
 import config from '../config/config';
-import { sendTokenEmail } from '../mail/tokenMail';
+import { sendTokenEmail } from '../email/tokenMail';
 import { AppError } from '../models/ErrorModel';
 
 
@@ -21,14 +20,14 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
     try {
         /* Verify body request */
         if (!isValidRequestBody(req.body, ['email'])) { // add verif for callback route
-            next(new AppError("Invalid request body", 400));
+            next(new AppError({message: "Invalid request body", httpStatus: 400}));
             return;
         }
         const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length-1] : req.body.email;
         const appName = req.body.app_name || config.app_name;
 
         if (!isValidEmail(email)) {
-            next(new AppError("Invalid email address", 400));
+            next(new AppError({message: "Invalid email address", httpStatus: 400}));
             return;
         }
 
@@ -42,36 +41,30 @@ export const sendToken = (req: Request, res: Response, next: NextFunction) => {
                 try {
                     Users.updateUser(user).then((result) => {
                         user.users_secret = result.users_secret;
-                    }).catch((err) => {
-                        logger.error("Failed to update token :", err);
-                        next(new AppError("Failed to update token", 500));
+                    }).catch((err: Error) => {
+                        next(new AppError({message: "Failed to update token", httpStatus: 500, stackTrace: err}));
                         return;
                     });
                 } catch (err) {
-                    logger.error("Failed to update token 2 :", err);
-                    next(new AppError("Failed to update token", 500));
+                    next(new AppError({message: "Failed to update token", httpStatus: 500, stackTrace: err}));
                     return;
                 }
 
                 /* Send token by email */
                 sendTokenEmail(email, appName, token).then(() => { // add route to the email
                     res.status(200).json({ message: 'Token sent successfully' });
-                }).catch((err) => {
-                    logger.error("Failed to send email :", err);
-                    next(new AppError("Failed to send email", 500));
+                }).catch((err: Error) => {
+                    next(new AppError({message: "Failed to send email", httpStatus: 500, stackTrace: err}));
                     return;
                 });
-            }).catch((err) => {
-                logger.error(err);
-                next(new AppError("User not found", 400));
+            }).catch((err: Error) => {
+                next(new AppError({message: "User not found", httpStatus: 400, stackTrace: err}));
                 return;
             });
         } catch (err) {
-            logger.error(err);
-            next(new AppError());
+            next(new AppError({stackTrace: err}));
         }
     } catch (err) {
-        logger.error(err);
-        next(new AppError());
+        next(new AppError({stackTrace: err}));
     }
 };

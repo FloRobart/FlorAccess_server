@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import * as Users from '../database/usersDao';
-import * as logger from '../utils/logger';
 import config from '../config/config';
 import JWT from 'jsonwebtoken';
 import { getAuthorizedApiByName } from '../database/authorizedApiDao';
@@ -26,27 +25,27 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
         const email = req.query.email instanceof Array ? req.query.email[req.query.email.length-1] : req.query.email;
         const token = req.query.token instanceof Array ? req.query.token[req.query.token.length-1] : req.query.token;
         if (!email || typeof email !== 'string' || !token || typeof token !== 'string') {
-            next(new AppError("Invalid email address or token.", 400));
+            next(new AppError({message: "Invalid email address or token.", httpStatus: 400}));
             return;
         }
 
         /* Get user informations */
         Users.getUserByEmailToken(email, token).then((user) => {
             if (!user) {
-                next(new AppError("Invalid email or token.", 400));
+                next(new AppError({message: "Invalid email or token.", httpStatus: 400}));
                 return;
             }
 
             /* Verify token expiration */
             const tokenParts = token.split('.');
             if (tokenParts.length !== 3 || isNaN(Number(tokenParts[1])) || Date.now() > Number(tokenParts[1])) {
-                next(new AppError("Token has expired.", 400));
+                next(new AppError({message: "Token has expired.", httpStatus: 400}));
                 return;
             }
 
             /* Verify user id */
             if (user.users_id !== Number(tokenParts[2])) {
-                next(new AppError("Invalid email or token.", 400));
+                next(new AppError({message: "Invalid email or token.", httpStatus: 400}));
                 return;
             }
 
@@ -62,13 +61,11 @@ export const getJwt = (req: Request, res: Response, next: NextFunction) => {
             /* Return JWT */
             res.status(200).json({ jwt: jwt });
         }).catch((err) => {
-            logger.error(err);
-            next(new AppError("User not found", 404));
+            next(new AppError({message: "User not found", httpStatus: 404}));
             return;
         });
     } catch (err) {
-        logger.error("Error in getJwt :", err);
-        next(new AppError());
+        next(new AppError({stackTrace: err}));
     }
 }
 
@@ -84,14 +81,14 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
     try {
         /* Verify headers */
         if (!req.headers.authorization) {
-            next(new AppError("Invalid Authorization header.", 400));
+            next(new AppError({message: "Invalid Authorization header.", httpStatus: 400}));
             return;
         }
 
         /* Verify body request */
         const jwt = req.params.jwt;
         if (!jwt || typeof jwt !== 'string') {
-            next(new AppError("Invalid JWT.", 400));
+            next(new AppError({message: "Invalid JWT.", httpStatus: 400}));
             return;
         }
 
@@ -108,8 +105,7 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
             res.status(200).json({ valid: true });
         });
     } catch (err) {
-        logger.error("Error in verifyToken :", err);
-        next(new AppError());
+        next(new AppError({stackTrace: err}));
     }
 }
 
@@ -128,30 +124,30 @@ export const getUserFromJwt = async (req: Request, res: Response, next: NextFunc
     try {
         /* Verify headers */
         if (!req.headers.authorization) {
-            next(new AppError("Unauthorized", 401));
+            next(new AppError({message: "Unauthorized", httpStatus: 401}));
             return;
         }
 
         const authHeader: string[] = req.headers.authorization.split(' ');
         if (authHeader.length !== 2) {
-            next(new AppError("Unauthorized", 401));
+            next(new AppError({message: "Unauthorized", httpStatus: 401}));
             return;
         }
 
         const api: AuthorizedApi | null = await getAuthorizedApiByName(authHeader[0]);
         if (!api) {
-            next(new AppError("Unauthorized", 401));
+            next(new AppError({message: "Unauthorized", httpStatus: 401}));
             return;
         }
 
         if (api.api_privatetoken !== authHeader[1]) {
-            next(new AppError("Unauthorized", 401));
+            next(new AppError({message: "Unauthorized", httpStatus: 401}));
             return;
         }
 
         const jwtRaw = req.query.jwt instanceof Array ? req.query.jwt[req.query.jwt.length-1].toString() : req.query.jwt?.toString();
         if (!jwtRaw || typeof jwtRaw !== 'string') {
-            next(new AppError("Invalid JWT.", 400));
+            next(new AppError({message: "Invalid JWT.", httpStatus: 400}));
             return;
         }
         const jwt: string = jwtRaw;
@@ -159,7 +155,7 @@ export const getUserFromJwt = async (req: Request, res: Response, next: NextFunc
         /* Verify JWT */
         verifyJwt(jwt).then((user: User|null) => {
             if (!user || !user.users_id) {
-                next(new AppError("Invalid or expired JWT", 422));
+                next(new AppError({message: "Invalid or expired JWT", httpStatus: 422}));
                 return;
             }
             res.status(200).json({
@@ -169,11 +165,9 @@ export const getUserFromJwt = async (req: Request, res: Response, next: NextFunc
                 authmethod: user.users_authmethod,
             });
         }).catch((err: Error) => {
-            logger.error("JWT verification error :", err);
-            next(new AppError());
+            next(new AppError({stackTrace: err}));
         });
     } catch (err) {
-        logger.error("Error in getUserFromJwt :", err);
-        next(new AppError());
+        next(new AppError({stackTrace: err}));
     }
 }

@@ -26,8 +26,8 @@ const app = express();
 /* Database */
 connectToDatabase(config.db_uri).then(() => {
     logger.success("Connected to database successfully");
-}).catch((err) => {
-    logger.error(err);
+}).catch((err: Error) => {
+    logger.error("Failed to connect to database :", err);
     process.exit(1); // Exit the application if an error occurs
 });
 

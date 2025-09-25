@@ -1,6 +1,5 @@
 import argon2 from 'argon2';
 import config from '../config/config';
-import * as logger from './logger';
 import { User } from '../models/UsersModel';
 import JWT from 'jsonwebtoken';
 import { getUserByEmail } from '../database/usersDao';
@@ -24,7 +23,6 @@ export async function hashString(input: string): Promise<string> {
 
         return hash;
     } catch (err) {
-        logger.error("Hashing error :", err);
         throw err;
     }
 }
@@ -39,7 +37,6 @@ export async function verifyHash(input: string, hash: string): Promise<boolean> 
     try {
         return await argon2.verify(hash, input);
     } catch (err) {
-        logger.error("Hash verification error :", err);
         throw err;
     }
 }
@@ -66,9 +63,8 @@ export async function getJwt(user: User): Promise<string> {
         const jwt = JWT.sign(jwtPayload, config.jwt_signing_key, { expiresIn: config.jwt_expiration });
 
         return jwt;
-    } catch (error) {
-        logger.error("JWT generation error :", error);
-        throw error;
+    } catch (err) {
+        throw err;
     }
 }
 
@@ -90,9 +86,8 @@ export async function verifyJwt(jwt: string): Promise<User | null> {
         }
         
         return null;
-    } catch (error) {
-        logger.error("JWT verification error :", error);
-        return null;
+    } catch (err) {
+        throw err;
     }
 }
 
@@ -100,7 +95,7 @@ export async function verifyJwt(jwt: string): Promise<User | null> {
 
 /**
  * Generates a secure random delay.
- * @param maxDelayMs Maximum delay in milliseconds
+ * @param maxDelayMs Maximum delay in milliseconds (default is 1000ms)
  * @returns A promise that resolves after a random delay
  */
 function generateSecureRandomDelay(maxDelayMs = 1000): Promise<void> {
@@ -130,24 +125,28 @@ export async function generateApiToken(length=128): Promise<string> {
  * @returns A promise that resolves to the generated code.
  */
 export async function generateCode(length: number): Promise<string> {
-    const chars = config.code_data_set;
-    const charsLength = chars.length;
-    const maxRandomValue = 0xFFFFFFFF; // Valeur max d'un Uint32
-    const mask = Math.floor(maxRandomValue / charsLength) * charsLength;
-    let result = '';
-    const values = new Uint32Array(length);
+    try {
+        const chars = config.code_data_set;
+        const charsLength = chars.length;
+        const maxRandomValue = 0xFFFFFFFF; // Valeur max d'un Uint32
+        const mask = Math.floor(maxRandomValue / charsLength) * charsLength;
+        let result = '';
+        const values = new Uint32Array(length);
 
-    while (result.length < length) {
-        getRandomValues(values);
-        for (let i = 0; i < values.length && result.length < length; i++) {
-            // On rejette les valeurs qui introduiraient un biais
-            const randomValue = values[i];
-            if (randomValue < mask) {
-                result += chars[randomValue % charsLength];
+        while (result.length < length) {
+            getRandomValues(values);
+            for (let i = 0; i < values.length && result.length < length; i++) {
+                // On rejette les valeurs qui introduiraient un biais
+                const randomValue = values[i];
+                if (randomValue < mask) {
+                    result += chars[randomValue % charsLength];
+                }
             }
         }
-    }
 
-    await generateSecureRandomDelay();
-    return result;
+        await generateSecureRandomDelay();
+        return result;
+    } catch (err) {
+        throw err;
+    }
 }

@@ -10,5 +10,5 @@ import { AppError } from '../models/ErrorModel';
  * @param next NextFunction
  */
 export const defaultRouteHandler = (req: Request, res: Response, next: NextFunction) => {
-    next(new AppError("URL not found", 404, 2));
+    next(new AppError({"message": "URL not found", "httpStatus": 404, "internalStatus": 2}));
 }
