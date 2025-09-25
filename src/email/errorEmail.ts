@@ -1,6 +1,6 @@
 import config from '../config/config';
 import sendEmail from './mailer';
-import { htmlCodeEmailTemplate, htmlErrorEmailTemplate } from './mailTemplate';
+import { htmlErrorEmailTemplate } from './mailTemplate';
 
 
 

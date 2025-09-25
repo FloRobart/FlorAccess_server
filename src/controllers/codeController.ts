@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as Users from '../database/usersDao';
 import { isValidEmail, isValidRequestBody } from '../utils/utils';
 import config from '../config/config';
-import { sendCodeEmail } from '../mail/codeEmail';
+import { sendCodeEmail } from '../email/codeEmail';
 import { getJwt, hashString, verifyHash, generateCode } from '../utils/securities';
 import { User } from '../models/UsersModel';
 import { AppError } from '../models/ErrorModel';

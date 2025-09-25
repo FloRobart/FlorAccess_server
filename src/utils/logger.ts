@@ -1,6 +1,6 @@
 import config from '../config/config';
 import { ENABLE_ENV } from '../config/enableenv';
-import { sendErrorEmail } from '../mail/errorMail';
+import { sendErrorEmail } from '../email/errorEmail';
 
 
 
