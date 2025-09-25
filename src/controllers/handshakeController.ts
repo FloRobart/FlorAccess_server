@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { createHash } from 'crypto';
-import * as logger from '../utils/logger';
 import config from '../config/config';
 import { getAuthorizedApiByName, updateAuthorizedApi } from '../database/authorizedApiDao';
 import { AuthorizedApi } from '../models/AuthorizedApiModel';
@@ -19,13 +18,13 @@ import { AppError } from '../models/ErrorModel';
 export const handshake = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.query['params'] || !req.headers['authorization']) {
-            next(new AppError("Missing parameters or http headers", 400));
+            next(new AppError({message: "Missing parameters or http headers", httpStatus: 400}));
             return;
         }
 
         const authorizationToken = req.headers['authorization'].split(' ')[1];
         if (authorizationToken !== config.handshake_static_token) {
-            next(new AppError("Unauthorized", 401));
+            next(new AppError({message: "Unauthorized", httpStatus: 401}));
             return;
         }
 
@@ -36,12 +35,12 @@ export const handshake = async (req: Request, res: Response, next: NextFunction)
         const savedApi: AuthorizedApi | null = await getAuthorizedApiByName(apiName);
 
         if (params.length !== 3) {
-            next(new AppError("Invalid parameters", 422));
+            next(new AppError({message: "Invalid parameters", httpStatus: 422}));
             return;
         }
 
         if (!apiName || !apiPrivateTokenHash || isNaN(apiLastAccess) || savedApi === null) {
-            next(new AppError("Invalid parameters", 400));
+            next(new AppError({message: "Invalid parameters", httpStatus: 400}));
             return;
         }
 
@@ -55,9 +54,8 @@ export const handshake = async (req: Request, res: Response, next: NextFunction)
             return;
         }
 
-        next(new AppError("Invalid token", 400));
+        next(new AppError({message: "Invalid token", httpStatus: 400}));
     } catch (err) {
-        logger.error('Error during handshake :', err);
-        next(new AppError());
+        next(new AppError({stackTrace: err}));
     }
 };
