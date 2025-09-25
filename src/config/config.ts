@@ -25,8 +25,8 @@ interface Config {
 
     /* Email */
     readonly mail_service: string;
-    readonly mail_username?: string;
-    readonly mail_password?: string;
+    readonly mail_username: string;
+    readonly mail_password: string;
 
     /* Security */
     readonly hash_rounds: number;
@@ -70,8 +70,8 @@ const config: Config = {
 
     /* Email */
     mail_service: process.env.MAIL_SERVICE || 'gmail',
-    mail_username: process.env.MAIL_USERNAME,
-    mail_password: process.env.MAIL_PASSWORD,
+    mail_username: process.env.MAIL_USERNAME || '',
+    mail_password: process.env.MAIL_PASSWORD || '',
 
     /* Security */
     hash_rounds: Math.round(Number(process.env.HASH_ROUNDS)) || 10,
