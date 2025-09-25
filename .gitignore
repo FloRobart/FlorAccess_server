@@ -2,8 +2,9 @@
 *.log
 node_modules
 dist
+coverage
 
-
-!.*.example
+!.github
 !.gitignore
 !.dockerignore
+!.*.example
