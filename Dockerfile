@@ -23,5 +23,9 @@ RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 
+# Ajout d'un utilisateur non-root avec UID/GID fixes
+RUN addgroup -g 1800 -S floraccessgroup && adduser -u 1800 -S floraccessuser -G floraccessgroup
+USER floraccessuser
+
 # Par défaut : lance le serveur
 CMD ["node", "dist/server.js"]
