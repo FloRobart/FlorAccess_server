@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as Users from '../database/usersDao';
 import { generateUserToken, isValidEmail, isValidRequestBody } from '../utils/utils';
 import config from '../config/config';
-import { sendTokenEmail } from '../mail/tokenMail';
+import { sendTokenEmail } from '../email/tokenMail';
 import { AppError } from '../models/ErrorModel';
 
 

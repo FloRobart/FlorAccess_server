@@ -78,7 +78,7 @@ router.post('/send-token', sendToken);
  *               type: string
  *               format: email
  *               description: The email address to which the authentication token will be sent
- *               example: "john.doe@mail.com"
+ *               example: "john.doe@email.com"
  *             token:
  *               type: string
  *               description: The authentication token sent to the user's email address
