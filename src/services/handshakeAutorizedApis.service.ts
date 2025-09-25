@@ -29,6 +29,8 @@ export async function handshakeAuthorizedApis(): Promise<boolean> {
                     api.api_lastaccess = timestamp;
                     updateAuthorizedApi(api).then(() => {
                         logger.success(`Handshake with ${api.api_name} successful.`);
+                    }).catch((err: Error) => {
+                        logger.error(`Failed to update authorized API ${api.api_name} after successful handshake :`, err);
                     });
                 } else {
                     logger.error(`Handshake with ${api.api_name} failed with status code : ${res.statusCode} - ${res.statusMessage}`);

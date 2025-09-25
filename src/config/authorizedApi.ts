@@ -15,7 +15,7 @@ export async function saveDefaultAuthorizedApisToDatabase(): Promise<boolean> {
     for (const api of defaultApis) {
         try {
             if (!api.api_name || !api.api_url) {
-                logger.error("Invalid API configuration :", api);
+                logger.warning("Invalid API configuration :", api);
             }
 
             createAuthorizedApi(api, true).then(() => {

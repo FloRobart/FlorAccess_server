@@ -1,5 +1,4 @@
 import { executeQuery } from '../database/database';
-import * as logger from '../utils/logger';
 import { User } from '../models/UsersModel';
 
 
@@ -45,8 +44,8 @@ export async function getUserByEmailToken(email: string, token: string): Promise
         if (rows.length === 0) { throw new Error('No user with this email and this token.'); }
 
         return rows[0] as User;
-    }).catch((err) => {
-        throw new Error(`Database error: ${err.message}`);
+    }).catch((err: Error) => {
+        throw err;
     });
 }
 
@@ -66,8 +65,8 @@ export async function getUserByEmail(email: string): Promise<User> {
         if (rows.length === 0) { throw new Error('No user with this email.'); }
 
         return rows[0] as User;
-    }).catch((err) => {
-        throw new Error(`Database error: ${err.message}`);
+    }).catch((err: Error) => {
+        throw err;
     });
 }
 
@@ -87,8 +86,8 @@ export async function getUserTokenByEmail(email: string): Promise<string> {
         if (rows.length === 0) { throw new Error('No user with this email.'); }
 
         return rows[0].users_secret;
-    }).catch((err) => {
-        throw new Error(`Database error: ${err.message}`);
+    }).catch((err: Error) => {
+        throw err;
     });
 }
 
@@ -107,8 +106,8 @@ export async function getUserCountByEmail(email: string): Promise<number> {
         if (rows.length === 0) { throw new Error('No user with this email.'); }
 
         return rows[0] as number;
-    }).catch((err) => {
-        throw new Error(`Database error: ${err.message}`);
+    }).catch((err: Error) => {
+        throw err;
     });
 }
 
@@ -175,8 +174,8 @@ export async function updateUserById(id: number, updatedValues: UpdatedValues): 
         if (rows.length === 0) { throw new Error('No user with this id.'); }
 
         return rows[0] as User;
-    }).catch((err) => {
-        throw new Error(`Database error: ${err.message}`);
+    }).catch((err: Error) => {
+        throw err;
     });
 }
 
@@ -197,8 +196,8 @@ export async function deleteUserById(id: number): Promise<User> {
         if (rows.length === 0) { throw new Error('No user with this id.'); }
 
         return rows[0] as User;
-    }).catch((err) => {
-        throw new Error(`Database error: ${err.message}`);
+    }).catch((err: Error) => {
+        throw err;
     });
 }
 

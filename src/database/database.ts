@@ -1,5 +1,6 @@
 import pg from 'pg';
 import * as logger from "../utils/logger";
+import { Query } from '../models/QueryModel';
 
 const { Client } = pg;
 let client: pg.Client;
@@ -19,15 +20,14 @@ export async function connectToDatabase(dburi: string|{host: string, user: strin
         await client.connect();
 
         client.on('error', (err) => {
-            logger.error(err);
-            logger.error("DATABASE ERROR")
+            logger.error('DATABASE ERROR :', err);
         });
 
         client.on('end', () => {
-            logger.success("DATABASE CONNECTION CLOSED")
+            logger.info("DATABASE CONNECTION CLOSED");
         });
     } catch (err: any) {
-        throw new Error(err);
+        throw err;
     }
 }
 
@@ -41,16 +41,13 @@ export async function closeDatabaseConnection(): Promise<boolean> {
     try {
         return client.end().then(() => {
             return true;
-        }).catch((err) => {
-            logger.error(err);
-            logger.error("FAILED CLOSING DATABASE CONNECTION");
+        }).catch((err: Error) => {
+            logger.error("FAILED CLOSING DATABASE CONNECTION :", err);
             return false;
         });
     }
     catch (err) {
-        logger.error(err);
-        logger.error("FAILED CLOSING DATABASE CONNECTION");
-        return false;
+        throw err;
     }
 }
 
@@ -62,17 +59,11 @@ export async function closeDatabaseConnection(): Promise<boolean> {
  * @returns Array of rows returned by the query or an empty array if no rows are returned or an error occurs
  * @returns null if the query is not supported
  */
-export async function executeQuery(query: Query): Promise<any[]|null> {
+export async function executeQuery(query: Query): Promise<any[]> {
     try {
         const res = await client.query(query);
         return res.rows || [];
     } catch (err) {
-        logger.error(err);
-        logger.error("FAILED EXECUTING QUERY");
-        return null;
+        throw err;
     }
 }
-
-
-
-export type Query = { text: string; values: (string | number | boolean | null)[]; };

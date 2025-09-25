@@ -26,7 +26,7 @@ const router = Router();
  *               type: string
  *               format: email
  *               description: The email address to which the login code will be sent
- *               example: "john.doe@mail.com"
+ *               example: "john.doe@email.com"
  *             name:
  *               type: string
  *               description: The name of the user requesting login
@@ -71,7 +71,7 @@ router.post('/login/request', loginRequest);
  *               type: string
  *               format: email
  *               description: The email address to which the login code was sent
- *               example: "john.doe@mail.com"
+ *               example: "john.doe@email.com"
  *             code:
  *               type: string
  *               description: The login code sent to the email address

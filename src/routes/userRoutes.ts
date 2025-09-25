@@ -109,7 +109,7 @@ router.post('/logout', logoutUser);
  *               type: string
  *               format: email
  *               description: The email address to which the authentication token will be sent
- *               example: "john.doe@mail.com"
+ *               example: "john.doe@email.com"
  *             name:
  *               type: string
  *               description: The name of the user
@@ -170,7 +170,7 @@ router.post('/register', registerUser);
  *             email:
  *               type: string
  *               format: email
- *               example: "john.doe@mail.com"
+ *               example: "john.doe@email.com"
  *             name:
  *               type: string
  *               example: "John Doe"

@@ -16,8 +16,8 @@ export async function createAuthorizedApi(api: {api_name: string, api_url: strin
         if (result.length === 0) { throw new Error('Failed to create authorized API.'); }
 
         return result[0] as AuthorizedApi;
-    }).catch((err: any) => {
-        throw new Error(`Database error: ${err.message}`);
+    }).catch((err: Error) => {
+        throw err;
     });
 }
 
@@ -96,7 +96,7 @@ export async function updateAuthorizedApi(api: AuthorizedApi): Promise<Authorize
         if (result.length === 0) { throw new Error('Failed to update authorized API.'); }
 
         return result[0] as AuthorizedApi;
-    }).catch((err: any) => {
-        throw new Error(`Database error: ${err.message}`);
+    }).catch((err: Error) => {
+        throw err;
     });
 }
