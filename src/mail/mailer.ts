@@ -37,23 +37,9 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
         }
         return true;
     }).catch((err: Error) => {
-        logger.error('Error sending email: ' + err);
         throw err;
     });
 }
 
 
 export default sendEmail;
-
-// function(err: Error | null, info: any) {
-//         if (err) {
-//             if (ENABLE_ENV[config.app_env] === 5) {
-//                 logger.debug("Email details:", mailOptions);
-//             }
-//             logger.error("Error sending email:", err);
-//             return false;
-//         } else {
-//             logger.success("Email sent successfully");
-//             return true;
-//         }
-//     }

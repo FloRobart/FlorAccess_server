@@ -8,9 +8,9 @@ import * as logger from './utils/logger';
 /*==================*/
 /* Écoute du server */
 /*==================*/
-const server = http.createServer(app);
-
 try {
+    const server = http.createServer(app);
+
     server.listen(config.app_port, config.host_name, () => {
         logger.success("Server running at URL :", config.base_url, "!");
         logger.success("Server documentation running at URL :", config.base_url + "/api-docs", "!");
@@ -20,7 +20,7 @@ try {
         logger.error("FAILED STARTING SERVER\n");
         throw new Error(error.message);
     });
-} catch (error) {
-    logger.error("Error in main server.ts :", error);
+} catch (err) {
+    logger.error("Error in server.ts :", err);
     process.exit(1);
 }

@@ -17,7 +17,14 @@ export const errorHandler = (
     res: Response,
     next: NextFunction
 ) => {
-    logger.error(err);
+    if (err.httpStatus >= 500) {
+        logger.error(err.toString());
+    } else if (err.httpStatus >= 400) {
+        logger.warning(err.toString());
+    } else {
+        logger.info(err.toString());
+    }
+
     res.status(err.httpStatus).json({
         message: err.message || 'Internal Server Error',
         internalStatus: err.internalStatus,

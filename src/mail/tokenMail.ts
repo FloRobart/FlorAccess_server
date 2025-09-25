@@ -12,11 +12,15 @@ import { htmlTokenEmailTemplate } from './mailTemplate';
  * @param token Authentication token to be included in the verification link
  * @returns {Promise<void>} A promise that resolves when the email is sent
  */ 
-export async function sendTokenEmail(to: string, app_name: string, token: string): Promise<void> {
+export async function sendTokenEmail(to: string, app_name: string, token: string): Promise<boolean> {
     const route = `${config.base_url}/jwt?email=${encodeURI(to)}&token=${encodeURI(token)}`;
     const appName = app_name || config.app_name;
 
     const html = htmlTokenEmailTemplate(appName, route);
 
-    sendEmail(to, `Connexion avec ${appName}`, html);
+    return sendEmail(to, `Lien de connexion pour ${appName}`, html).then((result) => {
+        return result;
+    }).catch((err: Error) => {
+        throw err;
+    });
 }
