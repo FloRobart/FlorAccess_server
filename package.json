@@ -8,7 +8,7 @@
     "start": "node dist/server.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts",
     "lint": "eslint 'src/**/*.ts'",
-    "test": "jest --coverage --runInBand",
+    "test": "jest --runInBand",
 
     "db-start": "docker build -t floraccess-db-image ./Database --build-arg postgres && docker run --name floraccess-db-container -p 18100:5432 -e POSTGRES_PASSWORD=postgres -d floraccess-db-image",
     "db-stop": "docker container stop floraccess-db-container && docker container rm floraccess-db-container && docker image rm floraccess-db-image",
