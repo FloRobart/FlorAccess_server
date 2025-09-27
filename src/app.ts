@@ -33,6 +33,7 @@ connectToDatabase(config.db_uri).then(() => {
 
 
 /* Routes and Middleware */
+app.use(cors(config.corsOptions));
 app.use(limiter);
 app.use(express.json());
 
@@ -40,16 +41,15 @@ app.get('/', (_req, res) => { res.status(200).send('HEALTH CHECK') });
 
 app.use('/handshake', handshakeRoutes);
 
-app.use('/code', cors(config.corsOptions), codeRoutes);
-app.use('/user', cors(config.corsOptions), userRoutes);
-app.use('/token', cors(config.corsOptions), tokenRoutes);
-app.use('/password', cors(config.corsOptions), passwordRoutes);
+app.use('/code', codeRoutes);
+app.use('/user', userRoutes);
+app.use('/token', tokenRoutes);
+app.use('/password', passwordRoutes);
 
-app.use('/jwt', cors(config.corsOptions), jwtRoutes);
+app.use('/jwt', jwtRoutes);
 
 app.use(defaultRouteHandler);
 app.use(errorHandler);
-
 
 
 /* Authorized APIs Handshake */
