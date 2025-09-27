@@ -214,5 +214,6 @@ interface UpdatedValues {
     users_email?: string,
     users_name?: string,
     users_password?: string,
-    users_secret?: string
+    users_secret?: string,
+    users_ip?: string,
 }
