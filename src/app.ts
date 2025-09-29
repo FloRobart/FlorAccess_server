@@ -1,4 +1,5 @@
 import express from 'express';
+import { Request, Response, NextFunction } from 'express';
 import tokenRoutes from './routes/tokenRoutes';
 import userRoutes from './routes/userRoutes';
 import passwordRoutes from './routes/passwordRoutes';
@@ -40,6 +41,11 @@ app.use(express.json());
 app.get('/', (_req, res) => { res.status(200).send('HEALTH CHECK') });
 
 app.use('/handshake', handshakeRoutes);
+
+app.use(async (req: Request, _res: Response, next: NextFunction) => {
+    logger.info(`Incoming request`, { ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress, method: req.method, url: req.url });
+    next();
+});
 
 app.use('/code', codeRoutes);
 app.use('/user', userRoutes);
@@ -94,7 +100,7 @@ if (ENABLE_ENV[config.app_env] === 5) {
 
     const swaggerDocs = swaggerJsDoc(swaggerOptions);
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-    app.get('/api-docs.json', (req, res) => {
+    app.get('/api-docs.json', (_req, res) => {
         if (!app.locals.swaggerJsonFileCreated) {
             res.status(500).json({ error: "The Swagger JSON file encountered a problem creating it. Please see : " + config.base_url + "/api-docs" });
             return;
