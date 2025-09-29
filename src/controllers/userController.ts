@@ -147,7 +147,7 @@ export const updateUserById = async (req: Request, res: Response, next: NextFunc
         const id = jwtPayload.userid;
 
         /* Update user by id */
-        Users.updateUserById(id, req.body).then(async (user) => {
+        Users.updateUserById(id, {users_email: jwtPayload.email, users_name: jwtPayload.name, users_ip: jwtPayload.ip}).then(async (user) => {
             const newJwt: string = await getJwt(user);
 
             res.status(200).json({ jwt: newJwt, updated: true });
