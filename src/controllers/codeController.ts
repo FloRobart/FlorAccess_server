@@ -26,11 +26,10 @@ export const loginRequest = async (req: Request, res: Response, next: NextFuncti
         return;
     }
     const email = Array.isArray(req.body.email) ? req.body.email[req.body.email.length - 1] : req.body.email;
-    const name = Array.isArray(req.body.name) ? req.body.name[req.body.name.length - 1] : req.body.name;
     const appName = req.body.app_name || config.app_name;
 
-    if (!isValidEmail(email) || !name) {
-        next(new AppError({message: "Invalid email address or name.", httpStatus: 400}));
+    if (!isValidEmail(email)) {
+        next(new AppError({message: "Invalid email address.", httpStatus: 400}));
         return;
     }
 
@@ -38,7 +37,6 @@ export const loginRequest = async (req: Request, res: Response, next: NextFuncti
     try {
         const user: User = {
             users_email: email,
-            users_name: name,
             users_authmethod: 'code',
             users_ip: req.ip,
             users_connected: false,
