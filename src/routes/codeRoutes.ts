@@ -20,17 +20,12 @@ const router = Router();
  *           type: object
  *           required:
  *             - email
- *             - name
  *           properties:
  *             email:
  *               type: string
  *               format: email
  *               description: The email address to which the login code will be sent
  *               example: "john.doe@email.com"
- *             name:
- *               type: string
- *               description: The name of the user requesting login
- *               example: "John Doe"
  *     responses:
  *       200:
  *         description: email sent successfully

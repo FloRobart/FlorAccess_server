@@ -114,24 +114,36 @@ export async function getUserCountByEmail(email: string): Promise<number> {
 
 /**
  * Updates or a user in the database.
- * @param user The user object containing the updated user information.
+ * @param newUser The user object containing the updated user information.
  * @returns A promise that resolves to the updated user object.
  */
-export async function updateUser(user: User): Promise<User> {
-    if (!user || !user.users_email || typeof user.users_email !== 'string') { throw new Error('Invalid user object.'); }
+export async function updateUser(newUser: User): Promise<User> {
+    if (!newUser || !newUser.users_email || typeof newUser.users_email !== 'string') { throw new Error('Invalid user object.'); }
+
+    const user = await getUserByEmail(newUser.users_email);
+    if (!user) { throw new Error('User not found.'); }
+
+    // update only the fields that are defined in newUser
+    const updatedFields = ['users_name', 'users_authmethod', 'users_connected', 'users_password', 'users_secret', 'users_ip'];
+    for (const field of updatedFields) {
+        // Skip readonly properties and only assign if the property is undefined in newUser
+        if (field !== 'createdAt' && field !== 'users_id' && ( newUser[field as keyof User] === undefined || newUser[field as keyof User] === null)) {
+            // @ts-expect-error: We ensure not to assign to readonly fields
+            newUser[field as keyof User] = user[field as keyof User];
+        }
+    }
 
     // Utilisation d'UPSERT pour créer ou mettre à jour l'utilisateur
-    const query = `INSERT INTO users (users_email, users_name, users_authmethod, users_password, users_secret, users_ip)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        ON CONFLICT (users_email)
-        DO UPDATE SET
-            users_name = EXCLUDED.users_name,
-            users_authmethod = EXCLUDED.users_authmethod,
-            users_password = EXCLUDED.users_password,
-            users_secret = EXCLUDED.users_secret,
-            users_ip = EXCLUDED.users_ip
-        RETURNING *`;
-    const values = [user.users_email, user.users_name, user.users_authmethod, user.users_password, user.users_secret, user.users_ip];
+    const query = `UPDATE users
+                   SET users_name = $2,
+                       users_authmethod = $3,
+                       users_connected = $4,
+                       users_password = $5,
+                       users_secret = $6,
+                       users_ip = $7
+                   WHERE users_email = $1
+                   RETURNING *`;
+    const values = [newUser.users_email, newUser.users_name, newUser.users_authmethod, newUser.users_connected || false, newUser.users_password, newUser.users_secret, newUser.users_ip];
 
     return executeQuery({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
