@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { loginRequest, loginConfirmation } from './codeController';
+import { loginRequest, loginConfirmation } from './code.controller';
 
 
 const router = Router();
