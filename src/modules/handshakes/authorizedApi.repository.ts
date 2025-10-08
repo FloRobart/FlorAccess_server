@@ -1,4 +1,4 @@
-import { executeQuery } from '../../core/database/database';
+import { Database } from '../../core/database/database';
 import { AuthorizedApi } from './AuthorizedApi.schema';
 
 
@@ -11,7 +11,7 @@ export async function createAuthorizedApi(api: { api_name: string, api_url: stri
 
     let values = [api.api_name, api.api_url];
 
-    return executeQuery({ text: query, values: values }).then((result) => {
+    return Database.execute({ text: query, values: values }).then((result) => {
         if (result === null) { throw new Error('Database query failed.'); }
         if (result.length === 0) { throw new Error('Failed to create authorized API.'); }
 
@@ -28,7 +28,7 @@ export async function createAuthorizedApi(api: { api_name: string, api_url: stri
 export async function getAllAuthorizedApi(): Promise<AuthorizedApi[]> {
     let query = "SELECT * FROM authorizedapi WHERE api_status=true;";
 
-    return executeQuery({ text: query, values: [] }).then((rows) => {
+    return Database.execute({ text: query, values: [] }).then((rows) => {
         if (rows === null) { throw new Error("Database query failed."); }
         if (rows.length === 0) { throw new Error("No authorized API found."); }
 
@@ -51,7 +51,7 @@ export async function getAuthorizedApiByNameUrl(api_name: string, api_url: strin
     let query = "SELECT * FROM authorizedapi WHERE api_name=$1 AND api_url=$2 LIMIT 1;";
     let values = [api_name, api_url];
 
-    return executeQuery({ text: query, values: values }).then((rows) => {
+    return Database.execute({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error("Database query failed."); }
         if (rows.length === 0) { return false; }
 
@@ -72,7 +72,7 @@ export async function getAuthorizedApiByName(api_name: string): Promise<Authoriz
     let query = "SELECT * FROM authorizedapi WHERE api_name=$1 LIMIT 1;";
     let values = [api_name];
 
-    return executeQuery({ text: query, values: values }).then((rows) => {
+    return Database.execute({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error("Database query failed."); }
         if (rows.length === 0) { return null; }
 
@@ -91,7 +91,7 @@ export async function updateAuthorizedApi(api: AuthorizedApi): Promise<Authorize
     let query = "UPDATE authorizedapi SET api_name=$1, api_url=$2, api_privatetoken=$3, api_lastaccess=$4, api_status=$5, api_tokenvalidation=$6 WHERE api_id=$7 RETURNING *;";
     let values = [api.api_name, api.api_url, api.api_privatetoken || "", api.api_lastaccess || 0, api.api_status || false, api.api_tokenvalidation || false, api.api_id || 0];
 
-    return executeQuery({ text: query, values: values }).then((result) => {
+    return Database.execute({ text: query, values: values }).then((result) => {
         if (result === null) { throw new Error('Database query failed.'); }
         if (result.length === 0) { throw new Error('Failed to update authorized API.'); }
 
