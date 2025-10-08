@@ -1,5 +1,5 @@
 import { executeQuery } from '../../core/database/database';
-import { User } from './UsersModel';
+import { User } from './users.schema';
 
 
 

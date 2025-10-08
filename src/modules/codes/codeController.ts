@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import * as Users from '../users/usersDao';
+import * as Users from '../users/users.repository';
 import { isValidEmail, isValidRequestBody } from '../../core/utils/utils';
 import config from '../../config/config';
 import { sendCodeEmail } from './codeEmail';
 import { getJwt, hashString, verifyHash, generateCode } from '../../core/utils/securities';
-import { User } from '../users/UsersModel';
+import { User } from '../users/users.schema';
 import { AppError } from '../../core/models/ErrorModel';
 
 

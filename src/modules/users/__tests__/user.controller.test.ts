@@ -1,5 +1,5 @@
-import { getUserProfile, logoutUser, registerUser, updateUserById, deleteUserById } from '../userController';
-import * as Users from '../usersDao';
+import { getUserProfile, logoutUser, registerUser, updateUserById, deleteUserById } from '../user.controller';
+import * as Users from '../users.repository';
 import * as securities from '../../../core/utils/securities';
 import { AppError } from '../../../core/models/ErrorModel';
 

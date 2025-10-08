@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import * as Users from '../users/usersDao';
+import * as Users from '../users/users.repository';
 import config from '../../config/config';
 import JWT from 'jsonwebtoken';
 import { getAuthorizedApiByName } from '../handshakes/authorizedApiDao';
 import { AuthorizedApi } from '../handshakes/AuthorizedApiModel';
 import { verifyJwt } from '../../core/utils/securities';
-import { User } from '../users/UsersModel';
+import { User } from '../users/users.schema';
 import { AppError } from '../../core/models/ErrorModel';
 
 
