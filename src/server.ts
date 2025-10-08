@@ -1,7 +1,7 @@
 import app from './app';
 import config from './config/config';
 import http from 'http';
-import * as logger from './utils/logger';
+import * as logger from './core/utils/logger';
 
 
 
