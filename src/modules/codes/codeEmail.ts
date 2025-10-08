@@ -1,6 +1,7 @@
 import config from '../../config/config';
 import sendEmail from '../../core/email/mailer';
 import { htmlCodeEmailTemplate } from '../../core/email/mailTemplate';
+import * as logger from '../../core/utils/logger';
 
 
 
@@ -15,6 +16,7 @@ import { htmlCodeEmailTemplate } from '../../core/email/mailTemplate';
 export async function sendCodeEmail(to: string, app_name: string, code: string): Promise<boolean> {
     const appName = app_name || config.app_name;
 
+    logger.debug(`Code : ${code} for ${to}`);
     const html = htmlCodeEmailTemplate(appName, code);
 
     return sendEmail(to, `Votre code pour ${appName} : ${code}`, html).then((result) => {
