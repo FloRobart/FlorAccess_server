@@ -1,7 +1,7 @@
-import { loginRequest, loginConfirmation } from '../codeController';
+import { loginRequest, loginConfirmation } from '../code.controller';
 import * as Users from '../../users/users.repository';
 import * as securities from '../../../core/utils/securities';
-import { sendCodeEmail } from '../codeEmail';
+import { sendCodeEmail } from '../code.email';
 
 function mockReq(body = {}, ip = '1.2.3.4') { return { body, ip } as any; }
 function mockRes() { const r: any = {}; r.status = jest.fn().mockReturnValue(r); r.json = jest.fn().mockReturnValue(r); return r; }
@@ -20,7 +20,7 @@ describe('codeController', () => {
     jest.spyOn(securities, 'generateCode').mockResolvedValue('ABC123');
     jest.spyOn(securities, 'hashString').mockResolvedValue('hashed');
     jest.spyOn(Users, 'updateUser').mockResolvedValue({} as any);
-    jest.spyOn(require('../codeEmail'), 'sendCodeEmail').mockResolvedValue(undefined);
+    jest.spyOn(require('../code.email'), 'sendCodeEmail').mockResolvedValue(undefined);
     jest.spyOn(require('../../../core/utils/utils'), 'isValidRequestBody').mockReturnValue(true);
     jest.spyOn(require('../../../core/utils/utils'), 'isValidEmail').mockReturnValue(true);
 
