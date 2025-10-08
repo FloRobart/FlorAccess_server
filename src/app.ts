@@ -1,22 +1,22 @@
 import express from 'express';
 import { Request, Response, NextFunction } from 'express';
-import tokenRoutes from './routes/tokenRoutes';
-import userRoutes from './routes/userRoutes';
-import passwordRoutes from './routes/passwordRoutes';
-import { errorHandler } from './middlewares/errorHandler';
+import tokenRoutes from './modules/tokens/tokenRoutes';
+import userRoutes from './modules/users/userRoutes';
+import passwordRoutes from './modules/passwords/passwordRoutes';
+import { errorHandler } from './core/middlewares/errorHandler';
 import * as logger from './utils/logger';
 import fs from 'node:fs';
 import config from './config/config';
-import { connectToDatabase } from './database/database';
-import { limiter } from './middlewares/rateLimiter';
-import handshakeRoutes from './routes/handshakeRoutes';
-import { handshakeAuthorizedApis } from './services/handshakeAutorizedApis.service';
+import { connectToDatabase } from './core/database/database';
+import { limiter } from './core/middlewares/rateLimiter';
+import handshakeRoutes from './modules/handshakes/handshakeRoutes';
+import { handshakeAuthorizedApis } from './modules/handshakes/handshakeAutorizedApis.service';
 import { saveDefaultAuthorizedApisToDatabase } from './config/authorizedApi';
-import codeRoutes from './routes/codeRoutes';
-import jwtRoutes from './routes/jwtRoutes';
+import codeRoutes from './modules/codes/codeRoutes';
+import jwtRoutes from './modules/jwts/jwtRoutes';
 import cors from 'cors';
 import { ENABLE_ENV } from './config/enableenv';
-import { defaultRouteHandler } from './middlewares/defaultRouteHandler';
+import { defaultRouteHandler } from './core/middlewares/defaultRouteHandler';
 import path from 'node:path';
 
 

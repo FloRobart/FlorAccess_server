@@ -1,4 +1,4 @@
-import { createAuthorizedApi } from '../database/authorizedApiDao';
+import { createAuthorizedApi } from '../modules/handshakes/authorizedApiDao';
 import config from '../config/config';
 import * as logger from '../utils/logger';
 
