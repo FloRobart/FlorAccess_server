@@ -1,4 +1,4 @@
-import { getJwt as getJwtController, verifyToken, getUserFromJwt } from '../jwtController';
+import { getJwt as getJwtController, verifyToken, getUserFromJwt } from '../jwt.controller';
 import * as Users from '../../users/users.repository';
 import * as authorizedDao from '../../handshakes/authorizedApiDao';
 import JWT from 'jsonwebtoken';
