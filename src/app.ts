@@ -1,8 +1,6 @@
 import express from 'express';
 import { Request, Response, NextFunction } from 'express';
-import tokenRoutes from './modules/tokens/tokenRoutes';
 import userRoutes from './modules/users/userRoutes';
-import passwordRoutes from './modules/passwords/passwordRoutes';
 import { errorHandler } from './core/middlewares/errorHandler';
 import * as logger from './core/utils/logger';
 import fs from 'node:fs';
@@ -51,10 +49,8 @@ app.use(async (req: Request, _res: Response, next: NextFunction) => {
     next();
 });
 
-app.use('/code', codeRoutes);
 app.use('/user', userRoutes);
-app.use('/token', tokenRoutes);
-app.use('/password', passwordRoutes);
+app.use('/code', codeRoutes);
 
 app.use('/jwt', jwtRoutes);
 
