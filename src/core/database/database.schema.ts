@@ -1,5 +1,7 @@
 import pg from "pg";
 
+
+
 /**
  * Database schema defining the IDatabase interface and Query type.
  */
@@ -40,8 +42,8 @@ export abstract class ADatabase implements IDatabase {
      */
     static async execute<T = any>(query: Query): Promise<T[]> {
         try {
-            if (!ADatabase.client) throw new Error('Database not connected');
-            const res = await ADatabase.client.query(query.text, query.values);
+            if (!this.client) throw new Error('Database not connected');
+            const res = await this.client.query(query.text, query.values);
             return res.rows || [];
         } catch (error) {
             throw error;
