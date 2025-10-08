@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getUserFromJwt } from './jwtController';
+import { getUserFromJwt } from './jwt.controller';
 
 
 const router = Router();

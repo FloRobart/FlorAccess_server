@@ -11,7 +11,7 @@ import handshakeRoutes from './modules/handshakes/handshakeRoutes';
 import { handshakeAuthorizedApis } from './modules/handshakes/handshakeAutorizedApis.service';
 import { saveDefaultAuthorizedApisToDatabase } from './config/authorizedApi';
 import codeRoutes from './modules/codes/codeRoutes';
-import jwtRoutes from './modules/jwts/jwtRoutes';
+import jwtRoutes from './modules/jwts/jwt.routes';
 import cors from 'cors';
 import { ENABLE_ENV } from './config/enableenv';
 import { defaultRouteHandler } from './core/middlewares/defaultRouteHandler';
