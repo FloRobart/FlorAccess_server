@@ -1,5 +1,5 @@
 import { executeQuery } from '../../core/database/database';
-import { AuthorizedApi } from './AuthorizedApiModel';
+import { AuthorizedApi } from './AuthorizedApi.schema';
 
 
 

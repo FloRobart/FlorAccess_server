@@ -1,5 +1,5 @@
-import { handshake } from '../handshakeController';
-import * as authorizedDao from '../authorizedApiDao';
+import { handshake } from '../handshake.controller';
+import * as authorizedDao from '../authorizedApi.repository';
 import config from '../../../config/config';
 
 function mockReq(query = {}, headers = {}) { return { query, headers } as any; }

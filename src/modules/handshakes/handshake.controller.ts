@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { createHash } from 'crypto';
 import config from '../../config/config';
-import { getAuthorizedApiByName, updateAuthorizedApi } from './authorizedApiDao';
-import { AuthorizedApi } from './AuthorizedApiModel';
+import { getAuthorizedApiByName, updateAuthorizedApi } from './authorizedApi.repository';
+import { AuthorizedApi } from './AuthorizedApi.schema';
 import { AppError } from '../../core/models/ErrorModel';
 
 

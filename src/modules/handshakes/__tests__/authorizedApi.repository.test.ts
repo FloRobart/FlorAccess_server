@@ -1,4 +1,4 @@
-import * as dao from '../authorizedApiDao';
+import * as dao from '../authorizedApi.repository';
 import * as db from '../../../core/database/database';
 
 describe('authorizedApiDao', () => {

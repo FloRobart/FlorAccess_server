@@ -1,5 +1,5 @@
-import { getAllAuthorizedApi, updateAuthorizedApi } from './authorizedApiDao';
-import { AuthorizedApi } from './AuthorizedApiModel';
+import { getAllAuthorizedApi, updateAuthorizedApi } from './authorizedApi.repository';
+import { AuthorizedApi } from './AuthorizedApi.schema';
 import http from 'http';
 import * as logger from '../../core/utils/logger';
 import config from '../../config/config';
