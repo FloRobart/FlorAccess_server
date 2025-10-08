@@ -1,6 +1,6 @@
 import express from 'express';
 import { Request, Response, NextFunction } from 'express';
-import userRoutes from './modules/users/userRoutes';
+import userRoutes from './modules/users/user.routes';
 import { errorHandler } from './core/middlewares/errorHandler';
 import * as logger from './core/utils/logger';
 import fs from 'node:fs';

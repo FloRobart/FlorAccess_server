@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import * as Users from './usersDao';
+import * as Users from './users.repository';
 import config from '../../config/config';
 import JWT from 'jsonwebtoken';
 import { isValidEmail, isValidRequestBody } from '../../core/utils/utils';
 import { getJwt, verifyJwt } from '../../core/utils/securities';
-import { User } from './UsersModel';
+import { User } from './users.schema';
 import { AppError } from '../../core/models/ErrorModel';
 
 

@@ -1,5 +1,5 @@
 import { loginRequest, loginConfirmation } from '../codeController';
-import * as Users from '../../users/usersDao';
+import * as Users from '../../users/users.repository';
 import * as securities from '../../../core/utils/securities';
 import { sendCodeEmail } from '../codeEmail';
 

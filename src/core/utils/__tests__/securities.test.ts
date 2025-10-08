@@ -1,7 +1,7 @@
 process.env.JWT_SIGNING_KEY = process.env.JWT_SIGNING_KEY || 'testkey';
 // re-import after setting env to ensure config uses the test key
 jest.resetModules();
-jest.mock('../../../modules/users/usersDao', () => ({
+jest.mock('../../../modules/users/users.repository', () => ({
   getUserByEmail: jest.fn(async (email: string) => ({
     users_id: 1,
     users_email: email,

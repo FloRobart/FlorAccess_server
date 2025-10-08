@@ -1,4 +1,4 @@
-import * as usersDao from '../usersDao';
+import * as usersDao from '../users.repository';
 import * as db from '../../../core/database/database';
 
 describe('usersDao', () => {

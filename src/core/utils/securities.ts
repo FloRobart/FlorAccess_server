@@ -1,8 +1,8 @@
 import argon2 from 'argon2';
 import config from '../../config/config';
-import { User } from '../../modules/users/UsersModel';
+import { User } from '../../modules/users/users.schema';
 import JWT from 'jsonwebtoken';
-import { getUserByEmail } from '../../modules/users/usersDao';
+import { getUserByEmail } from '../../modules/users/users.repository';
 import { getRandomValues, randomBytes } from "node:crypto";
 
 
