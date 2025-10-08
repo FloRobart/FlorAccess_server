@@ -3,7 +3,7 @@ import { AuthorizedApi } from './AuthorizedApiModel';
 import http from 'http';
 import * as logger from '../../core/utils/logger';
 import config from '../../config/config';
-import { generateApiToken } from '../../utils/securities';
+import { generateApiToken } from '../../core/utils/securities';
 
 
 

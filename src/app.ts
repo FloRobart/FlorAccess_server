@@ -4,7 +4,7 @@ import tokenRoutes from './modules/tokens/tokenRoutes';
 import userRoutes from './modules/users/userRoutes';
 import passwordRoutes from './modules/passwords/passwordRoutes';
 import { errorHandler } from './core/middlewares/errorHandler';
-import * as logger from './utils/logger';
+import * as logger from './core/utils/logger';
 import fs from 'node:fs';
 import config from './config/config';
 import { connectToDatabase } from './core/database/database';
