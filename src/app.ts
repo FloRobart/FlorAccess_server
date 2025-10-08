@@ -5,7 +5,7 @@ import { errorHandler } from './core/middlewares/errorHandler';
 import * as logger from './core/utils/logger';
 import fs from 'node:fs';
 import config from './config/config';
-import { connectToDatabase } from './core/database/database';
+import { Database } from './core/database/database';
 import { limiter } from './core/middlewares/rateLimiter';
 import handshakeRoutes from './modules/handshakes/handshake.routes';
 import { handshakeAuthorizedApis } from './modules/handshakes/handshakeAutorizedApis.service';
@@ -24,11 +24,12 @@ const app = express();
 
 
 /* Database */
-connectToDatabase(config.db_uri).then(() => {
+const database = new Database(config.db_uri);
+database.connect().then(() => {
     logger.success("Connected to database successfully");
-}).catch((err: Error) => {
-    logger.error("Failed to connect to database :", err);
-    process.exit(1); // Exit the application if an error occurs
+}).catch((error: Error) => {
+    logger.error("Failed to connect to database :", error);
+    process.exit(1);
 });
 
 
