@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { handshake } from './handshakeController';
+import { handshake } from './handshake.controller';
 
 
 

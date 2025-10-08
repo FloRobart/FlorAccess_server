@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { AuthorizedApi } from '../modules/handshakes/AuthorizedApiModel';
+import { AuthorizedApi } from '../modules/handshakes/AuthorizedApi.schema';
 import { type StringValue } from 'ms';
 import ms from 'ms';
 

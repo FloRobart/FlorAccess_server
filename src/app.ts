@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import config from './config/config';
 import { connectToDatabase } from './core/database/database';
 import { limiter } from './core/middlewares/rateLimiter';
-import handshakeRoutes from './modules/handshakes/handshakeRoutes';
+import handshakeRoutes from './modules/handshakes/handshake.routes';
 import { handshakeAuthorizedApis } from './modules/handshakes/handshakeAutorizedApis.service';
 import { saveDefaultAuthorizedApisToDatabase } from './config/authorizedApi';
 import codeRoutes from './modules/codes/codeRoutes';

@@ -1,6 +1,6 @@
 import { getJwt as getJwtController, verifyToken, getUserFromJwt } from '../jwt.controller';
 import * as Users from '../../users/users.repository';
-import * as authorizedDao from '../../handshakes/authorizedApiDao';
+import * as authorizedDao from '../../handshakes/authorizedApi.repository';
 import JWT from 'jsonwebtoken';
 import { AppError } from '../../../core/models/ErrorModel';
 
