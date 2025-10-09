@@ -1,19 +1,26 @@
+import { z } from "zod";
+
+
+
 /**
- * User interface representing the structure of a user in the database.
+ * Schéma de validation pour la création d'un utilisateur.
  */
-export type User = {
-    readonly users_id: number;
-    users_email: string;
-    users_name: string;
-    users_authmethod: string|null;
+export const createUserSchema = z.object({
+    email: z.preprocess(
+        (val) => typeof val === "string" ? val.toLowerCase().replace(/\s+/g, "") : val,
+        z.email()
+    ),
+    pseudo: z.string().min(3).max(255)
+}).transform((data) => ({
+    email: data.email,
+    pseudo: data.pseudo.trim()
+}));
 
-    users_connected: boolean;
-    users_lastlogin: string|null;
 
-    users_password: string|null;
-    users_secret: string|null;
-    users_ip: string|null;
-
-    readonly createdAt: Date;
-    updatedAt: Date|null;
-}
+/**
+ * Schéma de validation pour la connexion d'un utilisateur.
+ */
+export const loginUserSchema = z.object({
+    email: z.email(),
+    code: z.string().min(6).max(6)
+});

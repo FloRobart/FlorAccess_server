@@ -1,5 +1,5 @@
 import { Database } from '../../core/database/database';
-import { User } from './users.schema';
+import { User } from './users.types';
 
 
 
@@ -10,19 +10,17 @@ import { User } from './users.schema';
  * @param name Optional name of the user.
  * @returns A promise that resolves to the created user object.
  */
-export async function createUser(email: string, token: string | null, name: string | undefined): Promise<User> {
-    if (!email || typeof email !== 'string') { throw new Error('Invalid email address.'); }
-
-    let query = "INSERT INTO users (users_email, users_secret, users_name) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *";
-    let values = [email, token, name || null];
+export async function createUser(email: string, pseudo: string, ip: string | null): Promise<User> {
+    let query = "INSERT INTO users (email, pseudo, last_ip) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *";
+    let values = [email, pseudo, ip];
 
     return Database.execute({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('Failed to create user.'); }
 
         return rows[0] as User;
-    }).catch((err: Error) => {
-        throw err;
+    }).catch((error: Error) => {
+        throw error;
     });
 }
 
@@ -118,41 +116,42 @@ export async function getUserCountByEmail(email: string): Promise<number> {
  * @returns A promise that resolves to the updated user object.
  */
 export async function updateUser(newUser: User): Promise<User> {
-    if (!newUser || !newUser.users_email || typeof newUser.users_email !== 'string') { throw new Error('Invalid user object.'); }
+    // if (!newUser || !newUser.email || typeof newUser.email !== 'string') { throw new Error('Invalid user object.'); }
 
-    const user = await getUserByEmail(newUser.users_email);
-    if (!user) { throw new Error('User not found.'); }
+    // const user = await getUserByEmail(newUser.email);
+    // if (!user) { throw new Error('User not found.'); }
 
-    // update only the fields that are defined in newUser
-    const updatedFields = ['users_name', 'users_authmethod', 'users_connected', 'users_password', 'users_secret', 'users_ip'];
-    for (const field of updatedFields) {
-        // Skip readonly properties and only assign if the property is undefined in newUser
-        if (field !== 'createdAt' && field !== 'users_id' && (newUser[field as keyof User] === undefined || newUser[field as keyof User] === null)) {
-            // @ts-expect-error: We ensure not to assign to readonly fields
-            newUser[field as keyof User] = user[field as keyof User];
-        }
-    }
+    // // update only the fields that are defined in newUser
+    // const updatedFields = ['name', 'authmethod', 'connected', 'password', 'secret', 'ip'];
+    // for (const field of updatedFields) {
+    //     // Skip readonly properties and only assign if the property is undefined in newUser
+    //     if (field !== 'createdAt' && field !== 'id' && (newUser[field as keyof User] === undefined || newUser[field as keyof User] === null)) {
+    //         // @ts-expect-error: We ensure not to assign to readonly fields
+    //         newUser[field as keyof User] = user[field as keyof User];
+    //     }
+    // }
 
-    // Utilisation d'UPSERT pour créer ou mettre à jour l'utilisateur
-    const query = `UPDATE users
-                   SET users_name = $2,
-                       users_authmethod = $3,
-                       users_connected = $4,
-                       users_password = $5,
-                       users_secret = $6,
-                       users_ip = $7
-                   WHERE users_email = $1
-                   RETURNING *`;
-    const values = [newUser.users_email, newUser.users_name, newUser.users_authmethod, newUser.users_connected || false, newUser.users_password, newUser.users_secret, newUser.users_ip];
+    // // Utilisation d'UPSERT pour créer ou mettre à jour l'utilisateur
+    // const query = `UPDATE users
+    //                SET users_name = $2,
+    //                    users_authmethod = $3,
+    //                    users_connected = $4,
+    //                    users_password = $5,
+    //                    users_secret = $6,
+    //                    users_ip = $7
+    //                WHERE email = $1
+    //                RETURNING *`;
+    // const values = [newUser.email, newUser.name, newUser.authmethod, newUser.connected || false, newUser.password, newUser.secret, newUser.ip];
 
-    return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows === null) { throw new Error('Database query failed.'); }
-        if (rows.length === 0) { throw new Error('Failed to create or update user.'); }
+    // return Database.execute({ text: query, values: values }).then((rows) => {
+    //     if (rows === null) { throw new Error('Database query failed.'); }
+    //     if (rows.length === 0) { throw new Error('Failed to create or update user.'); }
 
-        return rows[0] as User;
-    }).catch((err: Error) => {
-        throw err;
-    });
+    //     return rows[0] as User;
+    // }).catch((err: Error) => {
+    //     throw err;
+    // });
+    return Promise.reject(new Error('Not implemented.'));
 }
 
 

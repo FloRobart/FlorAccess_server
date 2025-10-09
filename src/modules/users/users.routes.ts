@@ -1,8 +1,66 @@
 import { Router } from 'express';
-import { updateUserById, deleteUserById, registerUser, logoutUser, getUser } from './users.controller';
+import { updateUserById, deleteUserById, createUser, logoutUser, getUser } from './users.controller';
+import { bodyValidateSchema } from '../../core/middlewares/bodyValidate.middleware';
+import { createUserSchema } from './users.schema';
 
 
 const router = Router();
+
+
+
+/**
+ * @swagger
+ * /user:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: Register a new user
+ *     description: Register a new user by providing an email address and name. An authentication token will be sent to the provided email address.
+ *     parameters:
+ *       - in: body
+ *         schema:
+ *           type: object
+ *           required:
+ *             - email
+ *             - pseudo
+ *           properties:
+ *             email:
+ *               type: string
+ *               format: email
+ *               description: The email address to which the authentication token will be sent
+ *               example: "john.doe@email.com"
+ *             pseudo:
+ *               type: string
+ *               description: The name of the user
+ *               example: "John Doe"
+ *     responses:
+ *       200:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - jwt
+ *               properties:
+ *                 jwt:
+ *                   type: string
+ *                   description: JWT for user authentication
+ *                   example: "algo.payload.sign"
+ *       400:
+ *         description: Bad request. Change your request to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error400'
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.post('/', bodyValidateSchema(createUserSchema), createUser);
 
 
 
@@ -88,60 +146,6 @@ router.get('/', getUser);
  *               $ref: '#/components/schemas/error500'
  */
 router.post('/logout', logoutUser);
-
-
-/**
- * @swagger
- * /user/register:
- *   post:
- *     tags:
- *       - User
- *     summary: Register a new user
- *     description: Register a new user by providing an email address and name. An authentication token will be sent to the provided email address.
- *     parameters:
- *       - in: body
- *         schema:
- *           type: object
- *           required:
- *             - email
- *           properties:
- *             email:
- *               type: string
- *               format: email
- *               description: The email address to which the authentication token will be sent
- *               example: "john.doe@email.com"
- *             name:
- *               type: string
- *               description: The name of the user
- *               example: "John Doe"
- *     responses:
- *       200:
- *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               required:
- *                 - jwt
- *               properties:
- *                 jwt:
- *                   type: string
- *                   description: JWT for user authentication
- *                   example: "algo.payload.sign"
- *       400:
- *         description: Bad request. Change your request to fix this error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/error400'
- *       500:
- *         description: Internal server error. Please create an issue on Github
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/error500'
- */
-router.post('/register', registerUser);
 
 
 /**
