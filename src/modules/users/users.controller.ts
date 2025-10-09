@@ -19,7 +19,7 @@ import { AppError } from '../../core/models/ErrorModel';
  * @param next NextFunction
  * @returns User information or error response
  */
-export const getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
+export const getUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
         /* Verify headers */
         if (!req.headers.authorization) {
