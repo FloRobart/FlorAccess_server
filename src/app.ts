@@ -56,27 +56,6 @@ const app = express();
 
     app.use('/jwt', jwtRoutes);
 
-    app.use(defaultRouteHandler);
-    app.use(errorHandler);
-
-
-    /* Authorized APIs Handshake */
-    if (config.handshake_authorized_api) {
-        /* initialize default authorized APIs */
-        saveDefaultAuthorizedApisToDatabase().then((result) => {
-            if (result) {
-                /* Handshake to other services */
-                handshakeAuthorizedApis().then(() => {
-                    logger.info("Handshake with authorized APIs completed.");
-                }).catch((err: Error) => {
-                    logger.error("Handshake with authorized APIs completed :", err.message);
-                });
-            }
-        });
-    }
-
-
-
     /* Swagger - only in development */
     if (ENABLE_ENV[config.app_env] === 5) {
         /* Swagger setup */
@@ -121,6 +100,26 @@ const app = express();
             app.locals.swaggerJsonFileCreated = false;
             logger.error("Error creating swagger JSON file at :", SWAGGER_JSON_PATH);
         }
+    }
+
+
+    app.use(defaultRouteHandler);
+    app.use(errorHandler);
+
+
+    /* Authorized APIs Handshake */
+    if (config.handshake_authorized_api) {
+        /* initialize default authorized APIs */
+        saveDefaultAuthorizedApisToDatabase().then((result) => {
+            if (result) {
+                /* Handshake to other services */
+                handshakeAuthorizedApis().then(() => {
+                    logger.info("Handshake with authorized APIs completed.");
+                }).catch((err: Error) => {
+                    logger.error("Handshake with authorized APIs completed :", err.message);
+                });
+            }
+        });
     }
 })();
 
