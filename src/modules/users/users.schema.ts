@@ -8,6 +8,7 @@ export type User = {
     users_authmethod: string|null;
 
     users_connected: boolean;
+    users_lastlogin: string|null;
 
     users_password: string|null;
     users_secret: string|null;

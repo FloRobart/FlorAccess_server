@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { updateUserById, deleteUserById, registerUser, logoutUser, getUserProfile } from './user.controller';
+import { updateUserById, deleteUserById, registerUser, logoutUser, getUser } from './users.controller';
 
 
 const router = Router();
@@ -46,7 +46,7 @@ const router = Router();
  *       500:
  *         description: Internal server error.
  */
-router.get('/profile', getUserProfile);
+router.get('/', getUser);
 
 
 /**

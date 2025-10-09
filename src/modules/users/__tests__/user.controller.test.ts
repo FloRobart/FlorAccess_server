@@ -1,4 +1,4 @@
-import { getUserProfile, logoutUser, registerUser, updateUserById, deleteUserById } from '../user.controller';
+import { getUser, logoutUser, registerUser, updateUserById, deleteUserById } from '../users.controller';
 import * as Users from '../users.repository';
 import * as securities from '../../../core/utils/securities';
 import { AppError } from '../../../core/models/ErrorModel';
@@ -25,7 +25,7 @@ describe('userController', () => {
     const res = mockRes();
     const next = mockNext();
 
-    await getUserProfile(req, res, next);
+    await getUser(req, res, next);
     expect(next).toHaveBeenCalled();
     const err = next.mock.calls[0][0];
     expect(err).toBeInstanceOf(AppError);
@@ -36,7 +36,7 @@ describe('userController', () => {
     const res = mockRes();
     const next = mockNext();
 
-    await getUserProfile(req, res, next);
+    await getUser(req, res, next);
     expect(next).toHaveBeenCalled();
   });
 
@@ -48,7 +48,7 @@ describe('userController', () => {
     const res = mockRes();
     const next = mockNext();
 
-    await getUserProfile(req, res, next);
+    await getUser(req, res, next);
     // verifyJwt is async via then; wait a tick
     await Promise.resolve();
     expect(res.status).toHaveBeenCalledWith(200);
