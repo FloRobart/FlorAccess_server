@@ -60,7 +60,7 @@ const app = express();
     /* Swagger - only in development */
     if (ENABLE_ENV[config.app_env] === 5) {
         /* Swagger setup */
-        const SWAGGER_JSON_PATH = `${__dirname}/swagger/swagger.json`;
+        const SWAGGER_JSON_PATH = `${__dirname}/swagger/json/swagger.json`;
         const swaggerUi = require('swagger-ui-express');
         const swaggerJsDoc = require('swagger-jsdoc');
         const swaggerOptions = {
@@ -77,7 +77,7 @@ const app = express();
                     },
                 ],
             },
-            apis: [`${__dirname}/**/*.ts`, `${__dirname}/**/*.js`],
+            apis: [`${__dirname}/modules/**/*.ts`, `${__dirname}/swagger/**/*.ts`, `${__dirname}/modules/**/*.js`, `${__dirname}/swagger/**/*.js`],
         };
 
         const swaggerDocs = swaggerJsDoc(swaggerOptions);

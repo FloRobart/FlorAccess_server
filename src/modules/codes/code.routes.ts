@@ -34,13 +34,13 @@ const router = Router();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#components/schemas/error400'
+ *               $ref: '#/components/schemas/error400'
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#components/schemas/error500'
+ *               $ref: '#/components/schemas/error500'
  */
 router.post('/login/request', loginRequest);
 
@@ -90,19 +90,19 @@ router.post('/login/request', loginRequest);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#components/schemas/error400'
+ *               $ref: '#/components/schemas/error400'
  *       401:
  *         description: Unauthorized. Invalid or missing JWT token
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#components/schemas/error401'
+ *               $ref: '#/components/schemas/error401'
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#components/schemas/error500'
+ *               $ref: '#/components/schemas/error500'
  */
 router.post('/login/confirm', loginConfirmation);
 

@@ -69,7 +69,7 @@ services:
     user: "1800:1800"
     tmpfs:
       - /tmp:exec,nosuid,nodev
-      - /app/dist/swagger/:rw,uid=1800,gid=1800
+      - /app/dist/swagger/json/:rw,uid=1800,gid=1800
 
 volumes:
   db_data:
