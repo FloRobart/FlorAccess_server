@@ -1,10 +1,37 @@
 import argon2 from 'argon2';
 import config from '../../config/config';
-import { User } from '../../modules/users/users.schema';
+import { User } from '../../modules/users/users.types';
 import JWT from 'jsonwebtoken';
 import { getUserByEmail } from '../../modules/users/users.repository';
 import { getRandomValues, randomBytes } from "node:crypto";
 
+
+
+
+/**
+ * Generates a JWT for a user.
+ * @param user User object to generate JWT for
+ * @returns JWT as a string
+ */
+export async function generateJwt(user: User): Promise<string> {
+    try {
+        if (!user || !user.id || !user.email || !user.pseudo) {
+            throw new Error('Invalid user object for JWT generation.');
+        }
+
+        const jwtPayload = {
+            user_id: user.id,
+            email: user.email,
+            pseudo: user.pseudo,
+            is_connected: user.is_connected,
+            last_login: user.last_login,
+        };
+
+        return JWT.sign(jwtPayload, config.jwt_signing_key, { expiresIn: config.jwt_expiration });
+    } catch (error) {
+        throw error;
+    }
+}
 
 
 
@@ -43,32 +70,6 @@ export async function verifyHash(input: string, hash: string): Promise<boolean> 
 
 
 /**
- * Generates a JWT for a user.
- * @param user User object to generate JWT for
- * @returns JWT as a string
- */
-export async function getJwt(user: User): Promise<string> {
-    try {
-        if (!user || !user.users_id || !user.users_email || !user.users_name) {
-            throw new Error('Invalid user object for JWT generation.');
-        }
-
-        const jwtPayload = {
-            userid: user.users_id,
-            email: user.users_email,
-            name: user.users_name,
-            authmethod: user.users_authmethod
-        };
-
-        const jwt = JWT.sign(jwtPayload, config.jwt_signing_key, { expiresIn: config.jwt_expiration });
-
-        return jwt;
-    } catch (err) {
-        throw err;
-    }
-}
-
-/**
  * Verifies a JWT and returns the user information.
  * @param token JWT to verify
  * @returns A promise that resolves to the user object if the token is valid, or null if invalid.
@@ -81,7 +82,7 @@ export async function verifyJwt(jwt: string): Promise<User | null> {
         }
 
         const user = await getUserByEmail(decoded.email);
-        if (user && user.users_id === decoded.userid && user.users_name === decoded.name && user.users_authmethod === decoded.authmethod) {
+        if (user && user.id === decoded.userid && user.pseudo === decoded.name) {
             return user;
         }
 
