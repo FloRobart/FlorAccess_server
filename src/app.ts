@@ -36,6 +36,7 @@ const app = express();
 
     /* Routes and Middleware */
     app.use(cors(config.corsOptions));
+    app.set('trust proxy', true);
     app.use(limiter);
     app.use(express.json());
 
@@ -76,7 +77,7 @@ const app = express();
                     },
                 ],
             },
-            apis: [`${__dirname}/routes/*.ts`, `${__dirname}/swagger/*.ts`],
+            apis: [`${__dirname}/**/*.ts`, `${__dirname}/**/*.js`],
         };
 
         const swaggerDocs = swaggerJsDoc(swaggerOptions);

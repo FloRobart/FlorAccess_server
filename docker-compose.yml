@@ -66,6 +66,10 @@ services:
       - flower_garden-net
     ports:
       - ${APP_PORT}:80
+    user: "1800:1800"
+    tmpfs:
+      - /tmp:exec,nosuid,nodev
+      - /app/dist/swagger/:rw,uid=1800,gid=1800
 
 volumes:
   db_data:
