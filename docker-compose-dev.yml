@@ -1,0 +1,8 @@
+services:
+  floraccess-server:
+    volumes:
+      - ./:/app/
+      - ./node_modules:/app/node_modules
+    command: ["npm", "run", "dev"]
+    tmpfs:
+      - /app/src/swagger/json:rw,uid=1800,gid=1800
