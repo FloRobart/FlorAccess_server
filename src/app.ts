@@ -54,7 +54,7 @@ const app = express();
         next();
     });
 
-    app.use('/user', userRoutes);
+    app.use('/users', userRoutes);
     app.use('/code', codeRoutes);
 
     app.use('/jwt', jwtRoutes);
