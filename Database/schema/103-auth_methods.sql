@@ -9,10 +9,11 @@
 -- Table to store authentication methods
 CREATE TABLE auth_methods (
     id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    method_name VARCHAR(255) NOT NULL,
+    immuable_method_name VARCHAR(255) NOT NULL,
+    display_name VARCHAR(255) NOT NULL,
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT auth_methods_method_name_key UNIQUE (method_name)
+    CONSTRAINT auth_methods_immuable_method_name_key UNIQUE (immuable_method_name)
 );

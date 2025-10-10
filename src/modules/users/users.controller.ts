@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
 import { AppError } from '../../core/models/ErrorModel';
+import * as logger from '../../core/utils/logger';
 
 
 
@@ -14,9 +15,11 @@ import { AppError } from '../../core/models/ErrorModel';
  * @param next NextFunction
  */
 export const createUser = async (req: Request, res: Response, next: NextFunction) => {
-    const { email, name } = req.body.validated;
+    const { email, pseudo } = req.body.validated;
 
-    UsersService.createUser(email, name, req.ip || null).then((jwt: string) => {
+    logger.debug(`email: ${email} | pseudo: ${pseudo}`);
+
+    UsersService.createUser(email, pseudo, req.ip || null).then((jwt: string) => {
         res.status(201).json({ jwt: jwt });
     }).catch((error: Error) => {
         next(new AppError({ message: "User could not be created", httpStatus: 500, stackTrace: error }));

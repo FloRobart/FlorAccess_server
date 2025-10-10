@@ -15,7 +15,7 @@ export const bodyValidateSchema =
             req.body.validated = schema.parse(req.body);
             next();
         } catch (error) {
-            const stackTrace = error instanceof ZodError ? error.issues : error;
+            const stackTrace = error instanceof ZodError ? JSON.stringify(error.issues) : error;
             next(new AppError({ message: "Invalid request data", httpStatus: 400, stackTrace: stackTrace }) );
         }
   };

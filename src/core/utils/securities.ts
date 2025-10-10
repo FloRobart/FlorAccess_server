@@ -1,37 +1,10 @@
 import argon2 from 'argon2';
 import config from '../../config/config';
-import { User } from '../../modules/users/users.types';
+import { User, UserSafe } from '../../modules/users/users.types';
 import JWT from 'jsonwebtoken';
 import { getUserByEmail } from '../../modules/users/users.repository';
 import { getRandomValues, randomBytes } from "node:crypto";
-
-
-
-
-/**
- * Generates a JWT for a user.
- * @param user User object to generate JWT for
- * @returns JWT as a string
- */
-export async function generateJwt(user: User): Promise<string> {
-    try {
-        if (!user || !user.id || !user.email || !user.pseudo) {
-            throw new Error('Invalid user object for JWT generation.');
-        }
-
-        const jwtPayload = {
-            user_id: user.id,
-            email: user.email,
-            pseudo: user.pseudo,
-            is_connected: user.is_connected,
-            last_login: user.last_login,
-        };
-
-        return JWT.sign(jwtPayload, config.jwt_signing_key, { expiresIn: config.jwt_expiration });
-    } catch (error) {
-        throw error;
-    }
-}
+import { UserSafeSchema } from '../../modules/users/users.schema';
 
 
 
