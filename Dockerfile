@@ -1,5 +1,5 @@
 # Étape 1 : Build avec TypeScript
-FROM node:18-alpine AS builder
+FROM node:latest AS builder
 WORKDIR /app
 
 # Copier le code source
@@ -18,7 +18,7 @@ RUN npm ci
 RUN npm run build
 
 # Étape 2 : Image finale
-FROM node:18-alpine AS runner
+FROM node:latest AS runner
 WORKDIR /app
 
 # Copier uniquement les fichiers nécessaires à l'exécution
@@ -29,7 +29,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 
 # Ajout d'un utilisateur non-root avec UID/GID fixes
-RUN addgroup -g 1800 -S floraccessgroup && adduser -u 1800 -S floraccessuser -G floraccessgroup
+# Utiliser les options longues pour éviter les ambiguïtés entre différentes variantes d'adduser/addgroup
+RUN addgroup --gid 1800 --system floraccessgroup && \
+	adduser --uid 1800 --system --ingroup floraccessgroup --disabled-password --gecos "" --no-create-home floraccessuser
 USER floraccessuser
 
 # Par défaut : lance le serveur
