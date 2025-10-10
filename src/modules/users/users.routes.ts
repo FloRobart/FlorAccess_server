@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { updateUserById, deleteUserById, createUser, logoutUser, getUser } from './users.controller';
-import { bodyValidateSchema } from '../../core/middlewares/bodyValidate.middleware';
-import { createUserSchema } from './users.schema';
+import { updateUserById, deleteUserById, insertUser, logoutUser, selectUser } from './users.controller';
+import { bodyValidator } from '../../core/middlewares/body_validator.middleware';
+import { InsertUserSchema, AuthorizationHeaderSchema } from './users.schema';
+import { authorizationValidator } from '../../core/middlewares/auth_validator.middleware';
 
 
 const router = Router();
@@ -10,43 +11,23 @@ const router = Router();
 
 /**
  * @swagger
- * /user:
+ * /users:
  *   post:
  *     tags:
- *       - User
+ *       - Users
  *     summary: Register a new user
- *     description: Register a new user by providing an email address and name. An authentication token will be sent to the provided email address.
+ *     description: Register a new user by providing an email address and pseudo.
  *     parameters:
  *       - in: body
  *         schema:
- *           type: object
- *           required:
- *             - email
- *             - pseudo
- *           properties:
- *             email:
- *               type: string
- *               format: email
- *               description: The email address to which the authentication token will be sent
- *               example: "john.doe@email.com"
- *             pseudo:
- *               type: string
- *               description: The name of the user
- *               example: "John Doe"
+ *           $ref: '#/components/schemas/InsertUser'
  *     responses:
  *       200:
  *         description: User registered successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required:
- *                 - jwt
- *               properties:
- *                 jwt:
- *                   type: string
- *                   description: JWT for user authentication
- *                   example: "algo.payload.sign"
+ *               $ref: '#/components/schemas/JWTResponse'
  *       400:
  *         description: Bad request. Change your request to fix this error
  *         content:
@@ -60,23 +41,23 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/', bodyValidateSchema(createUserSchema), createUser);
+router.post('/', bodyValidator(InsertUserSchema), insertUser);
 
 
 
 /**
  * @swagger
- * /user:
+ * /users:
  *   get:
  *     tags:
- *       - User
+ *       - Users
  *     summary: Get user information from JWT
  *     description: Retrieve information about the authenticated user.
  *     parameters:
  *       - in: header
  *         name: Authorization
  *         required: true
- *         description: JWT Token
+ *         description: JWT
  *         schema:
  *           type: string
  *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -86,22 +67,25 @@ router.post('/', bodyValidateSchema(createUserSchema), createUser);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 email:
- *                   type: string
- *                   example: "user@example.com"
- *                 name:
- *                   type: string
- *                   example: "John Doe"
+ *               $ref: '#/components/schemas/UserSafe'
  *       401:
  *         description: Unauthorized access.
  *       422:
  *         description: Invalid request parameters.
  *       500:
- *         description: Internal server error.
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
  */
-router.get('/', getUser);
+router.get('/', authorizationValidator(AuthorizationHeaderSchema), selectUser);
+
+
+
+
+
+
 
 
 /**

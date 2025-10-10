@@ -1,30 +1,29 @@
 import { Database } from '../../core/database/database';
-import { UserAuthMethodSafe } from './auth_methods.type';
-import { User, UserSafe } from './users.types';
+import { UserAuthMethodSafe } from '../auth_methods/auth_methods.type';
+import { InsertUser, User, UserSafe } from './users.types';
 
 
 
 /**
  * Creates a new user in the database.
- * @param email The email address of the user to create.
- * @param token The authentication token for the user.
- * @param name Optional name of the user.
+ * @param user The user object containing the email and pseudo of the user to create.
+ * @param ip The IP address of the user (can be null).
  * @returns A promise that resolves to the created user object.
  */
-export async function createUser(email: string, pseudo: string, ip: string | null): Promise<UserSafe> {
-    let user: UserSafe;
+export async function insertUser(user: InsertUser, ip: string | null): Promise<UserSafe> {
+    let insertedUser: UserSafe;
     const DEFAULT_AUTH_METHOD = 'EMAIL_CODE';
     
     /* Create the user */
     try {
         const query = "INSERT INTO users (email, pseudo, last_ip) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING id, email, pseudo, is_connected, is_verified_email, last_login, created_at, updated_at;";
-        const values: (string | number | null)[] = [email, pseudo, ip];
+        const values: (string | number | null)[] = [user.email, user.pseudo, ip];
         
         const rows = await Database.execute<UserSafe>({ text: query, values: values });
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('Failed to create user.'); }
 
-        user = rows[0];
+        insertedUser = rows[0];
     } catch (error) {
         throw error;
     }
@@ -32,20 +31,51 @@ export async function createUser(email: string, pseudo: string, ip: string | nul
     /* Assign default auth method to the user */
     try {
         const query = "INSERT INTO user_auth_methods (user_id, auth_method_id) VALUES ($1, (SELECT id FROM auth_methods WHERE immuable_method_name = $2)) ON CONFLICT DO NOTHING RETURNING id, user_id, auth_method_id, created_at, updated_at;";
-        const values = [user.id, DEFAULT_AUTH_METHOD];
+        const values = [insertedUser.id, DEFAULT_AUTH_METHOD];
         
         const rows = await Database.execute<UserAuthMethodSafe>({ text: query, values: values });
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No auth method assigned.'); }
         
-        user.auth_methods = rows;
+        insertedUser.auth_methods = rows;
     } catch (error) {
         throw error;
     }
 
-    console.debug(`User created : ${JSON.stringify(user)}`);
-    return user;
+    console.debug(`User created : ${JSON.stringify(insertedUser)}`);
+    return insertedUser;
 }
+
+/**
+ * Retrieves a user from the database by their ID.
+ * @param id The ID of the user to retrieve.
+ * @returns A promise that resolves to the user object if found, otherwise throws an error.
+ */
+export async function getUserById(id: number): Promise<User> {
+    if (!id || typeof id !== 'number') { throw new Error('Invalid id.'); }
+
+    let query = "SELECT * FROM users WHERE users_id = $1";
+    let values = [id];
+
+    return Database.execute({ text: query, values: values }).then((rows) => {
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('No user with this id.'); }
+
+        return rows[0] as User;
+    }).catch((error: Error) => {
+        throw error;
+    });
+}
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Retrieves a user from the database by email and token.
