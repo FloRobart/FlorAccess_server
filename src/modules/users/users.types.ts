@@ -1,49 +1,15 @@
-import { UserAuthMethodSafe } from "./auth_methods.type";
+import { z } from "zod";
+import { AuthorizationHeaderSchema, InsertUserSchema, IPAddressSchema, UserSafeSchema, UserSchema } from "./users.schema";
 
-/**
- * User interface representing the structure of a user in the database.
- */
-export type User = {
-    readonly id: number;
-    email: string;
-    pseudo: string;
 
-    is_connected: boolean;
-    is_verified_email: boolean;
-    last_login: Date|null;
-    last_ip: string|null;
 
-    auth_methods?: string[];
+/* INSERT */
+export type InsertUser = z.infer<typeof InsertUserSchema>;
 
-    password_hash: string|null;
-    secret_hash: string|null;
+/* SELECT */
+export type UserSafe = z.infer<typeof UserSafeSchema>;
+export type User = z.infer<typeof UserSchema>;
+export type IPAddress = z.infer<typeof IPAddressSchema>;
+export type AuthorizationHeader = z.infer<typeof AuthorizationHeaderSchema>;
 
-    readonly created_at: Date;
-    readonly updated_at: Date;
-}
-
-/**
- * Safe version of the User interface without sensitive information.
- */
-export type UserSafe = {
-    readonly id: number;
-    email: string;
-    pseudo: string;
-
-    is_connected: boolean;
-    is_verified_email: boolean;
-    last_login: Date;
-
-    auth_methods?: UserAuthMethodSafe[];
-
-    readonly created_at: Date;
-    readonly updated_at: Date;
-}
-
-/**
- * Type for creating a new user.
- */
-export type createUser = {
-    email: string,
-    pseudo: string
-}
+/* UPDATE */

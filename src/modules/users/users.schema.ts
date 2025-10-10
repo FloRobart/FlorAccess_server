@@ -1,11 +1,15 @@
 import { z } from "zod";
+import { UserAuthMethodSafeSchema } from "../auth_methods/auth_methods.schema";
 
 
 
+/*========*/
+/* INSERT */
+/*========*/
 /**
- * Schéma de validation pour la création d'un utilisateur.
+ * Schéma de validation pour l'insertion d'un utilisateur.
  */
-export const createUserSchema = z.object({
+export const InsertUserSchema = z.object({
     email: z.preprocess(
         (val) => typeof val === "string" ? val.toLowerCase().replace(/\s+/g, "") : val,
         z.email()
@@ -16,15 +20,10 @@ export const createUserSchema = z.object({
     pseudo: data.pseudo.trim()
 }));
 
-export const UserAuthMethodSafeSchema = z.object({
-    id: z.number(),
-    user_id: z.number(),
-    auth_method_id: z.number(),
 
-    created_at: z.date(),
-    updated_at: z.date()
-});
-
+/*========*/
+/* SELECT */
+/*========*/
 /**
  * Schéma de validation pour un utilisateur "safe" (sans informations sensibles).
  */
@@ -43,11 +42,30 @@ export const UserSafeSchema = z.object({
     updated_at: z.date()
 });
 
-export const AuthMethodSchema = z.object({
-    id: z.number(),
-    immuable_method_name: z.string(),
-    display_name: z.string(),
+/**
+ * Schéma de validation pour un utilisateur complet (avec informations sensibles).
+ */
+export const UserSchema = z.object({
+    ...UserSafeSchema.shape,
 
-    created_at: z.date(),
-    updated_at: z.date()
-})
+    last_ip: z.ipv4().or(z.ipv6()).nullable(),
+
+    password_hash: z.string().nullable(),
+    secret_hash: z.string().nullable()
+});
+
+/**
+ * Schéma de validation pour une adresse IP (IPv4 ou IPv6).
+ */
+export const IPAddressSchema = z.ipv4().or(z.ipv6());
+
+/**
+ * Schéma de validation pour l'en-tête 'Authorization' contenant un JWT.
+ * Le format attendu est 'Bearer <token>'.
+ */
+export const AuthorizationHeaderSchema = z.string().regex(/^Bearer\s[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+$/);
+
+
+/*========*/
+/* UPDATE */
+/*========*/

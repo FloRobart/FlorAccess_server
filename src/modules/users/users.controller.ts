@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
 import { AppError } from '../../core/models/ErrorModel';
-import * as logger from '../../core/utils/logger';
+import { InsertUser, IPAddress, UserSafe } from './users.types';
+import { IPAddressSchema } from './users.schema';
 
 
 
@@ -14,12 +15,11 @@ import * as logger from '../../core/utils/logger';
  * @param res Return JWT for authentication or error
  * @param next NextFunction
  */
-export const createUser = async (req: Request, res: Response, next: NextFunction) => {
-    const { email, pseudo } = req.body.validated;
+export const insertUser = async (req: Request, res: Response, next: NextFunction) => {
+    const user: InsertUser = req.body.validated;
+    const ip: IPAddress | null = IPAddressSchema.safeParse(req.ip).data || null;
 
-    logger.debug(`email: ${email} | pseudo: ${pseudo}`);
-
-    UsersService.createUser(email, pseudo, req.ip || null).then((jwt: string) => {
+    UsersService.insertUser(user, ip).then((jwt: string) => {
         res.status(201).json({ jwt: jwt });
     }).catch((error: Error) => {
         next(new AppError({ message: "User could not be created", httpStatus: 500, stackTrace: error }));
@@ -38,41 +38,24 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
  * @param next NextFunction
  * @returns User information or error response
  */
-export const getUser = async (req: Request, res: Response, next: NextFunction) => {
-    // try {
-    //     /* Verify headers */
-    //     if (!req.headers.authorization) {
-    //         next(new AppError({ message: "Unauthorized", httpStatus: 401 }));
-    //         return;
-    //     }
+export const selectUser = async (req: Request, res: Response, next: NextFunction) => {
+    const jwt: string = req.headers.authorization!.split(' ')[1];
 
-    //     const authHeader: string[] = req.headers.authorization.split(' ');
-    //     if (authHeader.length !== 2 || authHeader[0] !== 'Bearer') {
-    //         next(new AppError({ message: "Unauthorized", httpStatus: 401 }));
-    //         return;
-    //     }
+    UsersService.selectUser(jwt).then((user: UserSafe | null) => {
+        if (!user) { return next(new AppError({ message: "Unauthorized", httpStatus: 401 })); }
 
-    //     const jwt: string = authHeader[1];
-
-    //     /* Verify JWT */
-    //     verifyJwt(jwt).then((user: User | null) => {
-    //         if (!user || !user.users_id) {
-    //             next(new AppError({ message: "Invalid or expired JWT", httpStatus: 401 }));
-    //             return;
-    //         }
-    //         res.status(200).json({
-    //             userid: user.users_id,
-    //             email: user.users_email,
-    //             name: user.users_name,
-    //             authmethod: user.users_authmethod,
-    //         });
-    //     }).catch((err: Error) => {
-    //         next(new AppError({ stackTrace: err }));
-    //     });
-    // } catch (err) {
-    //     next(new AppError({ stackTrace: err }));
-    // }
+        res.status(200).json({ user: user });
+    }).catch((error: Error) => {
+        next(new AppError({ message: "User could not be created", httpStatus: 500, stackTrace: error }));
+    });
 }
+
+
+
+
+
+
+
 
 /**
  * Logs out a user by invalidating the JWT token.
