@@ -36,7 +36,9 @@ const app = express();
 
     /* Routes and Middleware */
     app.use(cors(config.corsOptions));
-    app.set('trust proxy', true);
+    if (ENABLE_ENV[config.app_env] === 4) {
+        app.set('trust proxy', true);
+    }
     app.use(limiter);
     app.use(express.json());
 

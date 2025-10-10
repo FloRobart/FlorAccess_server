@@ -66,10 +66,10 @@ router.post('/', bodyValidateSchema(createUserSchema), createUser);
 
 /**
  * @swagger
- * /user/profile:
+ * /user:
  *   get:
  *     tags:
- *       - API routes
+ *       - User
  *     summary: Get user information from JWT
  *     description: Retrieve information about the authenticated user.
  *     parameters:
@@ -94,9 +94,6 @@ router.post('/', bodyValidateSchema(createUserSchema), createUser);
  *                 name:
  *                   type: string
  *                   example: "John Doe"
- *                 authmethod:
- *                   type: string
- *                   example: "password"
  *       401:
  *         description: Unauthorized access.
  *       422:

@@ -1,5 +1,6 @@
 import { Database } from '../../core/database/database';
-import { User } from './users.types';
+import { UserAuthMethodSafe } from './auth_methods.type';
+import { User, UserSafe } from './users.types';
 
 
 
@@ -10,18 +11,40 @@ import { User } from './users.types';
  * @param name Optional name of the user.
  * @returns A promise that resolves to the created user object.
  */
-export async function createUser(email: string, pseudo: string, ip: string | null): Promise<User> {
-    let query = "INSERT INTO users (email, pseudo, last_ip) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *";
-    let values = [email, pseudo, ip];
-
-    return Database.execute({ text: query, values: values }).then((rows) => {
+export async function createUser(email: string, pseudo: string, ip: string | null): Promise<UserSafe> {
+    let user: UserSafe;
+    const DEFAULT_AUTH_METHOD = 'EMAIL_CODE';
+    
+    /* Create the user */
+    try {
+        const query = "INSERT INTO users (email, pseudo, last_ip) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING id, email, pseudo, is_connected, is_verified_email, last_login, created_at, updated_at;";
+        const values: (string | number | null)[] = [email, pseudo, ip];
+        
+        const rows = await Database.execute<UserSafe>({ text: query, values: values });
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('Failed to create user.'); }
 
-        return rows[0] as User;
-    }).catch((error: Error) => {
+        user = rows[0];
+    } catch (error) {
         throw error;
-    });
+    }
+
+    /* Assign default auth method to the user */
+    try {
+        const query = "INSERT INTO user_auth_methods (user_id, auth_method_id) VALUES ($1, (SELECT id FROM auth_methods WHERE immuable_method_name = $2)) ON CONFLICT DO NOTHING RETURNING id, user_id, auth_method_id, created_at, updated_at;";
+        const values = [user.id, DEFAULT_AUTH_METHOD];
+        
+        const rows = await Database.execute<UserAuthMethodSafe>({ text: query, values: values });
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('No auth method assigned.'); }
+        
+        user.auth_methods = rows;
+    } catch (error) {
+        throw error;
+    }
+
+    console.debug(`User created : ${JSON.stringify(user)}`);
+    return user;
 }
 
 /**

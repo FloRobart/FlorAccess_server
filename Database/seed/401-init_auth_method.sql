@@ -7,6 +7,6 @@
 
 
 -- Insert default authentication methods if they do not exist
-INSERT INTO auth_methods (id, method_name)
-VALUES (1, 'code'), (2, 'password')
+INSERT INTO auth_methods (immuable_method_name, display_name)
+VALUES ('EMAIL_CODE', 'Code'), ('PASSWORD', 'Password')
 ON CONFLICT DO NOTHING;
