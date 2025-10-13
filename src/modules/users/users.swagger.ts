@@ -111,7 +111,26 @@
 /*========*/
 /* UPDATE */
 /*========*/
-
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     UpdateUser:
+ *       type: object
+ *       required:
+ *         - email
+ *         - pseudo
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: "john.doe@example.com"
+ *         pseudo:
+ *           type: string
+ *           minLength: 3
+ *           maxLength: 255
+ *           example: "John Doe"
+ */
 
 
 

@@ -1,14 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
 import { AppError } from '../../core/models/ErrorModel';
-import { InsertUser, IPAddress, UserSafe } from './users.types';
+import { InsertUser, IPAddress, UpdateUser, User, UserSafe } from './users.types';
 import { IPAddressSchema } from './users.schema';
 
 
 
 /**
  * Registers a new user with the provided information.
- * @POST /user
+ * @POST /users
  * @param req Request
  * @param req.body.validated.email Email address of the user
  * @param req.body.validated.name Optional name of the user
@@ -16,42 +16,57 @@ import { IPAddressSchema } from './users.schema';
  * @param next NextFunction
  */
 export const insertUser = async (req: Request, res: Response, next: NextFunction) => {
-    const user: InsertUser = req.body.validated;
+    const insertUser: InsertUser = req.body.validated;
     const ip: IPAddress | null = IPAddressSchema.safeParse(req.ip).data || null;
 
-    UsersService.insertUser(user, ip).then((jwt: string) => {
+    UsersService.insertUser(insertUser, ip).then((jwt: string) => {
         res.status(201).json({ jwt: jwt });
     }).catch((error: Error) => {
-        next(new AppError({ message: "User could not be created", httpStatus: 500, stackTrace: error }));
+        next(new AppError({ message: error.message, httpStatus: 500, stackTrace: error }));
     });
 };
 
 
-
 /**
  * Retrieves user information from the JWT in the request headers.
- * @GET /jwt/user
+ * @GET /users
  * @param req Request
  * @param req.headers.authorization Authorization header containing the API token
- * @param req.query.jwt JWT to verify
  * @param res Response
  * @param next NextFunction
  * @returns User information or error response
  */
 export const selectUser = async (req: Request, res: Response, next: NextFunction) => {
     const jwt: string = req.headers.authorization!.split(' ')[1];
-
-    UsersService.selectUser(jwt).then((user: UserSafe | null) => {
-        if (!user) { return next(new AppError({ message: "Unauthorized", httpStatus: 401 })); }
-
-        res.status(200).json({ user: user });
+    UsersService.selectUser(jwt).then((userSafe: UserSafe) => {
+        res.status(200).json(userSafe);
     }).catch((error: Error) => {
-        next(new AppError({ message: "User could not be created", httpStatus: 500, stackTrace: error }));
+        next(new AppError({ message: error.message, httpStatus: 500, stackTrace: error }));
     });
-}
+};
 
 
+/**
+ * Updates a user's information.
+ * @PUT /users
+ * @param req Request
+ * @param req.headers.authorization Authorization header containing the JWT
+ * @param req.body.name Optional name of the user
+ * @param req.body.email Optional email of the user
+ * @param res Response
+ * @param next NextFunction
+ * @returns Updated JWT or error response
+ */
+export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
+    const updateUser: UpdateUser = req.body.validated;
+    const jwt: string = req.headers.authorization!.split(' ')[1];
 
+    UsersService.updateUser(updateUser, jwt).then((newJwt: string) => {
+        res.status(200).json({ jwt: newJwt });
+    }).catch((error: Error) => {
+        next(new AppError({ message: "User could not be updated", httpStatus: 500, stackTrace: error }));
+    });
+};
 
 
 

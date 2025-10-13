@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { updateUserById, deleteUserById, insertUser, logoutUser, selectUser } from './users.controller';
+import { updateUser, deleteUserById, insertUser, logoutUser, selectUser } from './users.controller';
 import { bodyValidator } from '../../core/middlewares/body_validator.middleware';
-import { InsertUserSchema, AuthorizationHeaderSchema } from './users.schema';
+import { InsertUserSchema, AuthorizationHeaderSchema, UpdateUserSchema } from './users.schema';
 import { authorizationValidator } from '../../core/middlewares/auth_validator.middleware';
 
 
@@ -44,7 +44,6 @@ const router = Router();
 router.post('/', bodyValidator(InsertUserSchema), insertUser);
 
 
-
 /**
  * @swagger
  * /users:
@@ -81,6 +80,47 @@ router.post('/', bodyValidator(InsertUserSchema), insertUser);
  */
 router.get('/', authorizationValidator(AuthorizationHeaderSchema), selectUser);
 
+
+/**
+ * @swagger
+ * /users:
+ *   put:
+ *     tags:
+ *       - Users
+ *     summary: Update user information
+ *     description: Update the information of an existing user.
+ *     parameters:
+ *       - in: headers
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token for user authentication
+ *         schema:
+ *           type: string
+ *           example: "Bearer your_jwt_token_here"
+ *       - in: body
+ *         schema:
+ *           $ref: '#/components/schemas/UpdateUser'
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JWTResponse'
+ *       400:
+ *         description: Bad request. Change your request to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error400'
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.put('/', authorizationValidator(AuthorizationHeaderSchema), bodyValidator(UpdateUserSchema), updateUser);
 
 
 
@@ -129,68 +169,7 @@ router.get('/', authorizationValidator(AuthorizationHeaderSchema), selectUser);
 router.post('/logout', logoutUser);
 
 
-/**
- * @swagger
- * /user:
- *   put:
- *     tags:
- *       - User
- *     summary: Update user information
- *     description: Update the information of an existing user.
- *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         description: JWT token for user authentication
- *         schema:
- *           type: string
- *           example: "Bearer your_jwt_token_here"
- *       - in: body
- *         name: user
- *         required: true
- *         description: The user information to update
- *         schema:
- *           type: object
- *           properties:
- *             email:
- *               type: string
- *               format: email
- *               example: "john.doe@email.com"
- *             name:
- *               type: string
- *               example: "John Doe"
- *     responses:
- *       200:
- *         description: User updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               required:
- *                 - updated
- *               properties:
- *                 updated:
- *                   type: boolean
- *                   description: Indicates if the user was updated (true) or not (false)
- *                   example: true
- *                 jwt:
- *                   type: string
- *                   description: New JWT for user authentication after update (only if updated is true)
- *                   example: "new_algo.new_payload.new_sign"
- *       400:
- *         description: Bad request. Change your request to fix this error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/error400'
- *       500:
- *         description: Internal server error. Please create an issue on Github
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/error500'
- */
-router.put('/', updateUserById);
+
 
 
 /**

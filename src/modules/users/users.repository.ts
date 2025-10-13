@@ -1,6 +1,8 @@
 import { Database } from '../../core/database/database';
-import { UserAuthMethodSafe } from '../auth_methods/auth_methods.type';
-import { InsertUser, User, UserSafe } from './users.types';
+import { UserAuthMethodSchema } from '../auth_methods/auth_methods.schema';
+import { UserAuthMethod, UserAuthMethodSafe } from '../auth_methods/auth_methods.type';
+import { InsertUser, UpdateUser, User, UserSafe } from './users.types';
+import * as logger from '../../core/utils/logger';
 
 
 
@@ -10,16 +12,16 @@ import { InsertUser, User, UserSafe } from './users.types';
  * @param ip The IP address of the user (can be null).
  * @returns A promise that resolves to the created user object.
  */
-export async function insertUser(user: InsertUser, ip: string | null): Promise<UserSafe> {
-    let insertedUser: UserSafe;
+export async function insertUser(user: InsertUser, ip: string | null): Promise<User> {
+    let insertedUser: User;
     const DEFAULT_AUTH_METHOD = 'EMAIL_CODE';
     
     /* Create the user */
     try {
-        const query = "INSERT INTO users (email, pseudo, last_ip) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING id, email, pseudo, is_connected, is_verified_email, last_login, created_at, updated_at;";
+        const query = "INSERT INTO users (email, pseudo, last_ip) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *";
         const values: (string | number | null)[] = [user.email, user.pseudo, ip];
         
-        const rows = await Database.execute<UserSafe>({ text: query, values: values });
+        const rows = await Database.execute<User>({ text: query, values: values });
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('Failed to create user.'); }
 
@@ -30,10 +32,10 @@ export async function insertUser(user: InsertUser, ip: string | null): Promise<U
 
     /* Assign default auth method to the user */
     try {
-        const query = "INSERT INTO user_auth_methods (user_id, auth_method_id) VALUES ($1, (SELECT id FROM auth_methods WHERE immuable_method_name = $2)) ON CONFLICT DO NOTHING RETURNING id, user_id, auth_method_id, created_at, updated_at;";
+        const query = "INSERT INTO user_auth_methods (user_id, auth_method_id) VALUES ($1, (SELECT id FROM auth_methods WHERE immuable_method_name = $2)) ON CONFLICT DO NOTHING RETURNING *";
         const values = [insertedUser.id, DEFAULT_AUTH_METHOD];
         
-        const rows = await Database.execute<UserAuthMethodSafe>({ text: query, values: values });
+        const rows = await Database.execute<UserAuthMethod>({ text: query, values: values });
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No auth method assigned.'); }
         
@@ -42,20 +44,53 @@ export async function insertUser(user: InsertUser, ip: string | null): Promise<U
         throw error;
     }
 
-    console.debug(`User created : ${JSON.stringify(insertedUser)}`);
+    logger.debug(`User created : ${JSON.stringify(insertedUser)}`);
     return insertedUser;
 }
 
 /**
  * Retrieves a user from the database by their ID.
- * @param id The ID of the user to retrieve.
+ * @param userSafe The userSafe object containing the ID and other safe information of the user to retrieve.
  * @returns A promise that resolves to the user object if found, otherwise throws an error.
  */
-export async function getUserById(id: number): Promise<User> {
-    if (!id || typeof id !== 'number') { throw new Error('Invalid id.'); }
+export async function getUser(userSafe: UserSafe): Promise<User> {
+    let query = "SELECT * FROM users WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp)";
+    let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
 
-    let query = "SELECT * FROM users WHERE users_id = $1";
-    let values = [id];
+    logger.debug(`Query : ${query}`);
+    logger.debug(`Values : ${values}`);
+    return Database.execute({ text: query, values: values }).then((rows) => {
+        console.log(`Rows: ${JSON.stringify(rows)}`);
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('User not found.'); }
+
+
+        return rows[0] as User;
+    }).catch((error: Error) => {
+        throw error;
+    });
+}
+
+
+/**
+ * Updates or a user in the database.
+ * @param newUser The user object containing the updated user information.
+ * @returns A promise that resolves to the updated user object.
+ */
+export async function updateUser(updateUser: UpdateUser, id: number): Promise<User> {
+    let query = "UPDATE users SET ";
+    let setClauses: string[] = [];
+    let values: (string | number | null)[] = [];
+    values.push(id);
+
+    for (const key in updateUser) {
+        if (updateUser.hasOwnProperty(key)) {
+            setClauses.push(`${key} = $${values.length + 1}`);
+            values.push(updateUser[key as keyof UpdateUser]);
+        }
+    }
+
+    query += setClauses.join(', ') + " WHERE id = $1 AND is_connected = true RETURNING *";
 
     return Database.execute({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
@@ -66,7 +101,6 @@ export async function getUserById(id: number): Promise<User> {
         throw error;
     });
 }
-
 
 
 
@@ -160,51 +194,6 @@ export async function getUserCountByEmail(email: string): Promise<number> {
     }).catch((err: Error) => {
         throw err;
     });
-}
-
-
-/**
- * Updates or a user in the database.
- * @param newUser The user object containing the updated user information.
- * @returns A promise that resolves to the updated user object.
- */
-export async function updateUser(newUser: User): Promise<User> {
-    // if (!newUser || !newUser.email || typeof newUser.email !== 'string') { throw new Error('Invalid user object.'); }
-
-    // const user = await getUserByEmail(newUser.email);
-    // if (!user) { throw new Error('User not found.'); }
-
-    // // update only the fields that are defined in newUser
-    // const updatedFields = ['name', 'authmethod', 'connected', 'password', 'secret', 'ip'];
-    // for (const field of updatedFields) {
-    //     // Skip readonly properties and only assign if the property is undefined in newUser
-    //     if (field !== 'createdAt' && field !== 'id' && (newUser[field as keyof User] === undefined || newUser[field as keyof User] === null)) {
-    //         // @ts-expect-error: We ensure not to assign to readonly fields
-    //         newUser[field as keyof User] = user[field as keyof User];
-    //     }
-    // }
-
-    // // Utilisation d'UPSERT pour créer ou mettre à jour l'utilisateur
-    // const query = `UPDATE users
-    //                SET users_name = $2,
-    //                    users_authmethod = $3,
-    //                    users_connected = $4,
-    //                    users_password = $5,
-    //                    users_secret = $6,
-    //                    users_ip = $7
-    //                WHERE email = $1
-    //                RETURNING *`;
-    // const values = [newUser.email, newUser.name, newUser.authmethod, newUser.connected || false, newUser.password, newUser.secret, newUser.ip];
-
-    // return Database.execute({ text: query, values: values }).then((rows) => {
-    //     if (rows === null) { throw new Error('Database query failed.'); }
-    //     if (rows.length === 0) { throw new Error('Failed to create or update user.'); }
-
-    //     return rows[0] as User;
-    // }).catch((err: Error) => {
-    //     throw err;
-    // });
-    return Promise.reject(new Error('Not implemented.'));
 }
 
 
