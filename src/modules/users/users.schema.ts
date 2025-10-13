@@ -69,3 +69,13 @@ export const AuthorizationHeaderSchema = z.string().regex(/^Bearer\s[a-zA-Z0-9-_
 /*========*/
 /* UPDATE */
 /*========*/
+export const UpdateUserSchema = z.object({
+    email: z.preprocess(
+        (val) => typeof val === "string" ? val.toLowerCase().replace(/\s+/g, "") : val,
+        z.email()
+    ),
+    pseudo: z.string().min(3).max(255)
+}).transform((data) => ({
+    email: data.email,
+    pseudo: data.pseudo.trim()
+}));
