@@ -68,6 +68,15 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
     });
 };
 
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+    const jwt: string = req.headers.authorization!.split(' ')[1];
+
+    UsersService.deleteUser(jwt).then(() => {
+        res.status(200).json({ message: 'User deleted successfully.' });
+    }).catch((error: AppError) => {
+        next(error);
+    });
+};
 
 
 
@@ -104,71 +113,6 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
     //         next(new AppError({ stackTrace: err }));
     //     });
     // } catch (err) {
-    //     next(new AppError({ stackTrace: err }));
-    // }
-};
-
-
-
-/**
- * Updates a user by Id.
- * @param req Request
- * @param req.headers.authorization Authorization header containing the JWT
- * @param req.body.name Optional name of the user
- * @param req.body.email Optional email of the user
- * @param res Response
- * @param next NextFunction
- */
-export const updateUserById = async (req: Request, res: Response, next: NextFunction) => {
-    // try {
-    //     /* Get user id from JWT */
-    //     const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as {
-    //         userid: number,
-    //         email: string,
-    //         name: string,
-    //         ip: string
-    //     };
-    //     const id = jwtPayload.userid;
-
-    //     /* Update user by id */
-    //     Users.updateUserById(id, { users_email: jwtPayload.email, users_name: jwtPayload.name, users_ip: jwtPayload.ip }).then(async (user) => {
-    //         const newJwt: string = await getJwt(user);
-
-    //         res.status(200).json({ jwt: newJwt, updated: true });
-    //     }).catch((err: Error) => {
-    //         next(new AppError({ message: "User not found or could not be updated", httpStatus: 400, stackTrace: err }));
-    //     });
-    // } catch (err) {
-    //     next(new AppError({ stackTrace: err }));
-    // }
-}
-
-/**
- * Deletes a user by Id.
- * @param req Request
- * @param req.headers.authorization Authorization header containing the JWT
- * @param res Response
- * @param next NextFunction
- */
-export const deleteUserById = async (req: Request, res: Response, next: NextFunction) => {
-    // try {
-    //     /* Get user id from JWT */
-    //     const jwtPayload = JWT.verify(req.headers.authorization?.split(' ')[1] || '', config.jwt_signing_key) as {
-    //         userid: number,
-    //         email: string,
-    //         name: string,
-    //         ip: string
-    //     };
-    //     const id = jwtPayload.userid;
-
-    //     /* Delete user by id */
-    //     Users.deleteUserById(id).then(() => {
-    //         res.status(200).json({ message: 'User deleted successfully.' });
-    //     }).catch((err: Error) => {
-    //         next(new AppError({ message: "User not found or could not be deleted", httpStatus: 400, stackTrace: err }));
-    //     });
-    // }
-    // catch (err) {
     //     next(new AppError({ stackTrace: err }));
     // }
 };

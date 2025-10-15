@@ -63,9 +63,32 @@ export async function updateUser(updateUser: UpdateUser, jwt: string): Promise<s
     }
 
     try {
-        const updatedUser: User = await UsersRepository.updateUser(updateUser, decodedUser.id);
+        const updatedUser: User = await UsersRepository.updateUser(updateUser, decodedUser);
         return generateJwt(UserSafeSchema.parse(updatedUser));
     } catch (error) {
         throw error;
+    }
+}
+
+
+/**
+ * Deletes a user from the database.
+ * @param jwt JWT token of the user to delete.
+ * @returns Promise<boolean> True if the user was deleted, false otherwise.
+ * @throws AppError if user deletion fails or if the token is invalid.
+ */
+export async function deleteUser(jwt: string): Promise<boolean> {
+    let decodedUser: UserSafe;
+    try {
+        decodedUser = await verifyJwt(jwt);
+    } catch (error) {
+        throw new AppError({ message: "Invalid token", httpStatus: 401, stackTrace: error });
+    }
+
+    try {
+        await UsersRepository.deleteUser(decodedUser);
+        return true;
+    } catch (error) {
+        throw new AppError({ message: "Internal server error", httpStatus: 500, stackTrace: error });
     }
 }
