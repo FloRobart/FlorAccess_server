@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { updateUser, deleteUser, insertUser, logoutUser, selectUser } from './users.controller';
+import { updateUser, deleteUser, insertUser, logoutUser, selectUser, loginUser } from './users.controller';
 import { bodyValidator } from '../../core/middlewares/body_validator.middleware';
-import { InsertUserSchema, AuthorizationHeaderSchema, UpdateUserSchema } from './users.schema';
+import { InsertUserSchema, AuthorizationHeaderSchema, UpdateUserSchema, LoginUserSchema } from './users.schema';
 import { authorizationValidator } from '../../core/middlewares/auth_validator.middleware';
 
 
@@ -167,6 +167,50 @@ router.put('/', authorizationValidator(AuthorizationHeaderSchema), bodyValidator
  *               $ref: '#/components/schemas/error500'
  */
 router.delete('/', authorizationValidator(AuthorizationHeaderSchema), deleteUser);
+
+
+/**
+ * @swagger
+ * /users/login:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: Logout a user
+ *     description: Logout a user by invalidating the authentication token.
+ *     parameters:
+ *       - in: body
+ *         schema:
+ *           type: object
+ *           required:
+ *             - email
+ *           properties:
+ *             email:
+ *               type: string
+ *               format: email
+ *               example: "user@example.com"
+ *     responses:
+ *       200:
+ *         description: User logged out successfully
+ *       400:
+ *         description: Bad request. Change your request to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error400'
+ *       401:
+ *         description: Unauthorized. Invalid or missing JWT token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error401'
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.post('/login', bodyValidator(LoginUserSchema), loginUser);
 
 
 /**

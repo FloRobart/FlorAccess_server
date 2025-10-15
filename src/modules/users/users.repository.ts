@@ -1,6 +1,6 @@
 import { Database } from '../../core/database/database';
 import { UserAuthMethod } from '../auth_methods/auth_methods.type';
-import { InsertUser, UpdateUser, User, UserSafe } from './users.types';
+import { InsertUser, LoginUser, UpdateUser, User, UserSafe } from './users.types';
 import * as logger from '../../core/utils/logger';
 
 
@@ -116,6 +116,27 @@ export async function deleteUser(userSafe: UserSafe): Promise<User> {
     return Database.execute({ text: query, values: values }).then((rows) => {
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this id.'); }
+
+        return rows[0] as User;
+    }).catch((err: Error) => {
+        throw err;
+    });
+}
+
+
+/**
+ * Logs in a user.
+ * @param loginUser The loginUser object containing the information of the user to log in.
+ * @returns The user object if login is successful.
+ * @throws Error if login fails or if the information is invalid.
+ */
+export async function loginUser(loginUser: LoginUser): Promise<User> {
+    let query = "UPDATE users SET is_connected = true, last_login = NOW() WHERE email = $1 RETURNING *";
+    let values = [loginUser.email];
+
+    return Database.execute({ text: query, values: values }).then((rows) => {
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('No user with this email.'); }
 
         return rows[0] as User;
     }).catch((err: Error) => {
