@@ -2,7 +2,7 @@ import { AppError } from "../../core/models/ErrorModel";
 import { generateJwt, verifyJwt } from "../../core/utils/jwt";
 import * as UsersRepository from "./users.repository";
 import { UserSafeSchema } from "./users.schema";
-import { InsertUser, UpdateUser, User, UserSafe } from "./users.types";
+import { InsertUser, LoginUser, UpdateUser, User, UserSafe } from "./users.types";
 
 
 
@@ -98,6 +98,29 @@ export async function deleteUser(jwt: string): Promise<boolean> {
 }
 
 
+/**
+ * Logs in a user by generating a JWT based on the user's information.
+ * @param loginUser The loginUser object containing the information of the user to log in.
+ * @returns JWT for the user.
+ * @throws Error if login fails or if the information is invalid.
+ */
+export async function loginUser(loginUser: LoginUser): Promise<string> {
+    try {
+        const user: User = await UsersRepository.loginUser(loginUser);
+
+        return await generateJwt(UserSafeSchema.parse(user));
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
+ * Logs out a user by invalidating the JWT token.
+ * @param jwt JWT token of the user to log out.
+ * @returns True if the user was logged out, throw error otherwise.
+ * @throws AppError if logout fails or if the token is invalid.
+ */
 export async function logoutUser(jwt: string): Promise<boolean> {
     let decodedUser: UserSafe;
     try {

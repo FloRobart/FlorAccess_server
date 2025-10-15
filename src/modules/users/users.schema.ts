@@ -79,3 +79,14 @@ export const UpdateUserSchema = z.object({
     email: data.email,
     pseudo: data.pseudo.trim()
 }));
+
+
+/*=======*/
+/* LOGIN */
+/*=======*/
+export const LoginUserSchema = z.object({
+    email: z.preprocess(
+        (val) => typeof val === "string" ? val.toLowerCase().replace(/\s+/g, "") : val,
+        z.email()
+    )
+});
