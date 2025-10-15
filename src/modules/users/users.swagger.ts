@@ -134,6 +134,20 @@
 
 
 
-/*========*/
-/* DELETE */
-/*========*/
+/*=======*/
+/* LOGIN */
+/*=======*/
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     LoginUser:
+ *       type: object
+ *       required:
+ *         - email
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: "user@example.com"
+ */
