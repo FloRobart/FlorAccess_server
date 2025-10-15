@@ -2,7 +2,7 @@ import argon2 from 'argon2';
 import config from '../../config/config';
 import { User, UserSafe } from '../../modules/users/users.types';
 import JWT from 'jsonwebtoken';
-import { getUserByEmail } from '../../modules/users/users.repository';
+import { getUser } from '../../modules/users/users.repository';
 import { getRandomValues, randomBytes } from "node:crypto";
 import { UserSafeSchema } from '../../modules/users/users.schema';
 
@@ -41,29 +41,6 @@ export async function verifyHash(input: string, hash: string): Promise<boolean> 
     }
 }
 
-
-/**
- * Verifies a JWT and returns the user information.
- * @param token JWT to verify
- * @returns A promise that resolves to the user object if the token is valid, or null if invalid.
- */
-export async function verifyJwt(jwt: string): Promise<User | null> {
-    try {
-        const decoded = JWT.verify(jwt, config.jwt_signing_key) as { userid: number; email: string; name: string; authmethod: string };
-        if (!decoded || !decoded.userid || !decoded.email) {
-            return null;
-        }
-
-        const user = await getUserByEmail(decoded.email);
-        if (user && user.id === decoded.userid && user.pseudo === decoded.name) {
-            return user;
-        }
-
-        return null;
-    } catch (err) {
-        throw err;
-    }
-}
 
 
 

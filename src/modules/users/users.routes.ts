@@ -59,7 +59,7 @@ router.post('/', bodyValidator(InsertUserSchema), insertUser);
  *         description: JWT
  *         schema:
  *           type: string
- *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *           example: "Bearer your_jwt_token_here"
  *     responses:
  *       200:
  *         description: User information retrieved successfully.
@@ -169,17 +169,12 @@ router.put('/', authorizationValidator(AuthorizationHeaderSchema), bodyValidator
 router.delete('/', authorizationValidator(AuthorizationHeaderSchema), deleteUser);
 
 
-
-
-
-
-
 /**
  * @swagger
- * /user/logout:
+ * /users/logout:
  *   post:
  *     tags:
- *       - User
+ *       - Users
  *     summary: Logout a user
  *     description: Logout a user by invalidating the authentication token.
  *     parameters:
@@ -212,7 +207,7 @@ router.delete('/', authorizationValidator(AuthorizationHeaderSchema), deleteUser
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/logout', logoutUser);
+router.post('/logout', authorizationValidator(AuthorizationHeaderSchema), logoutUser);
 
 
 
