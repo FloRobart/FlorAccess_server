@@ -1,19 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
 import { AppError } from '../../core/models/ErrorModel';
-import { InsertUser, IPAddress, UpdateUser, User, UserSafe } from './users.types';
+import { InsertUser, IPAddress, UpdateUser, UserSafe } from './users.types';
 import { IPAddressSchema } from './users.schema';
 
 
 
 /**
  * Registers a new user with the provided information.
- * @POST /users
- * @param req Request
- * @param req.body.validated.email Email address of the user
- * @param req.body.validated.name Optional name of the user
- * @param res Return JWT for authentication or error
- * @param next NextFunction
+ * @param req.body.validated insertUser object containing the information of the user to create
+ * @returns JWT for the newly created user or error response
  */
 export const insertUser = async (req: Request, res: Response, next: NextFunction) => {
     const insertUser: InsertUser = req.body.validated;
@@ -29,15 +25,12 @@ export const insertUser = async (req: Request, res: Response, next: NextFunction
 
 /**
  * Retrieves user information from the JWT in the request headers.
- * @GET /users
- * @param req Request
- * @param req.headers.authorization Authorization header containing the API token
- * @param res Response
- * @param next NextFunction
+ * @param req.headers.authorization Authorization header containing the JWT
  * @returns User information or error response
  */
 export const selectUser = async (req: Request, res: Response, next: NextFunction) => {
     const jwt: string = req.headers.authorization!.split(' ')[1];
+
     UsersService.selectUser(jwt).then((userSafe: UserSafe) => {
         res.status(200).json(userSafe);
     }).catch((error: Error) => {
@@ -47,14 +40,9 @@ export const selectUser = async (req: Request, res: Response, next: NextFunction
 
 
 /**
- * Updates a user's information.
- * @PUT /users
- * @param req Request
+ * Updates a user's information
  * @param req.headers.authorization Authorization header containing the JWT
- * @param req.body.name Optional name of the user
- * @param req.body.email Optional email of the user
- * @param res Response
- * @param next NextFunction
+ * @param req.body.validated updateUser object with the updated user information
  * @returns Updated JWT or error response
  */
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -68,6 +56,13 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
     });
 };
 
+
+/**
+ * Deletes a user
+ * @param req.headers.authorization Authorization header containing the JWT
+ * @returns Success message
+ * @throws Error if user deletion fails or if the token is invalid.
+ */
 export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
     const jwt: string = req.headers.authorization!.split(' ')[1];
 
@@ -83,36 +78,16 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 
 /**
  * Logs out a user by invalidating the JWT token.
- * @POST /user/logout
- * @param req Request
- * @param res Response
- * @param next NextFunction
- * @returns Success message or error response
+ * @param req.headers.authorization Authorization header containing the JWT
+ * @returns Success message
+ * @throws Error if logout fails or if the token is invalid.
  */
 export const logoutUser = async (req: Request, res: Response, next: NextFunction) => {
-    // try {
-    //     /* Invalidate JWT */
-    //     const token = req.headers.authorization?.split(' ')[1];
-    //     if (!token) {
-    //         next(new AppError({ message: "Unauthorized", httpStatus: 401 }));
-    //         return;
-    //     }
+    const jwt: string = req.headers.authorization!.split(' ')[1];
 
-    //     verifyJwt(token).then((user: User | null) => {
-    //         if (!user || !user.users_id) {
-    //             next(new AppError({ message: "Invalid or expired JWT", httpStatus: 401 }));
-    //             return;
-    //         }
-
-    //         res.status(200).json({
-    //             email: user.users_email,
-    //             name: user.users_name,
-    //             authmethod: user.users_authmethod,
-    //         });
-    //     }).catch((err: Error) => {
-    //         next(new AppError({ stackTrace: err }));
-    //     });
-    // } catch (err) {
-    //     next(new AppError({ stackTrace: err }));
-    // }
+    UsersService.logoutUser(jwt).then(() => {
+        res.status(200).json({ message: 'User logged out successfully.' });
+    }).catch((error: AppError) => {
+        next(error);
+    });
 };

@@ -1,6 +1,5 @@
 import { Database } from '../../core/database/database';
-import { UserAuthMethodSchema } from '../auth_methods/auth_methods.schema';
-import { UserAuthMethod, UserAuthMethodSafe } from '../auth_methods/auth_methods.type';
+import { UserAuthMethod } from '../auth_methods/auth_methods.type';
 import { InsertUser, UpdateUser, User, UserSafe } from './users.types';
 import * as logger from '../../core/utils/logger';
 
@@ -10,7 +9,8 @@ import * as logger from '../../core/utils/logger';
  * Creates a new user in the database.
  * @param user The user object containing the email and pseudo of the user to create.
  * @param ip The IP address of the user (can be null).
- * @returns A promise that resolves to the created user object.
+ * @returns The newly created user object with sensitive information
+ * @throws Error if user creation fails.
  */
 export async function insertUser(user: InsertUser, ip: string | null): Promise<User> {
     let insertedUser: User;
@@ -44,23 +44,21 @@ export async function insertUser(user: InsertUser, ip: string | null): Promise<U
         throw error;
     }
 
-    logger.debug(`User created : ${JSON.stringify(insertedUser)}`);
     return insertedUser;
 }
 
+
 /**
  * Retrieves a user from the database by their ID.
- * @param userSafe The userSafe object containing the ID and other safe information of the user to retrieve.
- * @returns A promise that resolves to the user object if found, otherwise throws an error.
+ * @param userSafe The userSafe object containing the information of the user to retrieve.
+ * @returns The user object with sensitive information.
+ * @throws Error if user retrieval fails or if the user is not found.
  */
 export async function getUser(userSafe: UserSafe): Promise<User> {
     let query = "SELECT * FROM users WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp)";
     let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
 
-    logger.debug(`Query : ${query}`);
-    logger.debug(`Values : ${values}`);
     return Database.execute({ text: query, values: values }).then((rows) => {
-        console.log(`Rows: ${JSON.stringify(rows)}`);
         if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('User not found.'); }
 
@@ -73,9 +71,11 @@ export async function getUser(userSafe: UserSafe): Promise<User> {
 
 
 /**
- * Updates or a user in the database.
- * @param newUser The user object containing the updated user information.
- * @returns A promise that resolves to the updated user object.
+ * Updates user in the database.
+ * @param updateUser The user object containing the updated user information.
+ * @param userSafe The userSafe object containing the current information of the user to update.
+ * @returns The updated user object with sensitive information.
+ * @throws Error if user update fails or if the user is not found.
  */
 export async function updateUser(updateUser: UpdateUser, userSafe: UserSafe): Promise<User> {
     let query = "UPDATE users SET ";
@@ -105,9 +105,9 @@ export async function updateUser(updateUser: UpdateUser, userSafe: UserSafe): Pr
 
 /**
  * Deletes a user from the database by email and token.
- * @param email The email address of the user to delete.
- * @param token The authentication token of the user to delete.
- * @returns A promise that resolves to the deleted user object.
+ * @param userSafe The userSafe object containing the information of the user to delete.
+ * @returns The deleted user object with sensitive information.
+ * @throws Error if user deletion fails or if the user is not found.
  */
 export async function deleteUser(userSafe: UserSafe): Promise<User> {
     let query = "DELETE FROM users WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
@@ -118,6 +118,27 @@ export async function deleteUser(userSafe: UserSafe): Promise<User> {
         if (rows.length === 0) { throw new Error('No user with this id.'); }
 
         return rows[0] as User;
+    }).catch((err: Error) => {
+        throw err;
+    });
+}
+
+
+/**
+ * Logs out a user
+ * @param userSafe The userSafe object containing the information of the user to log out.
+ * @returns True if the user was logged out successfully.
+ * @throws Error if logout fails.
+ */
+export async function logoutUser(userSafe: UserSafe): Promise<boolean> {
+    let query = "UPDATE users SET is_connected = false WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp)";
+    let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
+
+    return Database.execute({ text: query, values: values }).then((rows) => {
+        if (rows === null) { throw new Error('Database query failed.'); }
+        if (rows.length === 0) { throw new Error('No user with this id.'); }
+
+        return true;
     }).catch((err: Error) => {
         throw err;
     });

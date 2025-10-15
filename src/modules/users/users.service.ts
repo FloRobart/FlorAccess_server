@@ -7,17 +7,17 @@ import { InsertUser, UpdateUser, User, UserSafe } from "./users.types";
 
 
 /**
- * Creates a new user with the given email and pseudo.
- * @param email The email address of the user to create.
- * @param pseudo The pseudo of the user to create.
+ * Creates a new user with the given information.
+ * @param user The user object containing the information of the user to create.
  * @param ip The IP address of the user (can be null).
- * @returns Promise<string> JWT for the newly created user.
+ * @returns JWT for the newly created user.
  * @throws Error if user creation or JWT generation fails.
  */
 export async function insertUser(user: InsertUser, ip: string | null): Promise<string> {
     try {
         const insertedUser: User = await UsersRepository.insertUser(user, ip);
         const validatedUser: UserSafe = UserSafeSchema.parse(insertedUser);
+
         return await generateJwt(validatedUser);
     } catch (error) {
         throw error;
@@ -28,8 +28,8 @@ export async function insertUser(user: InsertUser, ip: string | null): Promise<s
 /**
  * Vérifie le JWT et extrait les informations de l'utilisateur.
  * @param jwt JWT token to verify and extract user information from.
- * @returns User information or null if verification fails.
- * @throws Error if user retrieval fails.
+ * @returns UserSafe object containing the user's safe information.
+ * @throws Error if user retrieval fails or if the token is invalid.
  */
 export async function selectUser(jwt: string): Promise<UserSafe> {
     let decodedUserSafe: UserSafe;
@@ -40,7 +40,9 @@ export async function selectUser(jwt: string): Promise<UserSafe> {
     }
 
     try {
-        return UserSafeSchema.parse(await UsersRepository.getUser(decodedUserSafe));
+        const selectedUser: User = await UsersRepository.getUser(decodedUserSafe);
+
+        return UserSafeSchema.parse(selectedUser);
     } catch (error) {
         throw error;
     }
@@ -48,11 +50,11 @@ export async function selectUser(jwt: string): Promise<UserSafe> {
 
 
 /**
- * Updates a user in the database.
+ * Updates a user's information.
  * @param updateUser The user object containing the updated user information.
- * @param id The ID of the user to update.
- * @returns Promise<string> JWT for the newly updated user.
- * @throws Error if user update or JWT generation fails.
+ * @param jwt JWT token of the user to update.
+ * @returns JWT for the newly updated user.
+ * @throws Error if user update or JWT generation fails or if the token is invalid.
  */
 export async function updateUser(updateUser: UpdateUser, jwt: string): Promise<string> {
     let decodedUser: UserSafe;
@@ -64,6 +66,7 @@ export async function updateUser(updateUser: UpdateUser, jwt: string): Promise<s
 
     try {
         const updatedUser: User = await UsersRepository.updateUser(updateUser, decodedUser);
+
         return generateJwt(UserSafeSchema.parse(updatedUser));
     } catch (error) {
         throw error;
@@ -74,7 +77,7 @@ export async function updateUser(updateUser: UpdateUser, jwt: string): Promise<s
 /**
  * Deletes a user from the database.
  * @param jwt JWT token of the user to delete.
- * @returns Promise<boolean> True if the user was deleted, false otherwise.
+ * @returns True if the user was deleted, false otherwise.
  * @throws AppError if user deletion fails or if the token is invalid.
  */
 export async function deleteUser(jwt: string): Promise<boolean> {
@@ -87,6 +90,25 @@ export async function deleteUser(jwt: string): Promise<boolean> {
 
     try {
         await UsersRepository.deleteUser(decodedUser);
+
+        return true;
+    } catch (error) {
+        throw new AppError({ message: "Internal server error", httpStatus: 500, stackTrace: error });
+    }
+}
+
+
+export async function logoutUser(jwt: string): Promise<boolean> {
+    let decodedUser: UserSafe;
+    try {
+        decodedUser = await verifyJwt(jwt);
+    } catch (error) {
+        throw new AppError({ message: "Invalid token", httpStatus: 401, stackTrace: error });
+    }
+
+    try {
+        await UsersRepository.logoutUser(decodedUser);
+
         return true;
     } catch (error) {
         throw new AppError({ message: "Internal server error", httpStatus: 500, stackTrace: error });
