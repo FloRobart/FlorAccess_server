@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { updateUser, deleteUserById, insertUser, logoutUser, selectUser } from './users.controller';
+import { updateUser, deleteUser, insertUser, logoutUser, selectUser } from './users.controller';
 import { bodyValidator } from '../../core/middlewares/body_validator.middleware';
 import { InsertUserSchema, AuthorizationHeaderSchema, UpdateUserSchema } from './users.schema';
 import { authorizationValidator } from '../../core/middlewares/auth_validator.middleware';
@@ -123,6 +123,52 @@ router.get('/', authorizationValidator(AuthorizationHeaderSchema), selectUser);
 router.put('/', authorizationValidator(AuthorizationHeaderSchema), bodyValidator(UpdateUserSchema), updateUser);
 
 
+/**
+ * @swagger
+ * /users:
+ *   delete:
+ *     tags:
+ *       - Users
+ *     summary: Delete user
+ *     description: Delete the user associated with the provided JWT token.
+ *     parameters:
+ *       - in: headers
+ *         name: Authorization
+ *         required: true
+ *         description: JWT token for user authentication
+ *         schema:
+ *           type: string
+ *           example: "Bearer your_jwt_token_here"
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - message
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message for successful deletion
+ *                   example: "User deleted successfully."
+ *       400:
+ *         description: Bad request. Change your request to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error400'
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.delete('/', authorizationValidator(AuthorizationHeaderSchema), deleteUser);
+
+
 
 
 
@@ -167,55 +213,6 @@ router.put('/', authorizationValidator(AuthorizationHeaderSchema), bodyValidator
  *               $ref: '#/components/schemas/error500'
  */
 router.post('/logout', logoutUser);
-
-
-
-
-
-/**
- * @swagger
- * /user:
- *   delete:
- *     tags:
- *       - User
- *     summary: Delete user by Id
- *     description: Delete the user associated with the provided Id. Provide the user Id in the JWT token.
- *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         description: JWT token for user authentication
- *         schema:
- *           type: string
- *           example: "Bearer your_jwt_token_here"
- *     responses:
- *       200:
- *         description: User deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               required:
- *                 - message
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Confirmation message for successful deletion
- *                   example: "User deleted successfully."
- *       400:
- *         description: Bad request. Change your request to fix this error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/error400'
- *       500:
- *         description: Internal server error. Please create an issue on Github
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/error500'
- */
-router.delete('/', deleteUserById);
 
 
 
