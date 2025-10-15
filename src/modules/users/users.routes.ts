@@ -180,14 +180,7 @@ router.delete('/', authorizationValidator(AuthorizationHeaderSchema), deleteUser
  *     parameters:
  *       - in: body
  *         schema:
- *           type: object
- *           required:
- *             - email
- *           properties:
- *             email:
- *               type: string
- *               format: email
- *               example: "user@example.com"
+ *           $ref: '#/components/schemas/LoginUser'
  *     responses:
  *       200:
  *         description: User logged out successfully

@@ -10,7 +10,6 @@ const router = Router();
  * /code/login/request:
  *   post:
  *     tags:
- *       - Code
  *       - Login
  *     summary: Request login
  *     description: Request a login by providing an email address. An code will be sent to the provided email address.
@@ -50,7 +49,6 @@ router.post('/login/request', loginRequest);
  * /code/login/confirm:
  *   post:
  *     tags:
- *       - Code
  *       - Login
  *     summary: Confirm login
  *     description: Confirm a login by providing the email address and the code sent to that address.
