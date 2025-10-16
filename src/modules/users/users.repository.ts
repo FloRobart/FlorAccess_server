@@ -22,7 +22,6 @@ export async function insertUser(user: InsertUser, ip: string | null): Promise<U
         const values: (string | number | null)[] = [user.email, user.pseudo, ip];
         
         const rows = await Database.execute<User>({ text: query, values: values });
-        if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('Failed to create user.'); }
 
         insertedUser = rows[0];
@@ -36,7 +35,6 @@ export async function insertUser(user: InsertUser, ip: string | null): Promise<U
         const values = [insertedUser.id, DEFAULT_AUTH_METHOD];
         
         const rows = await Database.execute<UserAuthMethod>({ text: query, values: values });
-        if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No auth method assigned.'); }
         
         insertedUser.auth_methods = rows;
@@ -59,9 +57,7 @@ export async function getUser(userSafe: UserSafe): Promise<User> {
     let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('User not found.'); }
-
 
         return rows[0] as User;
     }).catch((error: Error) => {
@@ -93,7 +89,6 @@ export async function updateUser(updateUser: UpdateUser, userSafe: UserSafe): Pr
     query += setClauses.join(', ') + " WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this id.'); }
 
         return rows[0] as User;
@@ -114,7 +109,6 @@ export async function deleteUser(userSafe: UserSafe): Promise<User> {
     let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this id.'); }
 
         return rows[0] as User;
@@ -135,7 +129,6 @@ export async function loginUser(loginUser: LoginUser): Promise<User> {
     let values = [loginUser.email];
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this email.'); }
 
         return rows[0] as User;
@@ -156,7 +149,6 @@ export async function logoutUser(userSafe: UserSafe): Promise<boolean> {
     let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows === null) { throw new Error('Database query failed.'); }
         if (rows.length === 0) { throw new Error('No user with this id.'); }
 
         return true;

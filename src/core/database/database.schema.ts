@@ -44,6 +44,8 @@ export abstract class ADatabase implements IDatabase {
         try {
             if (!this.client) throw new Error('Database not connected');
             const res = await this.client.query(query.text, query.values);
+            if (res.rows === null) { throw new Error('Database query failed.'); }
+
             return res.rows || [];
         } catch (error) {
             throw error;
