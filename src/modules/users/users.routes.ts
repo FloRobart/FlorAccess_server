@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { updateUser, deleteUser, insertUser, logoutUser, selectUser, loginUser } from './users.controller';
+import { updateUser, deleteUser, insertUser, logoutUser, selectUser, userLoginRequest } from './users.controller';
 import { bodyValidator } from '../../core/middlewares/body_validator.middleware';
-import { InsertUserSchema, AuthorizationHeaderSchema, UpdateUserSchema, LoginUserSchema } from './users.schema';
+import { InsertUserSchema, AuthorizationHeaderSchema, UpdateUserSchema, UserLoginRequestSchema } from './users.schema';
 import { authorizationValidator } from '../../core/middlewares/auth_validator.middleware';
 
 
@@ -171,31 +171,29 @@ router.delete('/', authorizationValidator(AuthorizationHeaderSchema), deleteUser
 
 /**
  * @swagger
- * /users/login:
+ * /users/login/request:
  *   post:
  *     tags:
  *       - Users
- *     summary: Logout a user
- *     description: Logout a user by invalidating the authentication token.
+ *     summary: Request login for a user
+ *     description: Request login for a user by providing the necessary credentials.
  *     parameters:
  *       - in: body
  *         schema:
- *           $ref: '#/components/schemas/LoginUser'
+ *           $ref: '#/components/schemas/UserLoginRequest'
  *     responses:
  *       200:
- *         description: User logged out successfully
+ *         description: token to confirm user login
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserLoginRequestResponse'
  *       400:
  *         description: Bad request. Change your request to fix this error
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/error400'
- *       401:
- *         description: Unauthorized. Invalid or missing JWT token
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/error401'
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -203,7 +201,7 @@ router.delete('/', authorizationValidator(AuthorizationHeaderSchema), deleteUser
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/login', bodyValidator(LoginUserSchema), loginUser);
+router.post('/login/request', bodyValidator(UserLoginRequestSchema), userLoginRequest);
 
 
 /**

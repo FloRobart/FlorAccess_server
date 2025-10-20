@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
 import { AppError } from '../../core/models/ErrorModel';
-import { InsertUser, IPAddress, LoginUser, UpdateUser, UserSafe } from './users.types';
+import { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe } from './users.types';
 import { IPAddressSchema } from './users.schema';
 
 
@@ -77,14 +77,14 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 /**
  * Logs in a user by generating a JWT based on the user's email.
  * @param req.body.validated email of the user to log in
- * @returns JWT for the user
+ * @returns Token to confirm user login
  * @throws Error if login fails or if the email is invalid.
  */
-export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
-    const loginUser: LoginUser = req.body.validated;
+export const userLoginRequest = async (req: Request, res: Response, next: NextFunction) => {
+    const userLoginRequest: UserLoginRequest = req.body.validated;
 
-    UsersService.loginUser(loginUser).then((jwt: string) => {
-        res.status(200).json({ jwt: jwt });
+    UsersService.userLoginRequest(userLoginRequest).then((token: string) => {
+        res.status(200).json({ token: token });
     }).catch((error: AppError) => {
         next(error);
     });

@@ -3,7 +3,8 @@ import { AuthorizedApi } from './AuthorizedApi.schema';
 import http from 'http';
 import * as logger from '../../core/utils/logger';
 import config from '../../config/config';
-import { generateApiToken } from '../../core/utils/securities';
+import { generateSecureRandomDelay } from '../../core/utils/securities';
+import { randomBytes } from 'node:crypto';
 
 
 
@@ -42,4 +43,15 @@ export async function handshakeAuthorizedApis(): Promise<boolean> {
     }).catch((err: Error) => {
         throw err;
     });
+}
+
+
+/**
+ * Generates a random API token.
+ * @param length Length of the token to generate
+ * @returns A hexadecimal string representing the token.
+ */
+async function generateApiToken(length = 128): Promise<string> {
+    await generateSecureRandomDelay();
+    return Buffer.from(randomBytes(length)).toString('hex');
 }

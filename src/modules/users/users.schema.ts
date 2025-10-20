@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UserAuthMethodSafeSchema } from "../auth_methods/auth_methods.schema";
+import { UserAuthMethodSafeSchema } from "./auth-methods/auth_methods.schema";
 
 
 
@@ -32,11 +32,10 @@ export const UserSafeSchema = z.object({
     email: z.email(),
     pseudo: z.string().min(3).max(255),
 
+    auth_methods_id: z.number(),
     is_connected: z.boolean(),
     is_verified_email: z.boolean(),
     last_login: z.date(),
-
-    auth_methods: z.array(UserAuthMethodSafeSchema).optional(),
 
     created_at: z.date(),
     updated_at: z.date()
@@ -51,7 +50,8 @@ export const UserSchema = z.object({
     last_ip: z.ipv4().or(z.ipv6()).nullable(),
 
     password_hash: z.string().nullable(),
-    secret_hash: z.string().nullable()
+    secret_hash: z.string().nullable(),
+    token_hash: z.string().nullable()
 });
 
 /**
@@ -84,9 +84,9 @@ export const UpdateUserSchema = z.object({
 /*=======*/
 /* LOGIN */
 /*=======*/
-export const LoginUserSchema = z.object({
+export const UserLoginRequestSchema = z.object({
     email: z.preprocess(
         (val) => typeof val === "string" ? val.toLowerCase().replace(/\s+/g, "") : val,
         z.email()
     )
-});
+}).transform((data) => ( data.email ));

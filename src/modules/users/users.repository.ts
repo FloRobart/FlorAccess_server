@@ -1,7 +1,9 @@
 import { Database } from '../../core/database/database';
-import { UserAuthMethod } from '../auth_methods/auth_methods.type';
-import { InsertUser, LoginUser, UpdateUser, User, UserSafe } from './users.types';
+import { UserAuthMethod } from './auth-methods/auth_methods.type';
+import { InsertUser, UpdateUser, User, UserSafe } from './users.types';
 import * as logger from '../../core/utils/logger';
+import config from '../../config/config';
+import { AppError } from '../../core/models/ErrorModel';
 
 
 
@@ -14,30 +16,16 @@ import * as logger from '../../core/utils/logger';
  */
 export async function insertUser(user: InsertUser, ip: string | null): Promise<User> {
     let insertedUser: User;
-    const DEFAULT_AUTH_METHOD = 'EMAIL_CODE';
     
     /* Create the user */
     try {
-        const query = "INSERT INTO users (email, pseudo, last_ip) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING *";
-        const values: (string | number | null)[] = [user.email, user.pseudo, ip];
+        const query = "INSERT INTO users (email, pseudo, auth_methods_id, last_ip) VALUES ($1, $2, (SELECT id FROM auth_methods WHERE immuable_method_name = $3), $4) ON CONFLICT DO NOTHING RETURNING *";
+        const values: (string | number | null)[] = [user.email, user.pseudo, config.default_auth_method, ip];
         
         const rows = await Database.execute<User>({ text: query, values: values });
         if (rows.length === 0) { throw new Error('Failed to create user.'); }
 
         insertedUser = rows[0];
-    } catch (error) {
-        throw error;
-    }
-
-    /* Assign default auth method to the user */
-    try {
-        const query = "INSERT INTO user_auth_methods (user_id, auth_method_id) VALUES ($1, (SELECT id FROM auth_methods WHERE immuable_method_name = $2)) ON CONFLICT DO NOTHING RETURNING *";
-        const values = [insertedUser.id, DEFAULT_AUTH_METHOD];
-        
-        const rows = await Database.execute<UserAuthMethod>({ text: query, values: values });
-        if (rows.length === 0) { throw new Error('No auth method assigned.'); }
-        
-        insertedUser.auth_methods = rows;
     } catch (error) {
         throw error;
     }
@@ -57,7 +45,7 @@ export async function getUser(userSafe: UserSafe): Promise<User> {
     let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new Error('User not found.'); }
+        if (rows.length === 0) { throw new AppError({ message: 'User not found.', httpStatus: 404 }); }
 
         return rows[0] as User;
     }).catch((error: Error) => {
@@ -89,7 +77,7 @@ export async function updateUser(updateUser: UpdateUser, userSafe: UserSafe): Pr
     query += setClauses.join(', ') + " WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new Error('No user with this id.'); }
+        if (rows.length === 0) { throw new AppError({ message: 'No user with this id.', httpStatus: 404 }); }
 
         return rows[0] as User;
     }).catch((error: Error) => {
@@ -109,27 +97,7 @@ export async function deleteUser(userSafe: UserSafe): Promise<User> {
     let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new Error('No user with this id.'); }
-
-        return rows[0] as User;
-    }).catch((err: Error) => {
-        throw err;
-    });
-}
-
-
-/**
- * Logs in a user.
- * @param loginUser The loginUser object containing the information of the user to log in.
- * @returns The user object if login is successful.
- * @throws Error if login fails or if the information is invalid.
- */
-export async function loginUser(loginUser: LoginUser): Promise<User> {
-    let query = "UPDATE users SET is_connected = true, last_login = NOW() WHERE email = $1 RETURNING *";
-    let values = [loginUser.email];
-
-    return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new Error('No user with this email.'); }
+        if (rows.length === 0) { throw new AppError({ message: 'No user with this id.', httpStatus: 404 }); }
 
         return rows[0] as User;
     }).catch((err: Error) => {
@@ -149,10 +117,30 @@ export async function logoutUser(userSafe: UserSafe): Promise<boolean> {
     let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new Error('No user with this id.'); }
+        if (rows.length === 0) { throw new AppError({ message: 'No user with this id.', httpStatus: 404 }); }
 
         return true;
     }).catch((err: Error) => {
         throw err;
+    });
+}
+
+
+/**
+ * Gets a user by email.
+ * 
+ * This fonction is used by the login dispatcher.
+ * @param email The email of the user to retrieve.
+ */
+export async function _getUserByEmail(email: string): Promise<User> {
+    const query = "SELECT * FROM users WHERE email = $1";
+    const values = [email];
+
+    return Database.execute({ text: query, values: values }).then((rows) => {
+        if (rows.length === 0) { throw new Error('User not found.'); }
+
+        return rows[0] as User;
+    }).catch((error: Error) => {
+        throw error;
     });
 }

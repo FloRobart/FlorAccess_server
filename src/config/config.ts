@@ -35,6 +35,7 @@ interface Config {
     readonly request_limit_per_second: number;
     readonly request_limit_time: number;
     readonly hash_algorithm: string;
+    readonly default_auth_method: string;
     readonly code_data_set: string;
 
     /* Handshake authorized API */
@@ -80,6 +81,7 @@ const config: Config = {
     request_limit_per_second: Math.round(Number(process.env.REQUEST_LIMIT_PER_SECOND)) || 1,
     request_limit_time: Math.round(Number(process.env.REQUEST_LIMIT_TIME)) || 900,
     hash_algorithm: process.env.HASH_ALGORITHM || 'sha256',
+    default_auth_method: process.env.DEFAULT_AUTH_METHOD || 'EMAIL_CODE',
     code_data_set: process.env.CODE_DATA_SET || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
 
     /* Handshake authorized API */
