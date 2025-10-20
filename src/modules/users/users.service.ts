@@ -2,8 +2,8 @@ import { AppError } from "../../core/models/ErrorModel";
 import { generateJwt, verifyJwt } from "../../core/utils/jwt";
 import * as UsersRepository from "./users.repository";
 import { UserSafeSchema } from "./users.schema";
-import { InsertUser, UserLoginRequest, UpdateUser, User, UserSafe } from "./users.types";
-import { loginRequestDispatcher } from "../../core/dispatcher/login.dispatcher";
+import { InsertUser, UserLoginRequest, UpdateUser, User, UserSafe, UserLoginConfirm, IPAddress } from "./users.types";
+import { loginDispatcher } from "../../core/dispatcher/login.dispatcher";
 
 
 
@@ -14,7 +14,7 @@ import { loginRequestDispatcher } from "../../core/dispatcher/login.dispatcher";
  * @returns JWT for the newly created user.
  * @throws Error if user creation or JWT generation fails.
  */
-export async function insertUser(user: InsertUser, ip: string | null): Promise<string> {
+export async function insertUser(user: InsertUser, ip: IPAddress | null): Promise<string> {
     try {
         const insertedUser: User = await UsersRepository.insertUser(user, ip);
         const validatedUser: UserSafe = UserSafeSchema.parse(insertedUser);
@@ -107,12 +107,20 @@ export async function deleteUser(jwt: string): Promise<boolean> {
  */
 export async function userLoginRequest(userLoginRequest: UserLoginRequest): Promise<string> {
     try {
-        return await loginRequestDispatcher(userLoginRequest);
+        return await loginDispatcher(userLoginRequest);
     } catch (error) {
         throw error;
     }
 }
 
+
+export async function userLoginConfirm(userLoginConfirm: UserLoginConfirm): Promise<string> {
+    try {
+        return await loginDispatcher(userLoginConfirm);
+    } catch (error) {
+        throw error;
+    }
+}
 
 /**
  * Logs out a user by invalidating the JWT token.

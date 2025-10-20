@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { updateUser, deleteUser, insertUser, logoutUser, selectUser, userLoginRequest } from './users.controller';
+import { updateUser, deleteUser, insertUser, logoutUser, selectUser, userLoginRequest, userLoginConfirm } from './users.controller';
 import { bodyValidator } from '../../core/middlewares/body_validator.middleware';
-import { InsertUserSchema, AuthorizationHeaderSchema, UpdateUserSchema, UserLoginRequestSchema } from './users.schema';
+import { InsertUserSchema, AuthorizationHeaderSchema, UpdateUserSchema, UserLoginRequestSchema, UserLoginConfirmSchema } from './users.schema';
 import { authorizationValidator } from '../../core/middlewares/auth_validator.middleware';
 
 
@@ -194,6 +194,12 @@ router.delete('/', authorizationValidator(AuthorizationHeaderSchema), deleteUser
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/error400'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error404'
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -202,6 +208,41 @@ router.delete('/', authorizationValidator(AuthorizationHeaderSchema), deleteUser
  *               $ref: '#/components/schemas/error500'
  */
 router.post('/login/request', bodyValidator(UserLoginRequestSchema), userLoginRequest);
+
+
+/**
+ * @swagger
+ * /users/login/request:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: Request login for a user
+ *     description: Request login for a user by providing the necessary credentials.
+ *     parameters:
+ *       - in: body
+ *         schema:
+ *           $ref: '#/components/schemas/UserLoginConfirm'
+ *     responses:
+ *       200:
+ *         description: token to confirm user login
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JWTResponse'
+ *       400:
+ *         description: Bad request. Change your request to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error400'
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.post('/login/confirm', bodyValidator(UserLoginConfirmSchema), userLoginConfirm);
 
 
 /**

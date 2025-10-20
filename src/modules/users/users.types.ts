@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AuthorizationHeaderSchema, InsertUserSchema, IPAddressSchema, UserLoginRequestSchema, UpdateUserSchema, UserSafeSchema, UserSchema } from "./users.schema";
+import { AuthorizationHeaderSchema, InsertUserSchema, IPAddressSchema, UserLoginRequestSchema, UpdateUserSchema, UserSafeSchema, UserSchema, UserLoginConfirmSchema } from "./users.schema";
 
 
 
@@ -17,3 +17,4 @@ export type UpdateUser = z.infer<typeof UpdateUserSchema>;
 
 /* LOGIN */
 export type UserLoginRequest = z.infer<typeof UserLoginRequestSchema>;
+export type UserLoginConfirm = z.infer<typeof UserLoginConfirmSchema>;

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
 import { AppError } from '../../core/models/ErrorModel';
-import { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe } from './users.types';
+import { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm } from './users.types';
 import { IPAddressSchema } from './users.schema';
 
 
@@ -85,6 +85,25 @@ export const userLoginRequest = async (req: Request, res: Response, next: NextFu
 
     UsersService.userLoginRequest(userLoginRequest).then((token: string) => {
         res.status(200).json({ token: token });
+    }).catch((error: AppError) => {
+        next(error);
+    });
+};
+
+
+/**
+ * Confirms a user's login by validating the JWT and IP address.
+ * @param req The request object containing the JWT and user information.
+ * @param res The response object to send the JWT or error message.
+ * @param next The next middleware function.
+ */
+export const userLoginConfirm = async (req: Request, res: Response, next: NextFunction) => {
+    const userLoginConfirm: UserLoginConfirm = req.body.validated;
+    const ip: IPAddress | null = IPAddressSchema.safeParse(req.ip).data || null;
+    userLoginConfirm.ip = ip;
+
+    UsersService.userLoginConfirm(userLoginConfirm).then((jwt: string) => {
+        res.status(200).json({ jwt: jwt });
     }).catch((error: AppError) => {
         next(error);
     });

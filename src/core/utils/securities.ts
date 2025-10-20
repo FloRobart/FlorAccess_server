@@ -3,6 +3,7 @@ import config from '../../config/config';
 import { getRandomValues } from "node:crypto";
 
 
+
 /**
  * Generates a secure random delay.
  * @param maxDelayMs Maximum delay in milliseconds (default is 1000ms)
@@ -36,6 +37,7 @@ export async function hashString(input: string): Promise<string> {
         throw err;
     }
 }
+
 
 /**
  * Verifies a hashed string against a plain text input.
