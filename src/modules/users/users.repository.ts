@@ -1,7 +1,5 @@
 import { Database } from '../../core/database/database';
-import { UserAuthMethod } from './auth-methods/auth_methods.type';
-import { InsertUser, UpdateUser, User, UserSafe } from './users.types';
-import * as logger from '../../core/utils/logger';
+import { InsertUser, IPAddress, UpdateUser, User, UserSafe } from './users.types';
 import config from '../../config/config';
 import { AppError } from '../../core/models/ErrorModel';
 
@@ -14,7 +12,7 @@ import { AppError } from '../../core/models/ErrorModel';
  * @returns The newly created user object with sensitive information
  * @throws Error if user creation fails.
  */
-export async function insertUser(user: InsertUser, ip: string | null): Promise<User> {
+export async function insertUser(user: InsertUser, ip: IPAddress | null): Promise<User> {
     let insertedUser: User;
     
     /* Create the user */

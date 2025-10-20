@@ -163,4 +163,21 @@
  *           type: string
  *           description: Token to confirm user login
  *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *     UserLoginConfirm:
+ *       type: object
+ *       required:
+ *         - email
+ *         - token
+ *         - secret
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: "user@example.com"
+ *         token:
+ *           type: string
+ *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *         secret:
+ *           type: string
+ *           example: "mySecret"
  */

@@ -1,27 +1,37 @@
-import { UserLoginRequest, User } from "../../modules/users/users.types";
+import { UserLoginRequest, User, UserLoginConfirm } from "../../modules/users/users.types";
 import * as UsersRepository from "../../modules/users/users.repository";
 import * as AuthMethodsRepository from "../../modules/users/auth-methods/auth_methods.repository";
 import { AppError } from "../models/ErrorModel";
-import { usersLoginRequestCode } from "../../modules/users/auth-methods/code/code.service";
-import { usersLoginRequestPassword } from "../../modules/users/auth-methods/password/password.service";
+import { usersLoginConfirm, usersLoginRequest } from "../../modules/users/auth-methods/code/code.service";
+import { usersLoginConfirmPassword, usersLoginRequestPassword } from "../../modules/users/auth-methods/password/password.service";
+import * as logger from "../utils/logger";
+import { UserLoginConfirmSchema, UserLoginRequestSchema } from "../../modules/users/users.schema";
 
 
 
 /**
  * Dispatches the login request for a user.
- * @param userLoginRequest The login request user information.
+ * @param userLogin The login request user information or the login confirmation user information.
  * @returns Token to give when confirming connection
  */
-export async function loginRequestDispatcher(userLoginRequest: UserLoginRequest): Promise<string> {
+export async function loginDispatcher(userLogin: UserLoginRequest | UserLoginConfirm): Promise<string> {
     try {
-        const user: User = await UsersRepository._getUserByEmail(userLoginRequest);
+        const user: User = await UsersRepository._getUserByEmail(userLogin.email);
         const auth_method = await AuthMethodsRepository._getAuth_methodsById(user.auth_methods_id);
 
         switch (auth_method.immuable_method_name) {
             case "PASSWORD":
-                return await usersLoginRequestPassword(user);
+                if (UserLoginRequestSchema.safeParse(userLogin).success === true) {
+                    return await usersLoginRequestPassword(user);
+                } else if (UserLoginConfirmSchema.safeParse(userLogin).success === true) {
+                    return await usersLoginConfirmPassword();
+                }
             case "EMAIL_CODE":
-                return await usersLoginRequestCode(user);
+                if (UserLoginRequestSchema.safeParse(userLogin).success === true) {
+                    return await usersLoginRequest(user);
+                } else if (UserLoginConfirmSchema.safeParse(userLogin).success === true) {
+                    return await usersLoginConfirm(user, userLogin as UserLoginConfirm);
+                }
             default:
                 throw new AppError({ message: "Unsupported authentication method", httpStatus: 400 });
         }

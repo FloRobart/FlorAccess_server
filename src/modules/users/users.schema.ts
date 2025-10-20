@@ -1,5 +1,4 @@
-import { z } from "zod";
-import { UserAuthMethodSafeSchema } from "./auth-methods/auth_methods.schema";
+import { email, z } from "zod";
 
 
 
@@ -69,6 +68,9 @@ export const AuthorizationHeaderSchema = z.string().regex(/^Bearer\s[a-zA-Z0-9-_
 /*========*/
 /* UPDATE */
 /*========*/
+/**
+ * Schéma de validation pour la mise à jour d'un utilisateur.
+ */
 export const UpdateUserSchema = z.object({
     email: z.preprocess(
         (val) => typeof val === "string" ? val.toLowerCase().replace(/\s+/g, "") : val,
@@ -84,9 +86,30 @@ export const UpdateUserSchema = z.object({
 /*=======*/
 /* LOGIN */
 /*=======*/
+/**
+ * Schéma de validation pour la requête de login d'un utilisateur.
+ */
 export const UserLoginRequestSchema = z.object({
     email: z.preprocess(
         (val) => typeof val === "string" ? val.toLowerCase().replace(/\s+/g, "") : val,
         z.email()
     )
-}).transform((data) => ( data.email ));
+});
+
+/**
+ * Schéma de validation pour la confirmation de login d'un utilisateur.
+ */
+export const UserLoginConfirmSchema = z.object({
+    email: z.preprocess(
+        (val) => typeof val === "string" ? val.toLowerCase().replace(/\s+/g, "") : val,
+        z.email()
+    ),
+    token: z.string().min(1),
+    secret: z.string().min(1),
+    ip: IPAddressSchema.optional().nullable()
+}).transform((data) => ({
+    email: data.email,
+    token: data.token.trim(),
+    secret: data.secret.trim(),
+    ip: data.ip || null
+}));

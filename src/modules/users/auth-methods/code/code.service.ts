@@ -1,13 +1,20 @@
 import config from "../../../../config/config";
-import { User } from "../../users.types";
+import { User, UserLoginConfirm, UserSafe } from "../../users.types";
 import { sendEmailCode } from "./code.email";
 import * as CodeRepository from "./code.repository";
 import { getRandomValues, randomBytes } from "node:crypto";
 import { generateSecureRandomDelay, hashString } from "../../../../core/utils/securities";
+import { generateJwt } from "../../../../core/utils/jwt";
+import { UserSafeSchema } from "../../users.schema";
 
 
 
-export async function usersLoginRequestCode(user: User): Promise<string> {
+/**
+ * Generates a login request for a user using email code authentication.
+ * @param user The user object containing the information of the user.
+ * @returns Token to give when confirming connection
+ */
+export async function usersLoginRequest(user: User): Promise<string> {
     try {
         const token = await generateApiToken() + "." + Date.now();
         const code = await generateCode(6);
@@ -16,6 +23,23 @@ export async function usersLoginRequestCode(user: User): Promise<string> {
         await sendEmailCode(user.email, config.app_name, code);
     
         return token;
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
+ * Generates a login confirmation for a user using email code authentication.
+ * @param user The user object containing the information of the user.
+ * @returns JWT for the authenticated user.
+ */
+export async function usersLoginConfirm(user: User, userLoginConfirm: UserLoginConfirm): Promise<string> {
+    try {
+        const updatedUser: User = await CodeRepository.userLoginConfirm(user, userLoginConfirm);
+        const userSafe: UserSafe = UserSafeSchema.parse(updatedUser);
+
+        return generateJwt(userSafe);
     } catch (error) {
         throw error;
     }
