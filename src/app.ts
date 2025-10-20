@@ -10,7 +10,6 @@ import { limiter } from './core/middlewares/rateLimiter';
 import handshakeRoutes from './modules/handshakes/handshake.routes';
 import { handshakeAuthorizedApis } from './modules/handshakes/handshakeAutorizedApis.service';
 import { saveDefaultAuthorizedApisToDatabase } from './config/authorizedApi';
-import codeRoutes from './modules/codes/code.routes';
 import cors from 'cors';
 import { ENABLE_ENV } from './config/enableenv';
 import { defaultRouteHandler } from './core/middlewares/defaultRouteHandler';
@@ -54,7 +53,6 @@ const app = express();
     });
 
     app.use('/users', userRoutes);
-    app.use('/code', codeRoutes);
 
     /* Swagger - only in development */
     if (ENABLE_ENV[config.app_env] === 5) {

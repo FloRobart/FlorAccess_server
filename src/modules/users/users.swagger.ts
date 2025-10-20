@@ -47,6 +47,7 @@
  *         - id
  *         - email
  *         - pseudo
+ *         - auth_methods_id
  *         - is_connected
  *         - is_verified_email
  *         - last_login
@@ -62,6 +63,9 @@
  *         pseudo:
  *           type: string
  *           example: "John Doe"
+ *         auth_methods_id:
+ *           type: number
+ *           example: 1
  *         is_connected:
  *           type: boolean
  *           example: true
@@ -141,7 +145,7 @@
  * @swagger
  * components:
  *   schemas:
- *     LoginUser:
+ *     UserLoginRequest:
  *       type: object
  *       required:
  *         - email
@@ -150,4 +154,13 @@
  *           type: string
  *           format: email
  *           example: "user@example.com"
+ *     UserLoginRequestResponse:
+ *       type: object
+ *       required:
+ *         - token
+ *       properties:
+ *         token:
+ *           type: string
+ *           description: Token to confirm user login
+ *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  */

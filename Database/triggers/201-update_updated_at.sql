@@ -26,10 +26,3 @@ CREATE TRIGGER update_auth_methods_updated_at
 BEFORE UPDATE ON auth_methods
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
-
--- Trigger on the user_auth_methods table to update the updated_at column on row updates
-DROP TRIGGER IF EXISTS update_user_auth_methods_updated_at ON user_auth_methods;
-CREATE TRIGGER update_user_auth_methods_updated_at
-BEFORE UPDATE ON user_auth_methods
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();

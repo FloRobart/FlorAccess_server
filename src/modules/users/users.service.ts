@@ -2,7 +2,8 @@ import { AppError } from "../../core/models/ErrorModel";
 import { generateJwt, verifyJwt } from "../../core/utils/jwt";
 import * as UsersRepository from "./users.repository";
 import { UserSafeSchema } from "./users.schema";
-import { InsertUser, LoginUser, UpdateUser, User, UserSafe } from "./users.types";
+import { InsertUser, UserLoginRequest, UpdateUser, User, UserSafe } from "./users.types";
+import { loginRequestDispatcher } from "../../core/dispatcher/login.dispatcher";
 
 
 
@@ -104,11 +105,9 @@ export async function deleteUser(jwt: string): Promise<boolean> {
  * @returns JWT for the user.
  * @throws Error if login fails or if the information is invalid.
  */
-export async function loginUser(loginUser: LoginUser): Promise<string> {
+export async function userLoginRequest(userLoginRequest: UserLoginRequest): Promise<string> {
     try {
-        const user: User = await UsersRepository.loginUser(loginUser);
-
-        return await generateJwt(UserSafeSchema.parse(user));
+        return await loginRequestDispatcher(userLoginRequest);
     } catch (error) {
         throw error;
     }
