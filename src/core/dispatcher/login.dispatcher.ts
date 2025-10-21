@@ -1,10 +1,9 @@
 import { UserLoginRequest, User, UserLoginConfirm } from "../../modules/users/users.types";
 import * as UsersRepository from "../../modules/users/users.repository";
 import * as AuthMethodsRepository from "../../modules/users/auth-methods/auth_methods.repository";
-import { AppError } from "../models/ErrorModel";
+import { AppError } from "../models/AppError.model";
 import { usersLoginConfirm, usersLoginRequest } from "../../modules/users/auth-methods/code/code.service";
 import { usersLoginConfirmPassword, usersLoginRequestPassword } from "../../modules/users/auth-methods/password/password.service";
-import * as logger from "../utils/logger";
 import { UserLoginConfirmSchema, UserLoginRequestSchema } from "../../modules/users/users.schema";
 
 
@@ -33,7 +32,7 @@ export async function loginDispatcher(userLogin: UserLoginRequest | UserLoginCon
                     return await usersLoginRequest(user);
                 }
             default:
-                throw new AppError({ message: "Unsupported authentication method", httpStatus: 400 });
+                throw new AppError("Unsupported authentication method", 400);
         }
     } catch (error) {
         throw error;

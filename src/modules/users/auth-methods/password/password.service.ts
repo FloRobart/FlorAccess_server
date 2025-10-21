@@ -1,4 +1,4 @@
-import { AppError } from "../../../../core/models/ErrorModel";
+import { AppError } from "../../../../core/models/AppError.model";
 import { User } from "../../users.types";
 
 
@@ -9,7 +9,7 @@ import { User } from "../../users.types";
  * @returns Token to give when confirming connection
  */
 export async function usersLoginRequestPassword(user: User): Promise<string> {
-    throw new AppError({ message: "Password authentication method not implemented yet", httpStatus: 501 });
+    throw new AppError("Password authentication method not implemented yet", 501);
 }
 
 
@@ -18,5 +18,5 @@ export async function usersLoginRequestPassword(user: User): Promise<string> {
  * @returns JWT for the authenticated user.
  */
 export async function usersLoginConfirmPassword(): Promise<string> {
-    throw new AppError({ message: "Password authentication confirmation not implemented yet", httpStatus: 501 });
+    throw new AppError("Password authentication confirmation not implemented yet", 501);
 }

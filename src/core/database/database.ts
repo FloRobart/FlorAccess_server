@@ -1,6 +1,7 @@
 import pg from 'pg';
 import * as logger from "../utils/logger";
 import { ADatabase } from './database.schema';
+import { AppError } from '../models/AppError.model';
 
 
 /**
@@ -30,8 +31,8 @@ export class Database extends ADatabase {
             await Database.client.connect();
             Database.client.on('error', (error: Error) => logger.error('DATABASE ERROR :', error));
             Database.client.on('end', () => logger.info('DATABASE CONNECTION CLOSED'));
-        } catch (error: any) {
-            throw error;
+        } catch (error) {
+            throw new AppError('Database connection failed');
         }
     }
 
@@ -46,7 +47,7 @@ export class Database extends ADatabase {
             await Database.client.end();
             Database.client = null;
         } catch (error) {
-            throw error;
+            throw new AppError('Database disconnection failed');
         }
     }
 }

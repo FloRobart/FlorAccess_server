@@ -1,6 +1,6 @@
 import { Database } from "../../../../core/database/database";
-import { IPAddress, User, UserLoginConfirm } from "../../users.types";
-import { AppError } from "../../../../core/models/ErrorModel";
+import { IPAddress, User } from "../../users.types";
+import { AppError } from "../../../../core/models/AppError.model";
 
 
 /**
@@ -16,7 +16,7 @@ export async function userLoginRequest(user: User, tokenHash: string, codeHash: 
         const values = [user.id, user.email, user.pseudo, user.last_login.toISOString(), user.updated_at.toISOString(), user.created_at.toISOString(), tokenHash, codeHash];
 
         const rows = await Database.execute({ text: query, values: values });
-        if (rows.length === 0) { throw new AppError({ message: 'User not found.', httpStatus: 404 }); }
+        if (rows.length === 0) { throw new AppError("User not found", 404); }
     } catch (error) {
         throw error;
     }
@@ -34,7 +34,7 @@ export async function userLoginConfirm(user: User, ip: IPAddress | null): Promis
         const values = [user.id, user.email, user.pseudo, user.last_login.toISOString(), user.updated_at.toISOString(), user.created_at.toISOString(), ip];
 
         const rows = await Database.execute({ text: query, values: values });
-        if (rows.length === 0) { throw new AppError({ message: 'User not found.', httpStatus: 404 }); }
+        if (rows.length === 0) { throw new AppError("User not found", 404); }
 
         return rows[0] as User;
     } catch (error) {

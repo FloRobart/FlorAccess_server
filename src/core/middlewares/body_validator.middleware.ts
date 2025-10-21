@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodType, ZodError } from "zod";
-import { AppError } from "../models/ErrorModel";
+import { AppError } from "../models/AppError.model";
 
 
 
@@ -15,7 +15,6 @@ export const bodyValidator = (schema: ZodType) => (req: Request, _res: Response,
         req.body.validated = schema.parse(req.body);
         next();
     } catch (error) {
-        const stackTrace = error instanceof ZodError ? JSON.stringify(error.issues) : error;
-        next(new AppError({ message: "Invalid request data", httpStatus: 400, stackTrace: stackTrace }));
+        next(new AppError("Invalid request data", 400));
     }
 };
