@@ -1,7 +1,6 @@
 import nodemailer from 'nodemailer';
 import * as logger from '../utils/logger';
 import config from '../../config/config';
-import { ENABLE_ENV } from '../../config/enableenv';
 
 
 
@@ -32,8 +31,8 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
     mailOptions.html = html;
 
     return transporter.sendMail(mailOptions).then((info) => {
-        if (ENABLE_ENV[config.app_env] === 5) {
-            logger.info('Email sent: ' + info.response);
+        if (config.app_env.includes('dev')) {
+            logger.info('Email sent :', info.response);
         }
         return true;
     }).catch((err: Error) => {

@@ -6,8 +6,6 @@ import { getRandomValues, randomBytes } from "node:crypto";
 import { generateSecureRandomDelay, hashString, verifyHash } from "../../../../core/utils/securities";
 import { generateJwt } from "../../../../core/utils/jwt";
 import { UserSafeSchema } from "../../users.schema";
-import { ENABLE_ENV } from "../../../../config/enableenv";
-import * as logger from "../../../../core/utils/logger";
 
 
 
@@ -23,7 +21,7 @@ export async function usersLoginRequest(user: User): Promise<string> {
 
         await CodeRepository.userLoginRequest(user, await hashString(token), await hashString(code));
 
-        if (ENABLE_ENV[config.app_env] !== 5) {
+        if (!config.app_env.includes('dev')) {
             await sendEmailCode(user.email, config.app_name, code);
         }
 
