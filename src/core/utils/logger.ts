@@ -1,5 +1,4 @@
 import config from '../../config/config';
-import { ENABLE_ENV } from '../../config/enableenv';
 import { sendErrorEmail } from '../email/errorEmail';
 
 
@@ -24,10 +23,10 @@ const debugMessage = ` [🐛] ${config.app_name} - DEBUG   |`;
  * @param args elements to log
  */
 export function error(...args: any[]) {
-    if (ENABLE_ENV[config.app_env] >= 1) {
+    if (!config.app_env.includes('silent')) {
         console.error(errorMessage, ...args);
 
-        if (ENABLE_ENV[config.app_env] === 4) {
+        if (config.app_env.includes('prod')) {
             sendErrorEmail(...args).then(() => {
                 success("Error email sent successfully !");
             }).catch((err: Error) => {
@@ -49,7 +48,7 @@ export function error(...args: any[]) {
  * @param args elements to log
  */
 export function warning(...args: any[]) {
-    if (ENABLE_ENV[config.app_env] >= 2) {
+    if (!config.app_env.includes('silent')) {
         console.warn(warningMessage, ...args);
     }
 }
@@ -66,7 +65,7 @@ export function warning(...args: any[]) {
  * @param args elements to log
  */
 export function success(...args: any[]) {
-    if (ENABLE_ENV[config.app_env] >= 3) {
+    if (!config.app_env.includes('silent')) {
         console.log(successMessage, ...args);
     }
 }
@@ -83,7 +82,7 @@ export function success(...args: any[]) {
  * @param args elements to log
  */
 export function info(...args: any[]) {
-    if (ENABLE_ENV[config.app_env] >= 4) {
+    if (!config.app_env.includes('silent')) {
         console.info(infoMessage, ...args);
     }
 }
@@ -100,7 +99,7 @@ export function info(...args: any[]) {
  * @param args elements to log
  */
 export function debug(...args: any[]) {
-    if (ENABLE_ENV[config.app_env] >= 5) {
+    if (!config.app_env.includes('silent') && config.app_env.includes('dev')) {
         console.debug(debugMessage, ...args);
     }
 }

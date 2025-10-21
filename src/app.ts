@@ -8,7 +8,6 @@ import config from './config/config';
 import { Database } from './core/database/database';
 import { limiter } from './core/middlewares/rateLimiter';
 import cors from 'cors';
-import { ENABLE_ENV } from './config/enableenv';
 import { defaultRouteHandler } from './core/middlewares/defaultRouteHandler';
 import path from 'node:path';
 
@@ -31,7 +30,7 @@ const app = express();
 
     /* Routes and Middleware */
     app.use(cors(config.corsOptions));
-    if (ENABLE_ENV[config.app_env] === 4) {
+    if (config.app_env.includes('prod')) {
         app.set('trust proxy', true);
     }
     app.use(limiter);
@@ -47,10 +46,12 @@ const app = express();
         next();
     });
 
+
     app.use('/users', userRoutes);
 
+
     /* Swagger - only in development */
-    if (ENABLE_ENV[config.app_env] === 5) {
+    if (config.app_env.includes('dev')) {
         /* Swagger setup */
         const SWAGGER_JSON_PATH = `${__dirname}/swagger/json/swagger.json`;
         const swaggerUi = require('swagger-ui-express');
