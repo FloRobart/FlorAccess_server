@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import * as logger from '../utils/logger';
 import config from '../../config/config';
+import { AppError } from '../models/AppError.model';
 
 
 
@@ -19,26 +20,29 @@ const mailOptions = {
     html: ""
 };
 
+
 /**
  * Sends an email using the configured transporter.
  * @param to The recipient's email address
  * @param subject The subject of the email
  * @param html The HTML content of the email
+ * @throws {AppError} If email sending fails
  */
-async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
+async function sendEmail(to: string, subject: string, html: string): Promise<void> {
     mailOptions.to = to;
     mailOptions.subject = subject;
     mailOptions.html = html;
 
-    return transporter.sendMail(mailOptions).then((info) => {
+    try {
+        const info = await transporter.sendMail(mailOptions);
         if (config.app_env.includes('dev')) {
             logger.info('Email sent :', info.response);
         }
-        return true;
-    }).catch((err: Error) => {
-        throw err;
-    });
+    } catch (error) {
+        throw new AppError("Email sending failed");
+    }
 }
+
 
 
 export default sendEmail;

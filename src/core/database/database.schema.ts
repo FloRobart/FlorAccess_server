@@ -1,4 +1,5 @@
 import pg from "pg";
+import { AppError } from "../models/AppError.model";
 
 
 
@@ -42,13 +43,13 @@ export abstract class ADatabase implements IDatabase {
      */
     static async execute<T = any>(query: Query): Promise<T[]> {
         try {
-            if (!this.client) throw new Error('Database not connected');
+            if (!this.client) throw new AppError('Database not connected');
             const res = await this.client.query(query.text, query.values);
-            if (res.rows === null) { throw new Error('Database query failed.'); }
+            if (res.rows === null) { throw new AppError('Database query failed'); }
 
             return res.rows || [];
         } catch (error) {
-            throw error;
+            throw new AppError(error instanceof AppError ? error.message : 'Database unknown error');
         }
     }
 }

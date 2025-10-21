@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as logger from '../utils/logger';
-import { internalMessage, AppError } from '../models/ErrorModel';
+import { AppError } from '../models/AppError.model';
 
 
 
@@ -12,22 +12,18 @@ import { internalMessage, AppError } from '../models/ErrorModel';
  * @param next NextFunction
  */
 export const errorHandler = (
-    err: AppError,
+    error: AppError,
     req: Request,
     res: Response,
     next: NextFunction
 ) => {
-    if (err.httpStatus >= 500) {
-        logger.error(err.toString());
-    } else if (err.httpStatus >= 400) {
-        logger.warning(err.toString());
+    if (error.httpStatus >= 500) {
+        logger.error(error.stack);
+    } else if (error.httpStatus >= 400) {
+        logger.warning(error.stack);
     } else {
-        logger.info(err.toString());
+        logger.info(error.stack);
     }
 
-    res.status(err.httpStatus).json({
-        message: err.message || 'Internal Server Error',
-        internalStatus: err.internalStatus,
-        internalMessage: internalMessage[err.internalStatus] || internalMessage[1],
-    });
+    res.status(error.httpStatus).json(error.message);
 };

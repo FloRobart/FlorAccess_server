@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../models/ErrorModel';
+import { AppError } from '../models/AppError.model';
 
 
 
@@ -9,6 +9,6 @@ import { AppError } from '../models/ErrorModel';
  * @param res Response
  * @param next NextFunction
  */
-export const defaultRouteHandler = (req: Request, res: Response, next: NextFunction) => {
-    next(new AppError({"message": "URL not found", "httpStatus": 404, "internalStatus": 2}));
+export const defaultRouteHandler = (_req: Request, _res: Response, next: NextFunction) => {
+    next(new AppError("URL not found", 404));
 }

@@ -1,7 +1,7 @@
 import { Database } from '../../core/database/database';
 import { InsertUser, IPAddress, UpdateUser, User, UserSafe } from './users.types';
 import config from '../../config/config';
-import { AppError } from '../../core/models/ErrorModel';
+import { AppError } from '../../core/models/AppError.model';
 
 
 
@@ -43,7 +43,7 @@ export async function getUser(userSafe: UserSafe): Promise<User> {
     let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new AppError({ message: 'User not found.', httpStatus: 404 }); }
+        if (rows.length === 0) { throw new AppError('User not found', 404); }
 
         return rows[0] as User;
     }).catch((error: Error) => {
@@ -75,7 +75,7 @@ export async function updateUser(updateUser: UpdateUser, userSafe: UserSafe): Pr
     query += setClauses.join(', ') + " WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new AppError({ message: 'No user with this id.', httpStatus: 404 }); }
+        if (rows.length === 0) { throw new AppError('No user with this id', 404); }
 
         return rows[0] as User;
     }).catch((error: Error) => {
@@ -95,7 +95,7 @@ export async function deleteUser(userSafe: UserSafe): Promise<User> {
     let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new AppError({ message: 'No user with this id.', httpStatus: 404 }); }
+        if (rows.length === 0) { throw new AppError('No user with this id', 404); }
 
         return rows[0] as User;
     }).catch((err: Error) => {
@@ -115,7 +115,7 @@ export async function logoutUser(userSafe: UserSafe): Promise<boolean> {
     let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
 
     return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new AppError({ message: 'No user with this id.', httpStatus: 404 }); }
+        if (rows.length === 0) { throw new AppError('No user with this id', 404); }
 
         return true;
     }).catch((err: Error) => {

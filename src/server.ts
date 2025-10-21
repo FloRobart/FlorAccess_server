@@ -20,7 +20,7 @@ try {
         logger.error("FAILED STARTING SERVER\n");
         throw new Error(error.message);
     });
-} catch (err) {
-    logger.error("Error in server.ts :", err);
+} catch (error) {
+    logger.error("Error in server.ts :", error);
     process.exit(1);
 }

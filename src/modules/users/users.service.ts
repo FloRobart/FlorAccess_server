@@ -1,4 +1,4 @@
-import { AppError } from "../../core/models/ErrorModel";
+import { AppError } from "../../core/models/AppError.model";
 import { generateJwt, verifyJwt } from "../../core/utils/jwt";
 import * as UsersRepository from "./users.repository";
 import { UserSafeSchema } from "./users.schema";
@@ -37,7 +37,7 @@ export async function selectUser(jwt: string): Promise<UserSafe> {
     try {
         decodedUserSafe = await verifyJwt(jwt);
     } catch (error) {
-        throw new AppError({ message: "Invalid token", httpStatus: 401, stackTrace: error });
+        throw new AppError("Invalid token", 401);
     }
 
     try {
@@ -62,7 +62,7 @@ export async function updateUser(updateUser: UpdateUser, jwt: string): Promise<s
     try {
         decodedUser = await verifyJwt(jwt);
     } catch (error) {
-        throw new AppError({ message: "Invalid token", httpStatus: 401, stackTrace: error });
+        throw new AppError("Invalid token", 401);
     }
 
     try {
@@ -86,7 +86,7 @@ export async function deleteUser(jwt: string): Promise<boolean> {
     try {
         decodedUser = await verifyJwt(jwt);
     } catch (error) {
-        throw new AppError({ message: "Invalid token", httpStatus: 401, stackTrace: error });
+        throw new AppError("Invalid token", 401);
     }
 
     try {
@@ -94,7 +94,7 @@ export async function deleteUser(jwt: string): Promise<boolean> {
 
         return true;
     } catch (error) {
-        throw new AppError({ message: "Internal server error", httpStatus: 500, stackTrace: error });
+        throw new AppError("Internal server error", 500);
     }
 }
 
@@ -133,7 +133,7 @@ export async function logoutUser(jwt: string): Promise<boolean> {
     try {
         decodedUser = await verifyJwt(jwt);
     } catch (error) {
-        throw new AppError({ message: "Invalid token", httpStatus: 401, stackTrace: error });
+        throw new AppError("Invalid token", 401);
     }
 
     try {
@@ -141,6 +141,6 @@ export async function logoutUser(jwt: string): Promise<boolean> {
 
         return true;
     } catch (error) {
-        throw new AppError({ message: "Internal server error", httpStatus: 500, stackTrace: error });
+        throw new AppError("Internal server error", 500);
     }
 }

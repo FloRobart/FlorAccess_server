@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
-import { AppError } from '../../core/models/ErrorModel';
+import { AppError } from '../../core/models/AppError.model';
 import { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm } from './users.types';
 import { IPAddressSchema } from './users.schema';
 
@@ -18,7 +18,7 @@ export const insertUser = async (req: Request, res: Response, next: NextFunction
     UsersService.insertUser(insertUser, ip).then((jwt: string) => {
         res.status(201).json({ jwt: jwt });
     }).catch((error: Error) => {
-        next(new AppError({ message: error.message, httpStatus: 500, stackTrace: error }));
+        next(error);
     });
 };
 
@@ -34,7 +34,7 @@ export const selectUser = async (req: Request, res: Response, next: NextFunction
     UsersService.selectUser(jwt).then((userSafe: UserSafe) => {
         res.status(200).json(userSafe);
     }).catch((error: Error) => {
-        next(new AppError({ message: error.message, httpStatus: 500, stackTrace: error }));
+        next(error);
     });
 };
 
@@ -52,7 +52,7 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
     UsersService.updateUser(updateUser, jwt).then((newJwt: string) => {
         res.status(200).json({ jwt: newJwt });
     }).catch((error: Error) => {
-        next(new AppError({ message: "User could not be updated", httpStatus: 500, stackTrace: error }));
+        next(error);
     });
 };
 

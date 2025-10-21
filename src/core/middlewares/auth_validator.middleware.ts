@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodType, ZodError } from "zod";
-import { AppError } from "../models/ErrorModel";
+import { AppError } from "../models/AppError.model";
 import { verifyJwt } from "../utils/jwt";
 
 
@@ -16,7 +16,6 @@ export const authorizationValidator = (schema: ZodType) => async (req: Request, 
         await verifyJwt(req.headers.authorization!.split(' ')[1]);
         next();
     } catch (error) {
-        const stackTrace = error instanceof ZodError ? JSON.stringify(error.issues) : error;
-        next(new AppError({ message: "Invalid JWT", httpStatus: 401, stackTrace: stackTrace }));
+        next(new AppError("Invalid JWT", 401));
     }
 };
