@@ -7,9 +7,6 @@ import fs from 'node:fs';
 import config from './config/config';
 import { Database } from './core/database/database';
 import { limiter } from './core/middlewares/rateLimiter';
-import handshakeRoutes from './modules/handshakes/handshake.routes';
-import { handshakeAuthorizedApis } from './modules/handshakes/handshakeAutorizedApis.service';
-import { saveDefaultAuthorizedApisToDatabase } from './config/authorizedApi';
 import cors from 'cors';
 import { ENABLE_ENV } from './config/enableenv';
 import { defaultRouteHandler } from './core/middlewares/defaultRouteHandler';
@@ -44,8 +41,6 @@ const app = express();
     app.get("/favicon.ico", (_req, res) => {
         res.sendFile(path.join(__dirname, "../public/favicon.ico"));
     });
-
-    app.use('/handshake', handshakeRoutes);
 
     app.use(async (req: Request, _res: Response, next: NextFunction) => {
         logger.info(`Incoming request`, { ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress, method: req.method, url: req.url });
@@ -103,22 +98,6 @@ const app = express();
 
     app.use(defaultRouteHandler);
     app.use(errorHandler);
-
-
-    /* Authorized APIs Handshake */
-    if (config.handshake_authorized_api) {
-        /* initialize default authorized APIs */
-        saveDefaultAuthorizedApisToDatabase().then((result) => {
-            if (result) {
-                /* Handshake to other services */
-                handshakeAuthorizedApis().then(() => {
-                    logger.info("Handshake with authorized APIs completed.");
-                }).catch((err: Error) => {
-                    logger.error("Handshake with authorized APIs completed :", err.message);
-                });
-            }
-        });
-    }
 })();
 
 

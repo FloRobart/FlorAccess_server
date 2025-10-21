@@ -1,5 +1,4 @@
 import dotenv from 'dotenv';
-import { AuthorizedApi } from '../modules/handshakes/AuthorizedApi.schema';
 import { type StringValue } from 'ms';
 import ms from 'ms';
 
@@ -32,18 +31,14 @@ interface Config {
     readonly hash_rounds: number;
     readonly token_length: number;
     readonly token_expiration: number;
-    readonly request_limit_per_second: number;
-    readonly request_limit_time: number;
-    readonly hash_algorithm: string;
+
+    /* Authentication */
     readonly default_auth_method: string;
     readonly code_data_set: string;
 
-    /* Handshake authorized API */
-    readonly handshake_static_token: string;
-    readonly handshake_authorized_api: boolean;
-
-    /* Default Authorized APIs */
-    readonly default_authorized_apis: AuthorizedApi[];
+    /* Rate Limiting */
+    readonly request_limit_per_second: number;
+    readonly request_limit_time: number;
 
     /* CORS */
     readonly corsOptions: {
@@ -78,18 +73,14 @@ const config: Config = {
     hash_rounds: Math.round(Number(process.env.HASH_ROUNDS)) || 10,
     token_length: Math.round(Number(process.env.TOKEN_LENGTH)) || 128,
     token_expiration: Math.round(Number(process.env.TOKEN_EXPIRATION)) || 3600,
-    request_limit_per_second: Math.round(Number(process.env.REQUEST_LIMIT_PER_SECOND)) || 1,
-    request_limit_time: Math.round(Number(process.env.REQUEST_LIMIT_TIME)) || 900,
-    hash_algorithm: process.env.HASH_ALGORITHM || 'sha256',
+
+    /* Authentication */
     default_auth_method: process.env.DEFAULT_AUTH_METHOD || 'EMAIL_CODE',
     code_data_set: process.env.CODE_DATA_SET || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
 
-    /* Handshake authorized API */
-    handshake_static_token: process.env.HANDSHAKE_STATIC_TOKEN || '',
-    handshake_authorized_api: process.env.HANDSHAKE_AUTHORIZED_API === 'true',
-
-    /* Default Authorized APIs */
-    default_authorized_apis: parseDefaultAuthorizedApis(process.env.DEFAULT_AUTHORIZED_APIS || '[]'),
+    /* Rate Limiting */
+    request_limit_per_second: Math.round(Number(process.env.REQUEST_LIMIT_PER_SECOND)) || 1,
+    request_limit_time: Math.round(Number(process.env.REQUEST_LIMIT_TIME)) || 900,
 
     /* CORS */
     corsOptions: {
@@ -99,27 +90,6 @@ const config: Config = {
         allowedHeaders: ['Content-Type', 'Authorization'],
     },
 };
-
-
-/**
- * Parses the JSON string of default authorized APIs.
- * @param default_authorized_apis JSON string of default authorized APIs
- * @returns Array of default authorized APIs
- */
-function parseDefaultAuthorizedApis(default_authorized_apis: string): AuthorizedApi[] {
-    try {
-        const parsed: AuthorizedApi[] = JSON.parse(default_authorized_apis);
-        if (Array.isArray(parsed)) {
-            return parsed.map(api => ({
-                api_name: api.api_name || '',
-                api_url: api.api_url || ''
-            }));
-        }
-    } catch (error) {
-        console.error("Error parsing DEFAULT_AUTHORIZED_APIS :", error);
-    }
-    return [];
-}
 
 
 
