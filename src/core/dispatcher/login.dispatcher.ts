@@ -21,16 +21,16 @@ export async function loginDispatcher(userLogin: UserLoginRequest | UserLoginCon
 
         switch (auth_method.immuable_method_name) {
             case "PASSWORD":
-                if (UserLoginRequestSchema.safeParse(userLogin).success === true) {
-                    return await usersLoginRequestPassword(user);
-                } else if (UserLoginConfirmSchema.safeParse(userLogin).success === true) {
+                if (UserLoginConfirmSchema.safeParse(userLogin).success === true) {
                     return await usersLoginConfirmPassword();
+                } else if (UserLoginRequestSchema.safeParse(userLogin).success === true) {
+                    return await usersLoginRequestPassword(user);
                 }
             case "EMAIL_CODE":
-                if (UserLoginRequestSchema.safeParse(userLogin).success === true) {
-                    return await usersLoginRequest(user);
-                } else if (UserLoginConfirmSchema.safeParse(userLogin).success === true) {
+                if (UserLoginConfirmSchema.safeParse(userLogin).success === true) {
                     return await usersLoginConfirm(user, userLogin as UserLoginConfirm);
+                } else if (UserLoginRequestSchema.safeParse(userLogin).success === true) {
+                    return await usersLoginRequest(user);
                 }
             default:
                 throw new AppError({ message: "Unsupported authentication method", httpStatus: 400 });
