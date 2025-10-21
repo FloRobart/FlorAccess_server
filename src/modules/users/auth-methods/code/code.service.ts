@@ -3,9 +3,11 @@ import { User, UserLoginConfirm, UserSafe } from "../../users.types";
 import { sendEmailCode } from "./code.email";
 import * as CodeRepository from "./code.repository";
 import { getRandomValues, randomBytes } from "node:crypto";
-import { generateSecureRandomDelay, hashString } from "../../../../core/utils/securities";
+import { generateSecureRandomDelay, hashString, verifyHash } from "../../../../core/utils/securities";
 import { generateJwt } from "../../../../core/utils/jwt";
 import { UserSafeSchema } from "../../users.schema";
+import { ENABLE_ENV } from "../../../../config/enableenv";
+import * as logger from "../../../../core/utils/logger";
 
 
 
@@ -20,8 +22,11 @@ export async function usersLoginRequest(user: User): Promise<string> {
         const code = await generateCode(6);
 
         await CodeRepository.userLoginRequest(user, await hashString(token), await hashString(code));
-        await sendEmailCode(user.email, config.app_name, code);
-    
+
+        if (ENABLE_ENV[config.app_env] !== 5) {
+            await sendEmailCode(user.email, config.app_name, code);
+        }
+
         return token;
     } catch (error) {
         throw error;
@@ -36,7 +41,18 @@ export async function usersLoginRequest(user: User): Promise<string> {
  */
 export async function usersLoginConfirm(user: User, userLoginConfirm: UserLoginConfirm): Promise<string> {
     try {
-        const updatedUser: User = await CodeRepository.userLoginConfirm(user, userLoginConfirm);
+        const timeStamp = parseInt(userLoginConfirm.token.split(".")[1], 10);
+
+        if (Date.now() - timeStamp > config.token_expiration * 1000) {
+            throw new Error("Token has expired");
+        }
+
+        if (!(await verifyHash(userLoginConfirm.secret, user.secret_hash!))) {
+            throw new Error("Invalid token");
+        }
+
+
+        const updatedUser: User = await CodeRepository.userLoginConfirm(user, userLoginConfirm.ip);
         const userSafe: UserSafe = UserSafeSchema.parse(updatedUser);
 
         return generateJwt(userSafe);
@@ -84,7 +100,7 @@ async function generateCode(length: number): Promise<string> {
  * @param length Length of the token to generate
  * @returns A hexadecimal string representing the token.
  */
-async function generateApiToken(length = 128): Promise<string> {
+async function generateApiToken(length = config.token_length): Promise<string> {
     await generateSecureRandomDelay();
     return Buffer.from(randomBytes(length)).toString('hex');
 }

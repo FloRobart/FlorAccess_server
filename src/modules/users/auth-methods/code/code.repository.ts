@@ -1,5 +1,5 @@
 import { Database } from "../../../../core/database/database";
-import { User, UserLoginConfirm } from "../../users.types";
+import { IPAddress, User, UserLoginConfirm } from "../../users.types";
 import { AppError } from "../../../../core/models/ErrorModel";
 
 
@@ -28,10 +28,10 @@ export async function userLoginRequest(user: User, tokenHash: string, codeHash: 
  * @param userLoginConfirm The userLoginConfirm object containing the information of the user to confirm login.
  * @returns The updated user object.
  */
-export async function userLoginConfirm(user: User, userLoginConfirm: UserLoginConfirm): Promise<User> {
+export async function userLoginConfirm(user: User, ip: IPAddress | null): Promise<User> {
     try {
         const query = "UPDATE users SET last_login = NOW(), is_connected = true, last_ip = $7, secret_hash = null, token_hash = null WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
-        const values = [user.id, user.email, user.pseudo, user.last_login.toISOString(), user.updated_at.toISOString(), user.created_at.toISOString(), userLoginConfirm.ip, userLoginConfirm.secret];
+        const values = [user.id, user.email, user.pseudo, user.last_login.toISOString(), user.updated_at.toISOString(), user.created_at.toISOString(), ip];
 
         const rows = await Database.execute({ text: query, values: values });
         if (rows.length === 0) { throw new AppError({ message: 'User not found.', httpStatus: 404 }); }
