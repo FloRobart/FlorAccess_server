@@ -1,14 +1,14 @@
 import express from 'express';
 import { Request, Response, NextFunction } from 'express';
 import userRoutes from './modules/users/users.routes';
-import { errorHandler } from './core/middlewares/errorHandler';
+import { errorHandler } from './core/middlewares/error.middleware';
 import * as logger from './core/utils/logger';
 import fs from 'node:fs';
 import config from './config/config';
-import { Database } from './core/database/database';
-import { limiter } from './core/middlewares/rateLimiter';
+import { Database } from './core/models/Database.model';
+import { limiter } from './core/middlewares/rate_limiter.middleware';
 import cors from 'cors';
-import { defaultRouteHandler } from './core/middlewares/defaultRouteHandler';
+import { defaultRouteHandler } from './core/middlewares/default_route.middleware';
 import path from 'node:path';
 
 
@@ -17,36 +17,52 @@ const app = express();
 
 
 (async () => {
+    /*----------*/
     /* Database */
+    /*----------*/
     try {
         const database = new Database(config.db_uri);
         await database.connect();
         logger.success("Connected to database successfully");
     } catch (error) {
-        logger.error("Failed to connect to database :", error);
+        logger.error(error);
         process.exit(1);
     }
 
 
+    /*-----------------------*/
     /* Routes and Middleware */
+    /*-----------------------*/
+    /* Cross Origin Resource Sharing (CORS) */
     app.use(cors(config.corsOptions));
+
+    /* Trust proxy in production */
     if (config.app_env.includes('prod')) {
         app.set('trust proxy', true);
     }
+
+    /* Rate Limiter */
     app.use(limiter);
+
+    /* Body parser */
     app.use(express.json());
 
+    /* Health Check */
     app.get('/', (_req, res) => { res.status(200).send('HEALTH CHECK') });
+
+    /* Favicon */
     app.get("/favicon.ico", (_req, res) => {
         res.sendFile(path.join(__dirname, "../public/favicon.ico"));
     });
 
+    /* Logger */
     app.use(async (req: Request, _res: Response, next: NextFunction) => {
         logger.info(`Incoming request`, { ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress, method: req.method, url: req.url });
         next();
     });
 
 
+    /* Users routes */
     app.use('/users', userRoutes);
 
 
@@ -96,8 +112,10 @@ const app = express();
         }
     }
 
-
+    /* Default Route Handler (404) */
     app.use(defaultRouteHandler);
+
+    /* Error Handler */
     app.use(errorHandler);
 })();
 

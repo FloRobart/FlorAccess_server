@@ -1,7 +1,6 @@
 import config from "../../../../config/config";
 import sendEmail from "../../../../core/email/mailer";
 import { htmlCodeEmailTemplate } from "../../../../core/email/mailTemplate";
-import * as logger from "../../../../core/utils/logger";
 
 
 
@@ -16,7 +15,6 @@ export async function sendEmailCode(to: string, app_name: string, code: string):
     try {
         const appName = app_name || config.app_name;
 
-        logger.debug(`Code : ${code} for ${to}`);
         const html = htmlCodeEmailTemplate(appName, code);
 
         await sendEmail(to, `Votre code pour ${appName} : ${code.toString().replace(/(\d{2})(?=\d)/g, '$1 ')}`, html);

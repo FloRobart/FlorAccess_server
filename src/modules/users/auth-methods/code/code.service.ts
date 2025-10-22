@@ -6,6 +6,7 @@ import { getRandomValues, randomBytes } from "node:crypto";
 import { generateSecureRandomDelay, hashString, verifyHash } from "../../../../core/utils/securities";
 import { generateJwt } from "../../../../core/utils/jwt";
 import { UserSafeSchema } from "../../users.schema";
+import { AppError } from "../../../../core/models/AppError.model";
 
 
 
@@ -87,8 +88,8 @@ async function generateCode(length: number): Promise<string> {
 
         await generateSecureRandomDelay();
         return result;
-    } catch (err) {
-        throw err;
+    } catch (error) {
+        throw error;
     }
 }
 
@@ -99,6 +100,10 @@ async function generateCode(length: number): Promise<string> {
  * @returns A hexadecimal string representing the token.
  */
 async function generateApiToken(length = config.token_length): Promise<string> {
-    await generateSecureRandomDelay();
-    return Buffer.from(randomBytes(length)).toString('hex');
+    try {
+        await generateSecureRandomDelay();
+        return Buffer.from(randomBytes(length)).toString('hex');
+    } catch (error) {
+        throw new AppError("Failed to generate API token", 500);
+    }
 }
