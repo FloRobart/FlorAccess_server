@@ -1,20 +1,20 @@
 import nodemailer from 'nodemailer';
 import * as logger from '../utils/logger';
-import config from '../../config/config';
+import AppConfig from '../../config/AppConfig';
 import { AppError } from '../models/AppError.model';
 
 
 
 const transporter = nodemailer.createTransport({
-    service: config.mail_service,
+    service: AppConfig.mail_service,
     auth: {
-        user: config.mail_username,
-        pass: config.mail_password
+        user: AppConfig.mail_username,
+        pass: AppConfig.mail_password
     }
 });
 
 const mailOptions = {
-    from: config.app_name + " <" + config.mail_username + ">",
+    from: AppConfig.app_name + " <" + AppConfig.mail_username + ">",
     to: "",
     subject: "",
     html: ""
@@ -35,7 +35,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
 
     try {
         const info = await transporter.sendMail(mailOptions);
-        if (config.app_env.includes('dev')) {
+        if (AppConfig.app_env.includes('dev')) {
             logger.info('Email sent :', info.response);
         }
     } catch (error) {

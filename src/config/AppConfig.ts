@@ -3,11 +3,12 @@ import { type StringValue } from 'ms';
 import ms from 'ms';
 
 
+
 dotenv.config();
 
 
 
-interface Config {
+interface AppConfigInterface {
     /* Application configuration */
     readonly app_name: string;
     readonly app_port: number;
@@ -49,7 +50,7 @@ interface Config {
     };
 }
 
-const config: Config = {
+const AppConfig: AppConfigInterface = {
     /* Application configuration */
     app_name: "Floraccess",
     app_port: 80,
@@ -93,4 +94,4 @@ const config: Config = {
 
 
 
-export default config;
+export default AppConfig;

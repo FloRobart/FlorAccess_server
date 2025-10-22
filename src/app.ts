@@ -4,7 +4,7 @@ import userRoutes from './modules/users/users.routes';
 import { errorHandler } from './core/middlewares/error.middleware';
 import * as logger from './core/utils/logger';
 import fs from 'node:fs';
-import config from './config/config';
+import AppConfig from './config/AppConfig';
 import { Database } from './core/models/Database.model';
 import { limiter } from './core/middlewares/rate_limiter.middleware';
 import cors from 'cors';
@@ -21,7 +21,7 @@ const app = express();
     /* Database */
     /*----------*/
     try {
-        const database = new Database(config.db_uri);
+        const database = new Database(AppConfig.db_uri);
         await database.connect();
         logger.success("Connected to database successfully");
     } catch (error) {
@@ -34,10 +34,10 @@ const app = express();
     /* Routes and Middleware */
     /*-----------------------*/
     /* Cross Origin Resource Sharing (CORS) */
-    app.use(cors(config.corsOptions));
+    app.use(cors(AppConfig.corsOptions));
 
     /* Trust proxy in production */
-    if (config.app_env.includes('prod')) {
+    if (AppConfig.app_env.includes('prod')) {
         app.set('trust proxy', true);
     }
 
@@ -67,7 +67,7 @@ const app = express();
 
 
     /* Swagger - only in development */
-    if (config.app_env.includes('dev')) {
+    if (AppConfig.app_env.includes('dev')) {
         /* Swagger setup */
         const SWAGGER_JSON_PATH = `${__dirname}/swagger/json/swagger.json`;
         const swaggerUi = require('swagger-ui-express');
@@ -76,13 +76,13 @@ const app = express();
             swaggerDefinition: {
                 openapi: '3.0.0',
                 info: {
-                    title: `${config.app_name} API`,
+                    title: `${AppConfig.app_name} API`,
                     version: '2.0.0',
                     description: 'API documentation',
                 },
                 servers: [
                     {
-                        url: config.base_url,
+                        url: AppConfig.base_url,
                     },
                 ],
             },
@@ -93,7 +93,7 @@ const app = express();
         app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
         app.get('/api-docs.json', (_req, res) => {
             if (!app.locals.swaggerJsonFileCreated) {
-                res.status(500).json({ error: "The Swagger JSON file encountered a problem creating it. Please see : " + config.base_url + "/api-docs" });
+                res.status(500).json({ error: "The Swagger JSON file encountered a problem creating it. Please see : " + AppConfig.base_url + "/api-docs" });
                 return;
             }
             return res.download(SWAGGER_JSON_PATH)

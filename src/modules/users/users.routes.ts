@@ -212,12 +212,12 @@ router.post('/login/request', bodyValidator(UserLoginRequestSchema), userLoginRe
 
 /**
  * @swagger
- * /users/login/request:
+ * /users/login/confirm:
  *   post:
  *     tags:
  *       - Users
- *     summary: Request login for a user
- *     description: Request login for a user by providing the necessary credentials.
+ *     summary: Confirm login for a user
+ *     description: Confirm login for a user by providing the necessary credentials.
  *     parameters:
  *       - in: body
  *         schema:

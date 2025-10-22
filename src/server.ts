@@ -1,5 +1,5 @@
 import app from './app';
-import config from './config/config';
+import AppConfig from './config/AppConfig';
 import http from 'http';
 import * as logger from './core/utils/logger';
 
@@ -11,11 +11,11 @@ import * as logger from './core/utils/logger';
 try {
     const server = http.createServer(app);
 
-    server.listen(config.app_port, config.host_name, () => {
-        logger.success("Server running at URL :", config.base_url, "!");
-        logger.success("Server documentation running at URL :", config.base_url + "/api-docs", "!");
-        logger.success("Server running at HOST :", config.host_name, "!");
-        logger.success("Server running at PORT :", config.app_port, "!");
+    server.listen(AppConfig.app_port, AppConfig.host_name, () => {
+        logger.success("Server running at URL :", AppConfig.base_url, "!");
+        logger.success("Server documentation running at URL :", AppConfig.base_url + "/api-docs", "!");
+        logger.success("Server running at HOST :", AppConfig.host_name, "!");
+        logger.success("Server running at PORT :", AppConfig.app_port, "!");
     }).on("error", (error) => {
         logger.error("FAILED STARTING SERVER\n");
         throw new Error(error.message);

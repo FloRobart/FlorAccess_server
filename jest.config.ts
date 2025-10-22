@@ -1,5 +1,7 @@
 import type { Config } from 'jest';
 
+
+
 const config: Config = {
     preset: 'ts-jest',
     testEnvironment: 'node',
@@ -35,5 +37,7 @@ const config: Config = {
         "!<rootDir>/src/**/*.types.ts", // Exclure les fichiers de types
     ]
 };
+
+
 
 export default config;

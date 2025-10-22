@@ -1,4 +1,4 @@
-import config from '../../config/config';
+import AppConfig from '../../config/AppConfig';
 import sendEmail from './mailer';
 import { htmlErrorEmailTemplate } from './mailTemplate';
 
@@ -12,10 +12,10 @@ import { htmlErrorEmailTemplate } from './mailTemplate';
  * @param token Authentication token to be included in the verification link
  */
 export async function sendErrorEmail(...args: any[]): Promise<void> {
-    const html = htmlErrorEmailTemplate(config.app_name, ...args);
+    const html = htmlErrorEmailTemplate(AppConfig.app_name, ...args);
 
     try {
-        await sendEmail(config.mail_username, `Erreur dans ${config.app_name}`, html);
+        await sendEmail(AppConfig.mail_username, `Erreur dans ${AppConfig.app_name}`, html);
     } catch (error) {
         throw error;
     }

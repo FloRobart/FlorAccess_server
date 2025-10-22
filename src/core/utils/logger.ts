@@ -1,13 +1,13 @@
-import config from '../../config/config';
-import { sendErrorEmail } from '../email/errorEmail';
+import AppConfig from '../../config/AppConfig';
+import { sendErrorEmail } from '../email/error.email';
 
 
 
-const errorMessage = ` [❌] ${config.app_name} - ERROR   |`;
-const warningMessage = ` [⚠️] ${config.app_name} - WARNING |`;
-const successMessage = ` [✅] ${config.app_name} - SUCCESS |`;
-const infoMessage = ` [❕] ${config.app_name} - INFO    |`;
-const debugMessage = ` [🐛] ${config.app_name} - DEBUG   |`;
+const errorMessage = ` [❌] ${AppConfig.app_name} - ERROR   |`;
+const warningMessage = ` [⚠️] ${AppConfig.app_name} - WARNING |`;
+const successMessage = ` [✅] ${AppConfig.app_name} - SUCCESS |`;
+const infoMessage = ` [❕] ${AppConfig.app_name} - INFO    |`;
+const debugMessage = ` [🐛] ${AppConfig.app_name} - DEBUG   |`;
 
 
 
@@ -23,10 +23,10 @@ const debugMessage = ` [🐛] ${config.app_name} - DEBUG   |`;
  * @param args elements to log
  */
 export function error(...args: any[]) {
-    if (!config.app_env.includes('silent')) {
+    if (!AppConfig.app_env.includes('silent')) {
         console.error(errorMessage, ...args);
 
-        if (config.app_env.includes('prod')) {
+        if (AppConfig.app_env.includes('prod')) {
             sendErrorEmail(...args).then(() => {
                 success("Error email sent successfully !");
             }).catch((err: Error) => {
@@ -48,7 +48,7 @@ export function error(...args: any[]) {
  * @param args elements to log
  */
 export function warning(...args: any[]) {
-    if (!config.app_env.includes('silent')) {
+    if (!AppConfig.app_env.includes('silent')) {
         console.warn(warningMessage, ...args);
     }
 }
@@ -65,7 +65,7 @@ export function warning(...args: any[]) {
  * @param args elements to log
  */
 export function success(...args: any[]) {
-    if (!config.app_env.includes('silent')) {
+    if (!AppConfig.app_env.includes('silent')) {
         console.log(successMessage, ...args);
     }
 }
@@ -82,7 +82,7 @@ export function success(...args: any[]) {
  * @param args elements to log
  */
 export function info(...args: any[]) {
-    if (!config.app_env.includes('silent')) {
+    if (!AppConfig.app_env.includes('silent')) {
         console.info(infoMessage, ...args);
     }
 }
@@ -99,7 +99,7 @@ export function info(...args: any[]) {
  * @param args elements to log
  */
 export function debug(...args: any[]) {
-    if (!config.app_env.includes('silent') && config.app_env.includes('dev')) {
+    if (!AppConfig.app_env.includes('silent') && AppConfig.app_env.includes('dev')) {
         console.debug(debugMessage, ...args);
     }
 }
