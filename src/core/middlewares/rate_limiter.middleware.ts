@@ -9,13 +9,9 @@ import config from "../../config/config";
  * @module middlewares/limiter
  */
 export const limiter = rateLimit({
-    windowMs: config.request_limit_time * 1000, // Convert to milliseconds
-    max: Math.round(config.request_limit_per_second * config.request_limit_time), // Limit each IP to the specified number of requests
-    // Skip rate limiting for swagger docs and common static assets
-    skip: (req: Request) => {
-        const p = req.path || req.url || '';
-        return p.startsWith('/api-docs') || p.startsWith('/swagger') || p === '/favicon.ico';
-    },
+    windowMs: config.request_limit_time,
+    max: Math.round(config.request_limit_per_second * (config.request_limit_time/1000)), // Limit each IP to the specified number of requests
+
     // Return JSON response for 429 so clients (like the swagger UI) can handle it cleanly
     handler: (_req, res) => {
         res.status(429).json({ error: "Too many requests, please try again later." });
