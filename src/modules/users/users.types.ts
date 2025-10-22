@@ -1,0 +1,20 @@
+import { z } from "zod";
+import { AuthorizationHeaderSchema, InsertUserSchema, IPAddressSchema, UserLoginRequestSchema, UpdateUserSchema, UserSafeSchema, UserSchema, UserLoginConfirmSchema } from "./users.schema";
+
+
+
+/* INSERT */
+export type InsertUser = z.infer<typeof InsertUserSchema>;
+
+/* SELECT */
+export type UserSafe = z.infer<typeof UserSafeSchema>;
+export type User = z.infer<typeof UserSchema>;
+export type IPAddress = z.infer<typeof IPAddressSchema>;
+export type AuthorizationHeader = z.infer<typeof AuthorizationHeaderSchema>;
+
+/* UPDATE */
+export type UpdateUser = z.infer<typeof UpdateUserSchema>;
+
+/* LOGIN */
+export type UserLoginRequest = z.infer<typeof UserLoginRequestSchema>;
+export type UserLoginConfirm = z.infer<typeof UserLoginConfirmSchema>;
