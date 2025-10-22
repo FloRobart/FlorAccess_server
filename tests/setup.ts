@@ -1,1 +1,2 @@
-jest.spyOn(console, "log").mockImplementation(() => {});
+// Jest setup - kept minimal for now
+export {};
