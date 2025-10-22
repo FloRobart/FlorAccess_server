@@ -1,4 +1,4 @@
-import { Database } from '../../core/database/database';
+import { Database } from '../../core/models/Database.model';
 import { InsertUser, IPAddress, UpdateUser, User, UserSafe } from './users.types';
 import config from '../../config/config';
 import { AppError } from '../../core/models/AppError.model';
@@ -13,22 +13,17 @@ import { AppError } from '../../core/models/AppError.model';
  * @throws Error if user creation fails.
  */
 export async function insertUser(user: InsertUser, ip: IPAddress | null): Promise<User> {
-    let insertedUser: User;
-    
-    /* Create the user */
     try {
         const query = "INSERT INTO users (email, pseudo, auth_methods_id, last_ip) VALUES ($1, $2, (SELECT id FROM auth_methods WHERE immuable_method_name = $3), $4) ON CONFLICT DO NOTHING RETURNING *";
         const values: (string | number | null)[] = [user.email, user.pseudo, config.default_auth_method, ip];
-        
-        const rows = await Database.execute<User>({ text: query, values: values });
-        if (rows.length === 0) { throw new Error('Failed to create user.'); }
 
-        insertedUser = rows[0];
+        const rows = await Database.execute<User>({ text: query, values: values });
+        if (rows.length === 0) { throw new AppError("Failed to create user", 500); }
+
+        return rows[0];
     } catch (error) {
         throw error;
     }
-
-    return insertedUser;
 }
 
 
@@ -39,16 +34,17 @@ export async function insertUser(user: InsertUser, ip: IPAddress | null): Promis
  * @throws Error if user retrieval fails or if the user is not found.
  */
 export async function getUser(userSafe: UserSafe): Promise<User> {
-    let query = "SELECT * FROM users WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp)";
-    let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
+    try {
+        let query = "SELECT * FROM users WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp)";
+        let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
 
-    return Database.execute({ text: query, values: values }).then((rows) => {
+        const rows = await Database.execute<User>({ text: query, values: values });
         if (rows.length === 0) { throw new AppError('User not found', 404); }
 
-        return rows[0] as User;
-    }).catch((error: Error) => {
+        return rows[0];
+    } catch (error) {
         throw error;
-    });
+    }
 }
 
 
@@ -60,27 +56,28 @@ export async function getUser(userSafe: UserSafe): Promise<User> {
  * @throws Error if user update fails or if the user is not found.
  */
 export async function updateUser(updateUser: UpdateUser, userSafe: UserSafe): Promise<User> {
-    let query = "UPDATE users SET ";
-    let setClauses: string[] = [];
-    let values: (string | number | null)[] = [];
-    values.push(userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString());
-
-    for (const key in updateUser) {
-        if (updateUser.hasOwnProperty(key)) {
-            setClauses.push(`${key} = $${values.length + 1}`);
-            values.push(updateUser[key as keyof UpdateUser]);
+    try {
+        let query = "UPDATE users SET ";
+        let setClauses: string[] = [];
+        let values: (string | number | null)[] = [];
+        values.push(userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString());
+    
+        for (const key in updateUser) {
+            if (updateUser.hasOwnProperty(key)) {
+                setClauses.push(`${key} = $${values.length + 1}`);
+                values.push(updateUser[key as keyof UpdateUser]);
+            }
         }
-    }
+    
+        query += setClauses.join(', ') + " WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
 
-    query += setClauses.join(', ') + " WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
+        const rows = await Database.execute<User>({ text: query, values: values });
+        if (rows.length === 0) { throw new AppError('User not found', 404); }
 
-    return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new AppError('No user with this id', 404); }
-
-        return rows[0] as User;
-    }).catch((error: Error) => {
+        return rows[0];
+    } catch (error) {
         throw error;
-    });
+    }
 }
 
 
@@ -91,16 +88,17 @@ export async function updateUser(updateUser: UpdateUser, userSafe: UserSafe): Pr
  * @throws Error if user deletion fails or if the user is not found.
  */
 export async function deleteUser(userSafe: UserSafe): Promise<User> {
-    let query = "DELETE FROM users WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
-    let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
+    try {
+        let query = "DELETE FROM users WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
+        let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
+        
+        const rows = await Database.execute<User>({ text: query, values: values });
+        if (rows.length === 0) { throw new AppError('User not found', 404); }
 
-    return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new AppError('No user with this id', 404); }
-
-        return rows[0] as User;
-    }).catch((err: Error) => {
-        throw err;
-    });
+        return rows[0];
+    } catch (error) {
+        throw error;
+    }
 }
 
 
@@ -110,17 +108,18 @@ export async function deleteUser(userSafe: UserSafe): Promise<User> {
  * @returns True if the user was logged out successfully.
  * @throws Error if logout fails.
  */
-export async function logoutUser(userSafe: UserSafe): Promise<boolean> {
-    let query = "UPDATE users SET is_connected = false WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp)";
-    let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
+export async function logoutUser(userSafe: UserSafe): Promise<User> {
+    try {
+        let query = "UPDATE users SET is_connected = false WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
+        let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_login.toString(), userSafe.updated_at.toString(), userSafe.created_at.toString()];
+        
+        const rows = await Database.execute<User>({ text: query, values: values });
+        if (rows.length === 0) { throw new AppError('User not found', 404); }
 
-    return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new AppError('No user with this id', 404); }
-
-        return true;
-    }).catch((err: Error) => {
-        throw err;
-    });
+        return rows[0];
+    } catch (error) {
+        throw error;
+    }
 }
 
 
@@ -131,14 +130,15 @@ export async function logoutUser(userSafe: UserSafe): Promise<boolean> {
  * @param email The email of the user to retrieve.
  */
 export async function _getUserByEmail(email: string): Promise<User> {
-    const query = "SELECT * FROM users WHERE email = $1";
-    const values = [email];
+    try {
+        const query = "SELECT * FROM users WHERE email = $1";
+        const values = [email];
+        
+        const rows = await Database.execute<User>({ text: query, values: values });
+        if (rows.length === 0) { throw new AppError('User not found', 404); }
 
-    return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new Error('User not found.'); }
-
-        return rows[0] as User;
-    }).catch((error: Error) => {
+        return rows[0];
+    } catch (error) {
         throw error;
-    });
+    }
 }

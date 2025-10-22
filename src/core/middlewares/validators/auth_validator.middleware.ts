@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { ZodType, ZodError } from "zod";
-import { AppError } from "../models/AppError.model";
-import { verifyJwt } from "../utils/jwt";
+import { ZodType } from "zod";
+import { AppError } from "../../models/AppError.model";
+import { verifyJwt } from "../../utils/jwt";
 
 
 
@@ -16,6 +16,6 @@ export const authorizationValidator = (schema: ZodType) => async (req: Request, 
         await verifyJwt(req.headers.authorization!.split(' ')[1]);
         next();
     } catch (error) {
-        next(new AppError("Invalid JWT", 401));
+        next(error instanceof AppError ? error : new AppError("Invalid Authorization header", 401));
     }
 };

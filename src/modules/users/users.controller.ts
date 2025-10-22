@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
-import { AppError } from '../../core/models/AppError.model';
 import { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm } from './users.types';
 import { IPAddressSchema } from './users.schema';
 
@@ -15,11 +14,12 @@ export const insertUser = async (req: Request, res: Response, next: NextFunction
     const insertUser: InsertUser = req.body.validated;
     const ip: IPAddress | null = IPAddressSchema.safeParse(req.ip).data || null;
 
-    UsersService.insertUser(insertUser, ip).then((jwt: string) => {
+    try {
+        const jwt: string = await UsersService.insertUser(insertUser, ip);
         res.status(201).json({ jwt: jwt });
-    }).catch((error: Error) => {
+    } catch (error) {
         next(error);
-    });
+    }
 };
 
 
@@ -31,11 +31,12 @@ export const insertUser = async (req: Request, res: Response, next: NextFunction
 export const selectUser = async (req: Request, res: Response, next: NextFunction) => {
     const jwt: string = req.headers.authorization!.split(' ')[1];
 
-    UsersService.selectUser(jwt).then((userSafe: UserSafe) => {
+    try {
+        const userSafe: UserSafe = await UsersService.selectUser(jwt);
         res.status(200).json(userSafe);
-    }).catch((error: Error) => {
+    } catch (error) {
         next(error);
-    });
+    }
 };
 
 
@@ -49,11 +50,12 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
     const updateUser: UpdateUser = req.body.validated;
     const jwt: string = req.headers.authorization!.split(' ')[1];
 
-    UsersService.updateUser(updateUser, jwt).then((newJwt: string) => {
+    try {
+        const newJwt: string = await UsersService.updateUser(updateUser, jwt);
         res.status(200).json({ jwt: newJwt });
-    }).catch((error: Error) => {
+    } catch (error) {
         next(error);
-    });
+    }
 };
 
 
@@ -66,11 +68,12 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
 export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
     const jwt: string = req.headers.authorization!.split(' ')[1];
 
-    UsersService.deleteUser(jwt).then(() => {
+    try {
+        await UsersService.deleteUser(jwt);
         res.status(200).json({ message: 'User deleted successfully.' });
-    }).catch((error: AppError) => {
+    } catch (error) {
         next(error);
-    });
+    }
 };
 
 
@@ -83,11 +86,12 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 export const userLoginRequest = async (req: Request, res: Response, next: NextFunction) => {
     const userLoginRequest: UserLoginRequest = req.body.validated;
 
-    UsersService.userLoginRequest(userLoginRequest).then((token: string) => {
+    try {
+        const token: string = await UsersService.userLoginRequest(userLoginRequest);
         res.status(200).json({ token: token });
-    }).catch((error: AppError) => {
+    } catch (error) {
         next(error);
-    });
+    }
 };
 
 
@@ -102,11 +106,12 @@ export const userLoginConfirm = async (req: Request, res: Response, next: NextFu
     const ip: IPAddress | null = IPAddressSchema.safeParse(req.ip).data || null;
     userLoginConfirm.ip = ip;
 
-    UsersService.userLoginConfirm(userLoginConfirm).then((jwt: string) => {
+    try {
+        const jwt = await UsersService.userLoginConfirm(userLoginConfirm);
         res.status(200).json({ jwt: jwt });
-    }).catch((error: AppError) => {
+    } catch (error) {
         next(error);
-    });
+    }
 };
 
 
@@ -119,9 +124,10 @@ export const userLoginConfirm = async (req: Request, res: Response, next: NextFu
 export const logoutUser = async (req: Request, res: Response, next: NextFunction) => {
     const jwt: string = req.headers.authorization!.split(' ')[1];
 
-    UsersService.logoutUser(jwt).then(() => {
+    try {
+        await UsersService.logoutUser(jwt);
         res.status(200).json({ message: 'User logged out successfully.' });
-    }).catch((error: AppError) => {
+    } catch (error) {
         next(error);
-    });
+    }
 };

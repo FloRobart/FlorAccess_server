@@ -39,7 +39,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
             logger.info('Email sent :', info.response);
         }
     } catch (error) {
-        throw new AppError("Email sending failed");
+        throw new AppError("Email sending failed", 500);
     }
 }
 

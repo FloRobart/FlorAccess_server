@@ -33,14 +33,8 @@ export async function insertUser(user: InsertUser, ip: IPAddress | null): Promis
  * @throws Error if user retrieval fails or if the token is invalid.
  */
 export async function selectUser(jwt: string): Promise<UserSafe> {
-    let decodedUserSafe: UserSafe;
     try {
-        decodedUserSafe = await verifyJwt(jwt);
-    } catch (error) {
-        throw new AppError("Invalid token", 401);
-    }
-
-    try {
+        const decodedUserSafe = await verifyJwt(jwt);
         const selectedUser: User = await UsersRepository.getUser(decodedUserSafe);
 
         return UserSafeSchema.parse(selectedUser);
@@ -58,17 +52,12 @@ export async function selectUser(jwt: string): Promise<UserSafe> {
  * @throws Error if user update or JWT generation fails or if the token is invalid.
  */
 export async function updateUser(updateUser: UpdateUser, jwt: string): Promise<string> {
-    let decodedUser: UserSafe;
     try {
-        decodedUser = await verifyJwt(jwt);
-    } catch (error) {
-        throw new AppError("Invalid token", 401);
-    }
-
-    try {
+        const decodedUser = await verifyJwt(jwt);
         const updatedUser: User = await UsersRepository.updateUser(updateUser, decodedUser);
 
-        return generateJwt(UserSafeSchema.parse(updatedUser));
+        const userSafe: UserSafe = UserSafeSchema.parse(updatedUser);
+        return generateJwt(userSafe);
     } catch (error) {
         throw error;
     }
@@ -81,20 +70,12 @@ export async function updateUser(updateUser: UpdateUser, jwt: string): Promise<s
  * @returns True if the user was deleted, false otherwise.
  * @throws AppError if user deletion fails or if the token is invalid.
  */
-export async function deleteUser(jwt: string): Promise<boolean> {
-    let decodedUser: UserSafe;
+export async function deleteUser(jwt: string): Promise<void> {
     try {
-        decodedUser = await verifyJwt(jwt);
-    } catch (error) {
-        throw new AppError("Invalid token", 401);
-    }
-
-    try {
+        const decodedUser = await verifyJwt(jwt);
         await UsersRepository.deleteUser(decodedUser);
-
-        return true;
     } catch (error) {
-        throw new AppError("Internal server error", 500);
+        throw error;
     }
 }
 
@@ -128,19 +109,11 @@ export async function userLoginConfirm(userLoginConfirm: UserLoginConfirm): Prom
  * @returns True if the user was logged out, throw error otherwise.
  * @throws AppError if logout fails or if the token is invalid.
  */
-export async function logoutUser(jwt: string): Promise<boolean> {
-    let decodedUser: UserSafe;
+export async function logoutUser(jwt: string): Promise<void> {
     try {
-        decodedUser = await verifyJwt(jwt);
-    } catch (error) {
-        throw new AppError("Invalid token", 401);
-    }
-
-    try {
+        const decodedUser = await verifyJwt(jwt);
         await UsersRepository.logoutUser(decodedUser);
-
-        return true;
     } catch (error) {
-        throw new AppError("Internal server error", 500);
+        throw error;
     }
 }

@@ -10,12 +10,16 @@ import { getRandomValues } from "node:crypto";
  * @returns A promise that resolves after a random delay
  */
 export function generateSecureRandomDelay(maxDelayMs = 1000): Promise<void> {
-    const randomBuffer = new Uint32Array(1);
-    getRandomValues(randomBuffer);
-    const delayMs = randomBuffer[0] % (maxDelayMs + 1);
-    return new Promise((resolve) => {
-        setTimeout(resolve, delayMs);
-    });
+    try {
+        const randomBuffer = new Uint32Array(1);
+        getRandomValues(randomBuffer);
+        const delayMs = randomBuffer[0] % (maxDelayMs + 1);
+        return new Promise((resolve) => {
+            setTimeout(resolve, delayMs);
+        });
+    } catch (error) {
+        return Promise.resolve();
+    }
 }
 
 
@@ -33,8 +37,8 @@ export async function hashString(input: string): Promise<string> {
         });
 
         return hash;
-    } catch (err) {
-        throw err;
+    } catch (error) {
+        throw error;
     }
 }
 
@@ -48,7 +52,7 @@ export async function hashString(input: string): Promise<string> {
 export async function verifyHash(input: string, hash: string): Promise<boolean> {
     try {
         return await argon2.verify(hash, input);
-    } catch (err) {
-        throw err;
+    } catch (error) {
+        throw error;
     }
 }

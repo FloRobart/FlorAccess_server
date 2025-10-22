@@ -1,13 +1,13 @@
 /**
- * AppError model to represent application errors with HTTP status codes.
+ * Custom Error interface to include HTTP status codes
+ * @param message Error message
+ * @param httpStatus HTTP status code
  */
 export class AppError extends Error {
-    message: string;
     httpStatus: number;
 
-    constructor(message?: string, httpStatus?: number) {
+    constructor(message: string = "Internal Server Error", httpStatus: number = 500) {
         super(message);
-        this.message = message || "Internal Server Error";
-        this.httpStatus = httpStatus || 500;
+        this.httpStatus = httpStatus;
     }
 }

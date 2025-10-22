@@ -1,6 +1,7 @@
-import { Database } from "../../../../core/database/database";
+import { Database } from "../../../../core/models/Database.model";
 import { IPAddress, User } from "../../users.types";
 import { AppError } from "../../../../core/models/AppError.model";
+
 
 
 /**
@@ -33,10 +34,10 @@ export async function userLoginConfirm(user: User, ip: IPAddress | null): Promis
         const query = "UPDATE users SET last_login = NOW(), is_connected = true, last_ip = $7, secret_hash = null, token_hash = null WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
         const values = [user.id, user.email, user.pseudo, user.last_login.toISOString(), user.updated_at.toISOString(), user.created_at.toISOString(), ip];
 
-        const rows = await Database.execute({ text: query, values: values });
+        const rows = await Database.execute<User>({ text: query, values: values });
         if (rows.length === 0) { throw new AppError("User not found", 404); }
 
-        return rows[0] as User;
+        return rows[0];
     } catch (error) {
         throw error;
     }

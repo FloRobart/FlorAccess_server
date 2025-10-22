@@ -1,6 +1,7 @@
 import config from '../../config/config';
 import JWT from 'jsonwebtoken';
 import { UserSafe } from '../../modules/users/users.types';
+import { AppError } from '../models/AppError.model';
 
 
 
@@ -14,7 +15,7 @@ export async function generateJwt(payload: { [key: string|number]: any }): Promi
         const validatedPayload = payload || {};
         return JWT.sign(validatedPayload, config.jwt_signing_key, { expiresIn: config.jwt_expiration });
     } catch (error) {
-        throw error;
+        throw new AppError("Failed to generate JWT", 500);
     }
 }
 
@@ -28,6 +29,6 @@ export async function verifyJwt(token: string): Promise<UserSafe> {
         const decoded = JWT.verify(token, config.jwt_signing_key);
         return decoded as UserSafe;
     } catch (error) {
-        throw error;
+        throw new AppError("Invalid JWT", 401);
     }
 }

@@ -1,4 +1,5 @@
-import { Database } from "../../../core/database/database";
+import { AppError } from "../../../core/models/AppError.model";
+import { Database } from "../../../core/models/Database.model";
 import { AuthMethod } from "./auth_methods.type";
 
 
@@ -12,14 +13,15 @@ import { AuthMethod } from "./auth_methods.type";
  * @throws Error if auth method retrieval fails or if the auth method is not found.
  */
 export async function _getAuth_methodsById(id: number): Promise<AuthMethod> {
-    const query = "SELECT * FROM auth_methods WHERE id = $1";
-    const values = [id];
+    try {
+        const query = "SELECT * FROM auth_methods WHERE id = $1";
+        const values = [id];
 
-    return Database.execute({ text: query, values: values }).then((rows) => {
-        if (rows.length === 0) { throw new Error('User not found.'); }
+        const rows = await Database.execute<AuthMethod>({ text: query, values: values });
+        if (rows.length === 0) { throw new AppError('Auth method not found', 404); }
 
-        return rows[0] as AuthMethod;
-    }).catch((error: Error) => {
+        return rows[0];
+    } catch (error) {
         throw error;
-    });
+    }
 }

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodType, ZodError } from "zod";
-import { AppError } from "../models/AppError.model";
+import { AppError } from "../../models/AppError.model";
 
 
 

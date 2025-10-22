@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { updateUser, deleteUser, insertUser, logoutUser, selectUser, userLoginRequest, userLoginConfirm } from './users.controller';
-import { bodyValidator } from '../../core/middlewares/body_validator.middleware';
+import { bodyValidator } from '../../core/middlewares/validators/body_validator.middleware';
 import { InsertUserSchema, AuthorizationHeaderSchema, UpdateUserSchema, UserLoginRequestSchema, UserLoginConfirmSchema } from './users.schema';
-import { authorizationValidator } from '../../core/middlewares/auth_validator.middleware';
+import { authorizationValidator } from '../../core/middlewares/validators/auth_validator.middleware';
 
 
 const router = Router();
