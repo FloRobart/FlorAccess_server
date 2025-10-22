@@ -1,4 +1,4 @@
-import config from "../../../../config/config";
+import AppConfig from "../../../../config/AppConfig";
 import { User, UserLoginConfirm, UserSafe } from "../../users.types";
 import { sendEmailCode } from "./code.email";
 import * as CodeRepository from "./code.repository";
@@ -22,8 +22,8 @@ export async function usersLoginRequest(user: User): Promise<string> {
 
         await CodeRepository.userLoginRequest(user, await hashString(token), await hashString(code));
 
-        if (!config.app_env.includes('dev')) {
-            await sendEmailCode(user.email, config.app_name, code);
+        if (!AppConfig.app_env.includes('dev')) {
+            await sendEmailCode(user.email, AppConfig.app_name, code);
         }
 
         return token;
@@ -42,7 +42,7 @@ export async function usersLoginConfirm(user: User, userLoginConfirm: UserLoginC
     try {
         const timeStamp = parseInt(userLoginConfirm.token.split(".")[1], 10);
 
-        if (Date.now() - timeStamp > config.token_expiration * 1000) {
+        if (Date.now() - timeStamp > AppConfig.token_expiration * 1000) {
             throw new Error("Token has expired");
         }
 
@@ -68,7 +68,7 @@ export async function usersLoginConfirm(user: User, userLoginConfirm: UserLoginC
  */
 async function generateCode(length: number): Promise<string> {
     try {
-        const chars = config.code_data_set;
+        const chars = AppConfig.code_data_set;
         const charsLength = chars.length;
         const maxRandomValue = 0xFFFFFFFF; // Valeur max d'un Uint32
         const mask = Math.floor(maxRandomValue / charsLength) * charsLength;
@@ -99,7 +99,7 @@ async function generateCode(length: number): Promise<string> {
  * @param length Length of the token to generate
  * @returns A hexadecimal string representing the token.
  */
-async function generateApiToken(length = config.token_length): Promise<string> {
+async function generateApiToken(length = AppConfig.token_length): Promise<string> {
     try {
         await generateSecureRandomDelay();
         return Buffer.from(randomBytes(length)).toString('hex');

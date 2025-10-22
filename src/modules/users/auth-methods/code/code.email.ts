@@ -1,4 +1,4 @@
-import config from "../../../../config/config";
+import AppConfig from "../../../../config/AppConfig";
 import sendEmail from "../../../../core/email/mailer";
 import { htmlCodeEmailTemplate } from "../../../../core/email/mailTemplate";
 
@@ -13,7 +13,7 @@ import { htmlCodeEmailTemplate } from "../../../../core/email/mailTemplate";
  */
 export async function sendEmailCode(to: string, app_name: string, code: string): Promise<void> {
     try {
-        const appName = app_name || config.app_name;
+        const appName = app_name || AppConfig.app_name;
 
         const html = htmlCodeEmailTemplate(appName, code);
 

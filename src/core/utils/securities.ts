@@ -1,5 +1,5 @@
 import argon2 from 'argon2';
-import config from '../../config/config';
+import AppConfig from '../../config/AppConfig';
 import { getRandomValues } from "node:crypto";
 
 
@@ -32,7 +32,7 @@ export async function hashString(input: string): Promise<string> {
     try {
         const hash = await argon2.hash(input, {
             type: argon2.argon2id, // Résistant aux attaques GPU/ASIC
-            timeCost: config.hash_rounds, // Nombre d'itérations
+            timeCost: AppConfig.hash_rounds, // Nombre d'itérations
             parallelism: 1, // Nombre de threads
         });
 

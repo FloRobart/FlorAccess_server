@@ -1,6 +1,6 @@
 import { Database } from '../../core/models/Database.model';
 import { InsertUser, IPAddress, UpdateUser, User, UserSafe } from './users.types';
-import config from '../../config/config';
+import AppConfig from '../../config/AppConfig';
 import { AppError } from '../../core/models/AppError.model';
 
 
@@ -15,7 +15,7 @@ import { AppError } from '../../core/models/AppError.model';
 export async function insertUser(user: InsertUser, ip: IPAddress | null): Promise<User> {
     try {
         const query = "INSERT INTO users (email, pseudo, auth_methods_id, last_ip) VALUES ($1, $2, (SELECT id FROM auth_methods WHERE immuable_method_name = $3), $4) ON CONFLICT DO NOTHING RETURNING *";
-        const values: (string | number | null)[] = [user.email, user.pseudo, config.default_auth_method, ip];
+        const values: (string | number | null)[] = [user.email, user.pseudo, AppConfig.default_auth_method, ip];
 
         const rows = await Database.execute<User>({ text: query, values: values });
         if (rows.length === 0) { throw new AppError("Failed to create user", 500); }
