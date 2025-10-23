@@ -1,6 +1,6 @@
 import { ZodError } from "zod";
-import { AuthorizationHeaderSchema, IPAddressSchema, UserInsertSchema, UserLoginConfirmSchema, UserLoginRequestSchema, UserSafeSchema, UserSchema, UserUpdateSchema } from "../../../src/modules/users/users.schema";
-import { AuthorizationHeader, InsertUser, IPAddress, UpdateUser, User, UserLoginConfirm, UserSafe } from "../../../src/modules/users/users.types";
+import { AuthorizationHeaderSchema, IPAddressSchema, UserInsertSchema, UserLoginConfirmSchema, UserLoginRequestSchema, UserSafeSchema, UserSchema, UserUpdateSchema, UserEmailVerificationSchema } from "../../../src/modules/users/users.schema";
+import { AuthorizationHeader, InsertUser, IPAddress, UpdateUser, User, UserLoginConfirm, UserSafe, UserEmailVerification } from "../../../src/modules/users/users.types";
 
 
 
@@ -160,6 +160,25 @@ describe('Users Schemas tests', () => {
         it('Incorrect User Login Confirm schema', () => {
             for (const data of IncorrectUserLoginConfirmSchema) {
                 expect(() => UserLoginConfirmSchema.parse(data)).toThrow(ZodError);
+            }
+        });
+    });
+
+
+    /*====================*/
+    /* Email verification */
+    /*====================*/
+    describe('User Email Verification schema', () => {
+        it('Correct User Email Verification schema', () => {
+            for (const data of CorrectUserEmailVerificationSchema) {
+                expect(() => UserEmailVerificationSchema.parse(data)).not.toThrow();
+                expect(UserEmailVerificationSchema.parse(data)).toStrictEqual(CorrectUserEmailVerificationSchema[0]);
+            }
+        });
+
+        it('Incorrect User Email Verification schema', () => {
+            for (const data of IncorrectUserEmailVerificationSchema) {
+                expect(() => UserEmailVerificationSchema.parse(data)).toThrow(ZodError);
             }
         });
     });
@@ -350,7 +369,7 @@ const IncorrectUserSafeSchema: any[] = [
 const BaseUserSchema: User = {
     ...BaseUserSafeSchema,
     last_ip: "192.168.1.1",
-    password_hash: "hashed_password",
+    email_verify_token_hash: "hashed_token",
     secret_hash: "hashed_secret",
     token_hash: "hashed_token",
 };
@@ -360,19 +379,19 @@ const CorrectUserSchema: User[] = [
     {
         ...BaseUserSchema,
         last_ip: "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
-        password_hash: " another_hashed_password ",
+        email_verify_token_hash: "email_verify_token ",
         secret_hash: " another_hashed_secret ",
         token_hash: " another_hashed_token ",
     },{
         ...BaseUserSchema,
         last_ip: "::1",
-        password_hash: null,
+        email_verify_token_hash: null,
         secret_hash: null,
         token_hash: null,
     },{
         ...BaseUserSchema,
         last_ip: null,
-        password_hash: null,
+        email_verify_token_hash: null,
         secret_hash: null,
         token_hash: null,
     }
@@ -387,7 +406,7 @@ const IncorrectUserSchema: any[] = [
         last_ip: "invalid-ip", // invalid IP
     },{
         ...BaseUserSafeSchema,
-        password_hash: 123456, // should be string or null
+        email_verify_hash: 123456, // should be string or null
     },{
         ...BaseUserSafeSchema,
         secret_hash: 123456, // should be string or null
@@ -589,5 +608,62 @@ const IncorrectUserLoginConfirmSchema: any[] = [
         token: "123456",
         secret: "abcdef",
         ip: 192.168, // should be a string
+    },
+];
+
+
+/*====================*/
+/* Email verification */
+/*====================*/
+const CorrectUserEmailVerificationSchema: UserEmailVerification[] = [
+    {
+        userId: "1",
+        token: "abcdef",
+    },{
+        userId: "  1  ",
+        token: "  abcdef  ",
+    },
+];
+
+const IncorrectUserEmailVerificationSchema: any[] = [
+    {
+        userId: "0", // should be positive integer
+        token: "abcdef",
+    },{
+        userId: "-1", // should be positive integer
+        token: "abcdef",
+    },{
+        userId: "1.5", // should be integer
+        token: "abcdef",
+    },{
+        userId: "", // should be at least 1 character
+        token: "abcdef",
+    },{
+        userId: "1",
+        token: "", // should be at least 1 character
+    },{
+        // Missing userId
+        token: "abcdef",
+    },{
+        userId: "1",
+        // Missing token
+    },{
+        userId: null, // should be string
+        token: "abcdef",
+    },{
+        userId: "1",
+        token: null, // should be string
+    },{
+        userId: undefined, // should be string
+        token: "abcdef",
+    },{
+        userId: "1",
+        token: undefined, // should be string
+    },{
+        userId: 12345, // should be string
+        token: "abcdef",
+    },{
+        userId: "1",
+        token: 12345, // should be string
     },
 ];

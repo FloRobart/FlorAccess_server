@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
-import { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm } from './users.types';
+import { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm, UserEmailVerification } from './users.types';
 import { IPAddressSchema } from './users.schema';
 
 
@@ -127,6 +127,23 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
     try {
         await UsersService.logoutUser(jwt);
         res.status(200).json({ message: 'User logged out successfully.' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+/** * Verifies a user's email using the provided token.
+ * @param req.body.validated userId and token for email verification
+ * @returns Success message
+ * @throws Error if email verification fails or if the token is invalid.
+ */
+export const UserEmailVerify = async (req: Request, res: Response, next: NextFunction) => {
+    const userEmailVerification: UserEmailVerification = req.body.validated;
+
+    try {
+        await UsersService.UserEmailVerify(userEmailVerification);
+        res.status(200).json({ message: 'Email verified successfully.' });
     } catch (error) {
         next(error);
     }

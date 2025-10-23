@@ -3,7 +3,7 @@ import { User, UserLoginConfirm, UserSafe } from "../../users.types";
 import { sendEmailCode } from "./code.email";
 import * as CodeRepository from "./code.repository";
 import { getRandomValues, randomBytes } from "node:crypto";
-import { generateSecureRandomDelay, hashString, verifyHash } from "../../../../core/utils/securities";
+import { generateApiToken, generateSecureRandomDelay, hashString, verifyHash } from "../../../../core/utils/securities";
 import { generateJwt } from "../../../../core/utils/jwt";
 import { UserSafeSchema } from "../../users.schema";
 import { AppError } from "../../../../core/models/AppError.model";
@@ -90,20 +90,5 @@ async function generateCode(length: number): Promise<string> {
         return result;
     } catch (error) {
         throw error;
-    }
-}
-
-
-/**
- * Generates a random API token.
- * @param length Length of the token to generate
- * @returns A hexadecimal string representing the token.
- */
-async function generateApiToken(length = AppConfig.token_length): Promise<string> {
-    try {
-        await generateSecureRandomDelay();
-        return Buffer.from(randomBytes(length)).toString('hex');
-    } catch (error) {
-        throw new AppError("Failed to generate API token", 500);
     }
 }

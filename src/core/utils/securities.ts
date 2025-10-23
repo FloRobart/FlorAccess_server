@@ -1,6 +1,7 @@
 import argon2 from 'argon2';
 import AppConfig from '../../config/AppConfig';
-import { getRandomValues } from "node:crypto";
+import { getRandomValues, randomBytes } from "node:crypto";
+import { AppError } from '../models/AppError.model';
 
 
 
@@ -19,6 +20,22 @@ export function generateSecureRandomDelay(maxDelayMs = 1000): Promise<void> {
         });
     } catch (error) {
         return Promise.resolve();
+    }
+}
+
+
+/**
+ * Generates a random API token.
+ * @param length Length of the token to generate
+ * @returns A hexadecimal string representing the token.
+ * @throws AppError if token generation fails.
+ */
+export async function generateApiToken(length = AppConfig.token_length): Promise<string> {
+    try {
+        await generateSecureRandomDelay();
+        return Buffer.from(randomBytes(length)).toString('hex');
+    } catch (error) {
+        throw new AppError("Failed to generate API token", 500);
     }
 }
 

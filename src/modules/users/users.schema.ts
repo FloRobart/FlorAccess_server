@@ -54,7 +54,7 @@ export const UserSafeSchema = z.object({
 export const UserSchema = UserSafeSchema.extend({
     last_ip: z.ipv4().or(z.ipv6()).nullable(),
 
-    password_hash: z.string().trim().nullable(),
+    email_verify_token_hash: z.string().trim().nullable(),
     secret_hash: z.string().trim().nullable(),
     token_hash: z.string().trim().nullable(),
 });
@@ -107,3 +107,22 @@ export const UserLoginConfirmSchema = z.object({
     secret: data.secret,
     ip: data.ip || null,
 }));
+
+
+/*====================*/
+/* Email verification */
+/*====================*/
+/**
+ * Schéma de validation pour la vérification d'email d'un utilisateur.
+ */
+export const UserEmailVerificationSchema = z.object({
+    userId: z.string()
+        .trim()
+        .min(1)
+        .regex(/^[0-9a-f]+$/)
+        .refine((val) => {
+            const n = Number(val);
+            return Number.isInteger(n) && n > 0;
+        }),
+    token: z.string().trim().min(1),
+});

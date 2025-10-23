@@ -12,10 +12,10 @@ import { AppError } from '../../core/models/AppError.model';
  * @returns The newly created user object with sensitive information
  * @throws Error if user creation fails.
  */
-export async function insertUser(user: InsertUser, ip: IPAddress | null): Promise<User> {
+export async function insertUser(user: InsertUser, ip: IPAddress | null, email_verify_token_hash: string): Promise<User> {
     try {
-        const query = "INSERT INTO users (email, pseudo, auth_methods_id, last_ip) VALUES ($1, $2, (SELECT id FROM auth_methods WHERE immuable_method_name = $3), $4) ON CONFLICT DO NOTHING RETURNING *";
-        const values: (string | number | null)[] = [user.email, user.pseudo, AppConfig.default_auth_method, ip];
+        const query = "INSERT INTO users (email, pseudo, auth_methods_id, last_ip, email_verify_token_hash) VALUES ($1, $2, (SELECT id FROM auth_methods WHERE immuable_method_name = $3), $4, $5) ON CONFLICT DO NOTHING RETURNING *";
+        const values: (string | number | null)[] = [user.email, user.pseudo, AppConfig.default_auth_method, ip, email_verify_token_hash];
 
         const rows = await Database.execute<User>({ text: query, values: values });
         if (rows.length === 0) { throw new AppError("Failed to create user", 500); }
@@ -124,6 +124,23 @@ export async function logoutUser(userSafe: UserSafe): Promise<User> {
 
 
 /**
+ * Verifies a user's email.
+ * @param userId The ID of the user to verify email.
+ * @throws Error if query fails.
+ */
+export async function UserEmailVerify(userId: number): Promise<void> {
+    try {
+        const query = "UPDATE users SET is_verified_email = true, email_verify_token_hash = null WHERE id = $1";
+        const values = [userId];
+
+        await Database.execute<void>({ text: query, values: values });
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
  * Gets a user by email.
  * 
  * This fonction is used by the login dispatcher.
@@ -134,6 +151,27 @@ export async function _getUserByEmail(email: string): Promise<User> {
         const query = "SELECT * FROM users WHERE email = $1";
         const values = [email];
         
+        const rows = await Database.execute<User>({ text: query, values: values });
+        if (rows.length === 0) { throw new AppError('User not found', 404); }
+
+        return rows[0];
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
+ * Gets a user by email.
+ * 
+ * This fonction is dangerous and should be used carefully.
+ * @param email The email of the user to retrieve.
+ */
+export async function _getUserById(id: number): Promise<User> {
+    try {
+        const query = "SELECT * FROM users WHERE id = $1";
+        const values = [id];
+
         const rows = await Database.execute<User>({ text: query, values: values });
         if (rows.length === 0) { throw new AppError('User not found', 404); }
 
