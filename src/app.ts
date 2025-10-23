@@ -10,6 +10,8 @@ import { limiter } from './core/middlewares/rate_limiter.middleware';
 import cors from 'cors';
 import { defaultRouteHandler } from './core/middlewares/default_route.middleware';
 import path from 'node:path';
+import helmet from 'helmet';
+import { helmetOptions } from './core/middlewares/helmetHttpHeaders.middleware';
 
 
 
@@ -35,6 +37,9 @@ const app = express();
     /*-----------------------*/
     /* Cross Origin Resource Sharing (CORS) */
     app.use(cors(AppConfig.corsOptions));
+
+    /* Security headers (Helmet) */
+    app.use(helmet(helmetOptions));
 
     /* Trust proxy in production */
     if (AppConfig.app_env.includes('prod')) {
