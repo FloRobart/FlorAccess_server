@@ -1,4 +1,5 @@
 import { z } from "zod";
+import AppConfig from "../../config/AppConfig";
 
 
 
@@ -118,7 +119,8 @@ export const UserLoginConfirmSchema = z.object({
 export const UserEmailVerificationSchema = z.object({
     userId: z.string()
         .trim()
-        .min(1)
+        .min(AppConfig.token_length)
+        .max(AppConfig.token_length)
         .regex(/^[0-9a-f]+$/)
         .refine((val) => {
             const n = Number(val);
