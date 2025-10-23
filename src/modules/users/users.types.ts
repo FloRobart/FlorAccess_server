@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AuthorizationHeaderSchema, UserInsertSchema, IPAddressSchema, UserLoginRequestSchema, UserUpdateSchema, UserSafeSchema, UserSchema, UserLoginConfirmSchema } from "./users.schema";
+import { AuthorizationHeaderSchema, UserInsertSchema, IPAddressSchema, UserLoginRequestSchema, UserUpdateSchema, UserSafeSchema, UserSchema, UserLoginConfirmSchema, UserEmailVerificationSchema } from "./users.schema";
 
 
 
@@ -18,3 +18,6 @@ export type UpdateUser = z.infer<typeof UserUpdateSchema>;
 /* LOGIN */
 export type UserLoginRequest = z.infer<typeof UserLoginRequestSchema>;
 export type UserLoginConfirm = z.infer<typeof UserLoginConfirmSchema>;
+
+/* Email verification */
+export type UserEmailVerification = z.infer<typeof UserEmailVerificationSchema>;

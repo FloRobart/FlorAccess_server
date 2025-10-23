@@ -1,9 +1,13 @@
-import { AppError } from "../../core/models/AppError.model";
 import { generateJwt, verifyJwt } from "../../core/utils/jwt";
 import * as UsersRepository from "./users.repository";
 import { UserSafeSchema } from "./users.schema";
-import { InsertUser, UserLoginRequest, UpdateUser, User, UserSafe, UserLoginConfirm, IPAddress } from "./users.types";
+import { InsertUser, UserLoginRequest, UpdateUser, User, UserSafe, UserLoginConfirm, IPAddress, UserEmailVerification } from "./users.types";
 import { loginDispatcher } from "../../core/dispatcher/login.dispatcher";
+import { generateApiToken, hashString, verifyHash } from "../../core/utils/securities";
+import AppConfig from "../../config/AppConfig";
+import { sendEmailVerify } from "./users.email";
+import * as logger from "../../core/utils/logger";
+import { AppError } from "../../core/models/AppError.model";
 
 
 
@@ -16,8 +20,15 @@ import { loginDispatcher } from "../../core/dispatcher/login.dispatcher";
  */
 export async function insertUser(user: InsertUser, ip: IPAddress | null): Promise<string> {
     try {
-        const insertedUser: User = await UsersRepository.insertUser(user, ip);
+        const email_verify_token_hash = await generateApiToken();
+        const insertedUser: User = await UsersRepository.insertUser(user, ip, await hashString(email_verify_token_hash));
         const validatedUser: UserSafe = UserSafeSchema.parse(insertedUser);
+        
+        const url = `${AppConfig.base_url}/users/email/verify/${validatedUser.id}?token=${email_verify_token_hash}`;
+        logger.debug(`Email verification URL for user ${validatedUser.id}: ${url}`);
+        if (!AppConfig.app_env.includes('dev')) {
+            sendEmailVerify(user.email, AppConfig.app_name, url);
+        }
 
         return await generateJwt(validatedUser);
     } catch (error) {
@@ -95,6 +106,12 @@ export async function userLoginRequest(userLoginRequest: UserLoginRequest): Prom
 }
 
 
+/**
+ * Confirms a user's login.
+ * @param userLoginConfirm The userLoginConfirm object containing the information to confirm user login.
+ * @returns JWT for the user.
+ * @throws Error if login confirmation fails or if the information is invalid.
+ */
 export async function userLoginConfirm(userLoginConfirm: UserLoginConfirm): Promise<string> {
     try {
         return await loginDispatcher(userLoginConfirm);
@@ -102,6 +119,7 @@ export async function userLoginConfirm(userLoginConfirm: UserLoginConfirm): Prom
         throw error;
     }
 }
+
 
 /**
  * Logs out a user by invalidating the JWT token.
@@ -113,6 +131,40 @@ export async function logoutUser(jwt: string): Promise<void> {
     try {
         const decodedUser = await verifyJwt(jwt);
         await UsersRepository.logoutUser(decodedUser);
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
+ * Verifies a user's email.
+ * @param userEmailVerification The userEmailVerification object containing the information to verify user email.
+ * @throws Error if email verification fails or if the information is invalid.
+ */
+export async function UserEmailVerify(userEmailVerification: UserEmailVerification): Promise<void> {
+    try {
+        const stringUserId = userEmailVerification.userId;
+        const userId = parseInt(stringUserId, 10);
+        const token = userEmailVerification.token;
+
+        const user = await UsersRepository._getUserById(userId);
+
+        if (!user) {
+            throw new AppError("User not found");
+        }
+
+        if (user.is_verified_email) {
+            throw new AppError("Email is already verified");
+        }
+
+        if (!user.email_verify_token_hash) {
+            throw new AppError("No email verification token found for this user");
+        }
+
+        if (await verifyHash(token, user.email_verify_token_hash)) {
+            await UsersRepository.UserEmailVerify(userId);
+        }
     } catch (error) {
         throw error;
     }

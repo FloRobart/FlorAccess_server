@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { updateUser, deleteUser, insertUser, logoutUser, selectUser, userLoginRequest, userLoginConfirm } from './users.controller';
+import { updateUser, deleteUser, insertUser, logoutUser, selectUser, userLoginRequest, userLoginConfirm, UserEmailVerify } from './users.controller';
 import { bodyValidator } from '../../core/middlewares/validators/body_validator.middleware';
-import { UserInsertSchema, AuthorizationHeaderSchema, UserUpdateSchema, UserLoginRequestSchema, UserLoginConfirmSchema } from './users.schema';
+import { UserInsertSchema, AuthorizationHeaderSchema, UserUpdateSchema, UserLoginRequestSchema, UserLoginConfirmSchema, UserEmailVerificationSchema } from './users.schema';
 import { authorizationValidator } from '../../core/middlewares/validators/auth_validator.middleware';
+import { paramsQueryValidator } from '../../core/middlewares/validators/params_query_validator.middleware';
 
 
 const router = Router();
@@ -285,6 +286,57 @@ router.post('/login/confirm', bodyValidator(UserLoginConfirmSchema), userLoginCo
  */
 router.post('/logout', authorizationValidator(AuthorizationHeaderSchema), logoutUser);
 
+
+/**
+ * @swagger
+ * /users/email/verify:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Verify user email
+ *     description: Verify a user's email address using a verification token.
+ *     parameters:
+ *       - in: path
+ *         schema:
+ *           name: userId
+ *           required: true
+ *           description: The ID of the user whose email is being verified.
+ *           type: string
+ *           example: "1"
+ *       - in: query
+ *         schema:
+ *           name: token
+ *           required: true
+ *           description: The verification token sent to the user's email address.
+ *           type: string
+ *           example: "verification_token_here"
+ *     responses:
+ *       200:
+ *         description: token to confirm user login
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JWTResponse'
+ *       400:
+ *         description: Bad request. Change your request to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error400'
+ *       401:
+ *         description: Unauthorized. Invalid or missing JWT token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error401'
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.get('/email/verify/:userId', paramsQueryValidator(UserEmailVerificationSchema), UserEmailVerify);
 
 
 export default router;

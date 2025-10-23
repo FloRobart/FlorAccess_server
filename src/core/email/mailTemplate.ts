@@ -64,6 +64,72 @@ export const htmlTokenEmailTemplate = (appName: string, route: string): string =
 
 
 /**
+ * Generates the HTML template for the user email verification.
+ * @param appName Name of the application to be used in the email subject
+ * @param userId The ID of the user to be included in the email
+ * @param token The verification token to be included in the email
+ * @returns The HTML template as a string
+ */
+export const htmlEmailVerifyMailTemplate = (appName: string, url: string): string => {
+    const currentYear = new Date().getFullYear();
+    return `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Connexion avec ${appName}</title>
+    </head>
+
+    <!-- Corps de l'email -->
+    <body style="font-family: 'Poppins', Arial, sans-serif">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+                <td align="center" style="padding: 20px;">
+                    <table class="content" width="600" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 1px solid #721414;">
+                        <!-- Entête de l'email -->
+                        <tr>
+                            <td class="header" style="background-color: #721414; padding: 40px; text-align: center; color: white; font-size: 24px;">
+                                <h2>Connexion avec ${appName}</h2>
+                            </td>
+                        </tr>
+
+                        <!-- Contenu de l'email -->
+                        <tr>
+                            <td style="padding: 0px 40px 0px 40px; text-align: center;">
+                                <h3>Confirmer votre email en cliquant sur le bouton suivant :</h3>
+                                
+                                <table cellspacing="0" cellpadding="0" style="margin: auto;">
+                                    <tr>
+                                        <td align="center" style="background-color: #721414; padding: 10px 20px; border-radius: 5px;">
+                                            <a href="${url}" style="color: #ffffff; text-decoration: none; font-weight: bold;">Cliquez ici pour validé votre email</a>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <br>
+
+                                <p>Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer cet email.</p>
+                            </td>
+                        </tr>
+
+                        <!-- Footer de l'email -->
+                        <tr>
+                            <td class="footer" style="background-color: #333333; padding: 40px; text-align: center; color: white; font-size: 14px;">
+                                <span>Copyright © ${currentYear} - </span>
+                                <a href="https://florobart.github.io/" target="_blank"><b>Floris Robart</b></a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>`;
+}
+
+
+/**
  * Generates the HTML template for the code email.
  * @param appName Name of the application to be used in the email subject
  * @param code The code to be included in the email
