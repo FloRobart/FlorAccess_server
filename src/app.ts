@@ -11,7 +11,7 @@ import cors from 'cors';
 import { defaultRouteHandler } from './core/middlewares/default_route.middleware';
 import path from 'node:path';
 import helmet from 'helmet';
-import { helmetOptions } from './core/middlewares/helmetHttpHeaders.middleware';
+import { helmetOptions } from './core/middlewares/helmet_http_headers.middleware';
 
 
 
