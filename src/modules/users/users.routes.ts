@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { updateUser, deleteUser, insertUser, logoutUser, selectUser, userLoginRequest, userLoginConfirm } from './users.controller';
 import { bodyValidator } from '../../core/middlewares/validators/body_validator.middleware';
-import { InsertUserSchema, AuthorizationHeaderSchema, UpdateUserSchema, UserLoginRequestSchema, UserLoginConfirmSchema } from './users.schema';
+import { UserInsertSchema, AuthorizationHeaderSchema, UserUpdateSchema, UserLoginRequestSchema, UserLoginConfirmSchema } from './users.schema';
 import { authorizationValidator } from '../../core/middlewares/validators/auth_validator.middleware';
 
 
@@ -41,7 +41,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/', bodyValidator(InsertUserSchema), insertUser);
+router.post('/', bodyValidator(UserInsertSchema), insertUser);
 
 
 /**
@@ -120,7 +120,7 @@ router.get('/', authorizationValidator(AuthorizationHeaderSchema), selectUser);
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.put('/', authorizationValidator(AuthorizationHeaderSchema), bodyValidator(UpdateUserSchema), updateUser);
+router.put('/', authorizationValidator(AuthorizationHeaderSchema), bodyValidator(UserUpdateSchema), updateUser);
 
 
 /**
