@@ -9,30 +9,10 @@ import { z } from "zod";
  * Schéma de validation pour la table auth_methods.
  */
 export const AuthMethodSchema = z.object({
-    id: z.number(),
-    immuable_method_name: z.string(),
-    display_name: z.string(),
+    id: z.int().min(1),
+    immuable_method_name: z.string().trim().toUpperCase().min(1),
+    display_name: z.string().trim().min(1),
 
     created_at: z.date(),
     updated_at: z.date()
-});
-
-/**
- * Schéma de validation pour la table user_auth_methods sans informations sensibles.
- */
-export const UserAuthMethodSafeSchema = z.object({
-    id: z.number(),
-    user_id: z.number(),
-    auth_method_id: z.number(),
-
-    created_at: z.date(),
-    updated_at: z.date()
-});
-
-/**
- * Schéma de validation pour la table user_auth_methods.
- */
-export const UserAuthMethodSchema = z.object({
-    ...UserAuthMethodSafeSchema.shape,
-    is_validated: z.boolean(),
 });

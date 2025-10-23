@@ -1,6 +1,6 @@
 import { AppError } from "../../../core/models/AppError.model";
 import { Database } from "../../../core/models/Database.model";
-import { AuthMethod } from "./auth_methods.type";
+import { AuthMethod } from "./auth_methods.types";
 
 
 
