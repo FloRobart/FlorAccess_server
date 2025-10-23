@@ -18,9 +18,9 @@ CREATE TABLE users (
     last_login TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     last_ip VARCHAR(512),
 
-    email_verify_token_hash VARCHAR(512),
-    secret_hash VARCHAR(512),
-    token_hash VARCHAR(512),
+    email_verify_token_hash VARCHAR(1024),
+    secret_hash VARCHAR(1024),
+    token_hash VARCHAR(1024),
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

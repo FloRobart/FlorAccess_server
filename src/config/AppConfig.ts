@@ -72,7 +72,7 @@ const AppConfig: AppConfigInterface = {
 
     /* Security */
     hash_rounds: Math.round(Number(process.env.HASH_ROUNDS)) || 10,
-    token_length: Math.round(Number(process.env.TOKEN_LENGTH)) || 64,
+    token_length: (Math.round(Number(process.env.TOKEN_LENGTH)) / 2) || (512/2),
     token_expiration: (ms((process.env.TOKEN_EXPIRATION as StringValue) || "30min") || (30 * 60 * 1000)),
 
     /* Authentication */
