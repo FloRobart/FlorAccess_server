@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - dev
 
 permissions:
   contents: read
@@ -38,25 +37,25 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Déterminer si on a les identifiants Docker Hub
-      - name: Check Docker Hub credentials
-        id: check-creds
-        run: |
-          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ] && [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
-            echo "use_dockerhub=true" >> $GITHUB_OUTPUT
-          else
-            echo "use_dockerhub=false" >> $GITHUB_OUTPUT
-          fi
-
+      # Connexion à Docker Hub (si credentials présents)
       - name: Login to Docker Hub
-        if: steps.check-creds.outputs.use_dockerhub == 'true'
+        if: ${{ secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN }}
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Connexion à GitHub Container Registry
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- Docker Hub Builds ---
       - name: Build and push floraccess-db (Docker Hub)
-        if: steps.check-creds.outputs.use_dockerhub == 'true'
+        if: ${{ secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN }}
         uses: docker/build-push-action@v4
         with:
           context: Database
@@ -67,7 +66,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/floraccess-db:latest
 
       - name: Build and push floraccess-server (Docker Hub)
-        if: steps.check-creds.outputs.use_dockerhub == 'true'
+        if: ${{ secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN }}
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -77,16 +76,8 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/floraccess-server:${{ steps.vars.outputs.version }}
             ${{ secrets.DOCKERHUB_USERNAME }}/floraccess-server:latest
 
-      - name: Login to GitHub Container Registry (fallback)
-        if: steps.check-creds.outputs.use_dockerhub == 'false'
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
+      # --- GHCR Builds ---
       - name: Build and push floraccess-db (GHCR)
-        if: steps.check-creds.outputs.use_dockerhub == 'false'
         uses: docker/build-push-action@v4
         with:
           context: Database
@@ -97,7 +88,6 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/floraccess-db:latest
 
       - name: Build and push floraccess-server (GHCR)
-        if: steps.check-creds.outputs.use_dockerhub == 'false'
         uses: docker/build-push-action@v4
         with:
           context: .
