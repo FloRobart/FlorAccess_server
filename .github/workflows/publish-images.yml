@@ -81,8 +81,8 @@ jobs:
           file: Database/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/floraccess-db:${{ steps.vars.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/floraccess-db:latest
+            ghcr.io/${{ github.repository_owner.toLowerCase() }}/floraccess-db:${{ steps.vars.outputs.version }}
+            ghcr.io/${{ github.repository_owner.toLowerCase() }}/floraccess-db:latest
 
       - name: Build and push floraccess-server (GHCR)
         uses: docker/build-push-action@v4
@@ -91,5 +91,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/floraccess-server:${{ steps.vars.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/floraccess-server:latest
+            ghcr.io/${{ github.repository_owner.toLowerCase() }}/floraccess-server:${{ steps.vars.outputs.version }}
+            ghcr.io/${{ github.repository_owner.toLowerCase() }}/floraccess-server:latest
