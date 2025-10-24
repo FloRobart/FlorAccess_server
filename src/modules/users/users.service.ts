@@ -20,11 +20,11 @@ import { AppError } from "../../core/models/AppError.model";
  */
 export async function insertUser(user: InsertUser, ip: IPAddress | null): Promise<string> {
     try {
-        const email_verify_token_hash = await generateApiToken();
-        const insertedUser: User = await UsersRepository.insertUser(user, ip, await hashString(email_verify_token_hash));
+        const email_verify_token = await generateApiToken();
+        const insertedUser: User = await UsersRepository.insertUser(user, ip, await hashString(email_verify_token));
         const validatedUser: UserSafe = UserSafeSchema.parse(insertedUser);
         
-        const url = `${AppConfig.base_url}/users/email/verify/${validatedUser.id}?token=${email_verify_token_hash}`;
+        const url = `${AppConfig.base_url}/users/email/verify/${validatedUser.id}?token=${email_verify_token}`;
         logger.debug(`Email verification URL for user ${validatedUser.id}: ${url}`);
         if (!AppConfig.app_env.includes('dev')) {
             sendEmailVerify(user.email, AppConfig.app_name, url);
@@ -144,27 +144,28 @@ export async function logoutUser(jwt: string): Promise<void> {
  */
 export async function UserEmailVerify(userEmailVerification: UserEmailVerification): Promise<void> {
     try {
-        const stringUserId = userEmailVerification.userId;
-        const userId = parseInt(stringUserId, 10);
+        const userId = parseInt(userEmailVerification.userId, 10);
         const token = userEmailVerification.token;
 
         const user = await UsersRepository._getUserById(userId);
 
         if (!user) {
-            throw new AppError("User not found");
+            throw new AppError("User not found", 404);
         }
 
         if (user.is_verified_email) {
-            throw new AppError("Email is already verified");
+            throw new AppError("Email is already verified", 410);
         }
 
         if (!user.email_verify_token_hash) {
-            throw new AppError("No email verification token found for this user");
+            throw new AppError("No email verification token found for this user", 400);
         }
 
-        if (await verifyHash(token, user.email_verify_token_hash)) {
-            await UsersRepository.UserEmailVerify(userId);
+        if (!await verifyHash(token, user.email_verify_token_hash)) {
+            throw new AppError("Invalid token", 400);
         }
+
+        await UsersRepository.UserEmailVerify(userId);
     } catch (error) {
         throw error;
     }
