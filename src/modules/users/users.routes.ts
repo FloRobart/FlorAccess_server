@@ -6,6 +6,7 @@ import { authorizationValidator } from '../../core/middlewares/validators/auth_v
 import { paramsQueryValidator } from '../../core/middlewares/validators/params_query_validator.middleware';
 
 
+
 const router = Router();
 
 
@@ -297,17 +298,17 @@ router.post('/logout', authorizationValidator(AuthorizationHeaderSchema), logout
  *     description: Verify a user's email address using a verification token.
  *     parameters:
  *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: The ID of the user whose email is being verified.
  *         schema:
- *           name: userId
- *           required: true
- *           description: The ID of the user whose email is being verified.
  *           type: string
  *           example: "1"
  *       - in: query
+ *         name: token
+ *         required: true
+ *         description: The verification token sent to the user's email address.
  *         schema:
- *           name: token
- *           required: true
- *           description: The verification token sent to the user's email address.
  *           type: string
  *           example: "verification_token_here"
  *     responses:
@@ -316,7 +317,14 @@ router.post('/logout', authorizationValidator(AuthorizationHeaderSchema), logout
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/JWTResponse'
+ *               type: object
+ *               required:
+ *                 - message
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message for successful email verification
+ *                   example: "Email verified successfully."
  *       400:
  *         description: Bad request. Change your request to fix this error
  *         content:
@@ -337,6 +345,7 @@ router.post('/logout', authorizationValidator(AuthorizationHeaderSchema), logout
  *               $ref: '#/components/schemas/error500'
  */
 router.get('/email/verify/:userId', paramsQueryValidator(UserEmailVerificationSchema), UserEmailVerify);
+
 
 
 export default router;
