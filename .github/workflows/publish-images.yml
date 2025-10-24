@@ -32,7 +32,7 @@ jobs:
       - name: Get package version
         id: vars
         run: |
-          echo "version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+          node -e "const fs=require('fs'); const v=require('./package.json').version; fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${v}\n`);"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
