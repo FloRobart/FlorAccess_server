@@ -13,7 +13,6 @@ import * as logger from "../../utils/logger";
  */
 export const paramsQueryValidator = (schema: ZodType) => (req: Request, _res: Response, next: NextFunction) => {
     try {
-        logger.debug("Validating :", { ...req.params, ...req.query });
         req.body = { validated: schema.parse({ ...req.params, ...req.query }) };
         next();
     } catch (error) {

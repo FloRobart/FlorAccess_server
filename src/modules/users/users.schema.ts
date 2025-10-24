@@ -119,12 +119,12 @@ export const UserLoginConfirmSchema = z.object({
 export const UserEmailVerificationSchema = z.object({
     userId: z.string()
         .trim()
-        .min(AppConfig.token_length)
-        .max(AppConfig.token_length)
-        .regex(/^[0-9a-f]+$/)
+        .regex(/^[0-9]+$/)
         .refine((val) => {
             const n = Number(val);
             return Number.isInteger(n) && n > 0;
         }),
-    token: z.string().trim().min(1),
+    token: z.string()
+        .trim()
+        .regex(/^[0-9a-f]+$/),
 });
