@@ -10,8 +10,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - db_data:/var/lib/postgresql/data
-      - ./Database:/docker-entrypoint-initdb.d
+      - db_data:/var/lib/postgresql
     networks:
       - floraccess-net
     healthcheck:
@@ -26,52 +25,25 @@ services:
       dockerfile: Dockerfile
     image: floraccess-server:latest
     restart: always
-    environment:
-      APP_NAME: ${APP_NAME}
-      APP_PORT: ${APP_PORT}
-      HOST_NAME: ${HOST_NAME}
-      BASE_URL: ${BASE_URL}
-      APP_ENV: ${APP_ENV}
-
-      DB_SCHEME: ${DB_SCHEME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      DB_HOST: ${DB_HOST}
-
-      JWT_SIGNING_KEY: ${JWT_SIGNING_KEY}
-      JWT_EXPIRATION: ${JWT_EXPIRATION}
-
-      MAIL_SERVICE: ${MAIL_SERVICE}
-      MAIL_USERNAME: ${MAIL_USERNAME}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
-
-      HASH_ROUNDS: ${HASH_ROUNDS}
-      TOKEN_LENGTH: ${TOKEN_LENGTH}
-      TOKEN_EXPIRATION: ${TOKEN_EXPIRATION}
-      REQUEST_LIMIT_PER_SECOND: ${REQUEST_LIMIT_PER_SECOND}
-      REQUEST_LIMIT_TIME: ${REQUEST_LIMIT_TIME}
-      HASH_ALGORITHM: ${HASH_ALGORITHM}
-      CODE_DATA_SET: ${CODE_DATA_SET}
-
-      HANDSHAKE_STATIC_TOKEN: ${HANDSHAKE_STATIC_TOKEN}
-      HANDSHAKE_AUTHORIZED_API: ${HANDSHAKE_AUTHORIZED_API}
-
-      DEFAULT_AUTHORIZED_APIS: ${DEFAULT_AUTHORIZED_APIS}
+    env_file: .env
     depends_on:
       floraccess-db:
         condition: service_healthy
     networks:
-      - floraccess-net
       - flower_garden-net
+      - floraccess-net
     ports:
       - ${APP_PORT}:80
+    user: "1800:1800"
+    tmpfs:
+      - /tmp:exec,nosuid,nodev
+      - /app/dist/swagger/json/:rw,uid=1800,gid=1800
 
 volumes:
   db_data:
 
 networks:
-  floraccess-net:
-    driver: bridge
   flower_garden-net:
     external: true
+  floraccess-net:
+    driver: bridge
