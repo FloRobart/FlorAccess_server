@@ -54,7 +54,6 @@ jobs:
 
       # --- Docker Hub Builds ---
       - name: Build and push floraccess-db (Docker Hub)
-        if: ${{ secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN }}
         uses: docker/build-push-action@v4
         with:
           context: Database
@@ -65,7 +64,6 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/floraccess-db:latest
 
       - name: Build and push floraccess-server (Docker Hub)
-        if: ${{ secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN }}
         uses: docker/build-push-action@v4
         with:
           context: .
