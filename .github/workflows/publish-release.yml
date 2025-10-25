@@ -12,12 +12,13 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Run Release Please
-        uses: google-github-actions/release-please-action@v4
+        uses: googleapis/release-please-action@v4
         with:
-          release-type: node  # ou 'simple', 'go', 'java', 'php', etc.
+          release-type: node
           token: ${{ secrets.GITHUB_TOKEN }}
