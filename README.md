@@ -1,110 +1,89 @@
-# FlorAccess
+# FlorAccess server
 
-# Table des matières
+# Table des matière
 
-<details>
-<summary>Expand contents</summary>
-
-- [FlorAccess](#floraccess)
-- [Table des matières](#table-des-matières)
+- [FlorAccess server](#floraccess-server)
+- [Table des matière](#table-des-matière)
 - [Présentation](#présentation)
 - [Fonctionnalités](#fonctionnalités)
-- [Architecture de l'application](#architecture-de-lapplication)
-- [Architecture de la base de données](#architecture-de-la-base-de-données)
-  - [Modèle Conceptuel de Données (MCD)](#modèle-conceptuel-de-données-mcd)
-  - [Modèle Logique de Données (MLD)](#modèle-logique-de-données-mld)
-- [Routes available](#routes-available)
-- [Technologies utilisées](#technologies-utilisées)
 - [Installation](#installation)
+  - [Pour le développement](#pour-le-développement)
+  - [Pour la production](#pour-la-production)
 - [Auteur](#auteur)
 - [Report de bug et suggestions](#report-de-bug-et-suggestions)
 - [License](#license)
 
-</details>
-
 # Présentation
 
-FlorAccess est une API d'authentification et de gestion des utilisateurs. Elle permet d'enregistrer les utilisateurs, et données l'accès à n'importe quelle application qui accepte les JWT génération par FlorAccess.
+FlorAccess est une API d'authentification et de gestion des utilisateurs. Elle permet d'enregistrer les utilisateurs, et données l'accès à n'importe quelle application qui accepte les JWT générés par FlorAccess.
 
 # Fonctionnalités
 
 - [x] Enregistrement des utilisateurs
-- [x] Connexion via JWT
-- [x] Vérification de l'existence d'un utilisateur
-- [x] Envoi d'e-mails de connexion
-- [ ] Connexion via mot de passe
-- [ ] Réinitialisation de mot de passe
-
-# Architecture de l'application
-
-```mermaid
-flowchart RL
-
-A[(Database)] <--> |SQL| B[Models]
-B <==> C[Controllers]
-C <==> G[Routes]
-G -.-> |HTTP Response: JSON| F{Client}
-F --> |HTTP Request| G
-```
-
-# Architecture de la base de données
-
-## Modèle Conceptuel de Données (MCD)
-
-```mermaid
-classDiagram
-  direction TB
-
-  class users{
-    **users_id** : Integer
-    **users_email** : Varchar
-    **users_name** : Varchar
-    **users_password** : Varchar
-    **users_token** : Varchar
-    **users_ip** : Varchar
-    **created_at** : Timestamp
-  }
-```
-
-## Modèle Logique de Données (MLD)
-
-- **users** (<u>users_id</u>, users_email, users_name, users_password, users_token, users_ip, created_at)
-
-# Routes available
-
-**For full documentation please see [https://domaine.name/api-docs](#routes-available) or read '`/docs/swagger.json`' in [Swagger editor](https://editor.swagger.io/)**
-
-| Action | Méthode | Route | Type de données retournée | Description |
-|:------:|:-------:|:------|:--------------------------|:------------|
-| Select | GET     | / | JSON |  |
-| Create | POST    | / | JSON |  |
-| Update | PUT     | / | JSON |  |
-| Delete | DELETE  | / | JSON |  |
-
-# Technologies utilisées
-
-FlorAccess est une application web développée avec les technologies suivantes :
-
-- Langages :
-  - [JavaScript (TypeScript)](https://developer.mozilla.org/fr/docs/Web/JavaScript)
-  - [*HTML*](https://developer.mozilla.org/fr/docs/Web/HTML)
-  - [*CSS*](https://developer.mozilla.org/fr/docs/Web/CSS)
-- Frameworks et librairies :
-  - [ExpressJS](https://www.npmjs.com/package/express)
-  - [Express rate limiter](https://www.npmjs.com/package/express-rate-limit)
-  - [Dotenv](https://www.npmjs.com/package/dotenv)
-  - [Json web token](https://www.npmjs.com/package/jsonwebtoken)
-  - [Node mailer](https://www.npmjs.com/package/nodemailer)
-  - [Node postgres](https://www.npmjs.com/package/pg)
-  - [Swagger UI Express](https://www.npmjs.com/package/swagger-ui-express)
-- Base de données :
-  - [PostgreSQL](https://www.postgresql.org/)
-- Deployement :
-  - [Docker](https://www.docker.com/)
+- [x] Connexion sans MDP via un code envoyé par e-mail
+- [x] Modification des informations utilisateur
+- [x] Suppression des utilisateurs
+- [x] Vérification des adresses e-mail
+- [x] Déconnexion d'un utilisateur de tous les appareils
 
 # Installation
 
-coming soon...
+## Pour le développement
+
+1. Cloner le dépôt GitHub
+
+  ```bash
+  git clone https://github.com/FloRobart/FlorAccess_server.git
+  ```
+
+2. Accéder au répertoire du projet
+
+  ```bash
+  cd FlorAccess_server
+  ```
+
+3. Installer les dépendances
+
+  ```bash
+  npm install
+  ```
+
+4. Créer un fichier `.env` à la racine du projet et y ajouter les variables d'environnement nécessaires (vous pouvez vous baser sur le fichier `.env.example`)
+
+  ```bash
+  cp .env.example .env
+  ```
+
+5. Démarrer le serveur en mode développement
+
+  ```bash
+  npm run dev-docker
+  ```
+
+6. Le serveur devrait maintenant être accessible à l'adresse `http://localhost:26001`
+7. Accéder à la documentation de l'API via Swagger à l'adresse `http://localhost:26001/api-docs`
+
+## Pour la production
+
+1. Récupérer les images Docker depuis [Docker Hub](https://hub.docker.com/u/florobart) ou depuis [GitHub Container Registry](https://github.com/FloRobart?tab=packages&repo_name=FlorAccess_server)
+
+  ```bash
+  docker pull florobart/floraccess-server:latest
+  docker pull florobart/floraccess-db:latest
+  ```
+  
+2. Créer un fichier `.env` à la racine du projet et y ajouter les variables d'environnement nécessaires (vous pouvez vous baser sur le fichier `.env.example`)
+
+  ```bash
+  touch .env
+  nano .env
+  ```
+
+3. Copier le fichier `docker-compose.yml` à la racine du projet et lancer les conteneurs Docker
+
+```bash
+docker-compose up -d
+```
 
 # Auteur
 
