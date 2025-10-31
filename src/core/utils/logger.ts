@@ -3,11 +3,11 @@ import { sendErrorEmail } from '../email/error.email';
 
 
 
-const errorMessage = ` [❌] ${AppConfig.app_name} - ERROR   |`;
-const warningMessage = ` [⚠️] ${AppConfig.app_name} - WARNING |`;
-const successMessage = ` [✅] ${AppConfig.app_name} - SUCCESS |`;
-const infoMessage = ` [❕] ${AppConfig.app_name} - INFO    |`;
-const debugMessage = ` [🐛] ${AppConfig.app_name} - DEBUG   |`;
+const errorMessage   = ` [❌] ${AppConfig.app_name} - ${new Date().toISOString()} |`;
+const warningMessage = ` [⚠️] ${AppConfig.app_name} - ${new Date().toISOString()} |`;
+const successMessage = ` [✅] ${AppConfig.app_name} - ${new Date().toISOString()} |`;
+const infoMessage    = ` [❕] ${AppConfig.app_name} - ${new Date().toISOString()} |`;
+const debugMessage   = ` [🐛] ${AppConfig.app_name} - ${new Date().toISOString()} |`;
 
 
 

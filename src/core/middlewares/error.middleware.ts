@@ -25,5 +25,5 @@ export const errorHandler = (
         logger.info(error.stack);
     }
 
-    res.status(error.httpStatus).json(error.message);
+    res.status(error.httpStatus || 500).json(error.message || "Internal Server Error");
 };
