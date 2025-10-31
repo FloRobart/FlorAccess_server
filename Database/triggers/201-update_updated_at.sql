@@ -6,13 +6,6 @@
 
 
 
--- Trigger on the authorized_apis table to update the updated_at column on row updates
-DROP TRIGGER IF EXISTS update_authorized_apis_updated_at ON authorized_apis;
-CREATE TRIGGER update_authorized_apis_updated_at
-BEFORE UPDATE ON authorized_apis
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
-
 -- Trigger on the users table to update the updated_at column on row updates
 DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at

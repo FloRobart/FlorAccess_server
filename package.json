@@ -1,6 +1,6 @@
 {
   "name": "floraccess",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Authentification API",
   "main": "server.js",
   "scripts": {
@@ -9,6 +9,7 @@
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts",
     "dev-docker": "docker compose -f docker-compose.yml -f docker-compose-dev.yml up --build",
     "clean": "rm -rf dist",
+    "clean-docker": "docker compose -f docker-compose.yml -f docker-compose-dev.yml down --volumes --rmi all",
     "test": "jest"
   },
   "repository": {
