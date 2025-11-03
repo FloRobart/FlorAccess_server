@@ -81,33 +81,6 @@
  *         updated_at:
  *           type: Date
  *           example: "2025-10-10T20:16:25.183Z"
- *         auth_methods:
- *           type: array
- *           items:
- *             type: object
- *             description: List of authentication methods associated with the user
- *             required:
- *               - id
- *               - user_id
- *               - auth_method_id
- *               - created_at
- *               - updated_at
- *             properties:
- *               id:
- *                 type: number
- *                 example: 1
- *               user_id:
- *                 type: number
- *                 example: 1
- *               auth_method_id:
- *                 type: number
- *                 example: 1
- *               created_at:
- *                 type: Date
- *                 example: "2025-10-10T20:16:25.183Z"
- *               updated_at:
- *                 type: Date
- *                 example: "2025-10-10T20:16:25.183Z"
  */
 
 
