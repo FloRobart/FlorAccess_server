@@ -1,6 +1,6 @@
 {
   "name": "floraccess",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Authentification API",
   "main": "server.js",
   "scripts": {
