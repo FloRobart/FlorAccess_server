@@ -2,11 +2,11 @@ import AppConfig from "../../../../config/AppConfig";
 import { User, UserLoginConfirm, UserSafe } from "../../users.types";
 import { sendEmailCode } from "./code.email";
 import * as CodeRepository from "./code.repository";
-import { getRandomValues, randomBytes } from "node:crypto";
+import { getRandomValues } from "node:crypto";
 import { generateApiToken, generateSecureRandomDelay, hashString, verifyHash } from "../../../../core/utils/securities";
 import { generateJwt } from "../../../../core/utils/jwt";
 import { UserSafeSchema } from "../../users.schema";
-import { AppError } from "../../../../core/models/AppError.model";
+import * as logger from "../../../../core/utils/logger";
 
 
 
@@ -24,6 +24,8 @@ export async function usersLoginRequest(user: User): Promise<string> {
 
         if (!AppConfig.app_env.includes('dev')) {
             await sendEmailCode(user.email, AppConfig.app_name, code);
+        } else {
+            logger.debug(`Login code for user ${user.id} is: ${code}`);
         }
 
         return token;
