@@ -279,7 +279,7 @@ const BaseUserSafeSchema: UserSafe = {
     auth_methods_id: 1,
     is_connected: true,
     is_verified_email: true,
-    last_login: new Date(),
+    last_logout_at: new Date(),
 
     created_at: new Date(),
     updated_at: new Date(),
@@ -346,10 +346,10 @@ const IncorrectUserSafeSchema: any[] = [
         is_verified_email: 0, // should be boolean
     },{
         ...BaseUserSafeSchema,
-        last_login: "not-a-date", // should be date
+        last_logout_at: "not-a-date", // should be date
     },{
         ...BaseUserSafeSchema,
-        last_login: 123456789, // should be date
+        last_logout_at: 123456789, // should be date
     },{
         ...BaseUserSafeSchema,
         created_at: "not-a-date", // should be date
@@ -368,6 +368,7 @@ const IncorrectUserSafeSchema: any[] = [
 /* User Schema */
 const BaseUserSchema: User = {
     ...BaseUserSafeSchema,
+    last_login: new Date(),
     last_ip: "192.168.1.1",
     email_verify_token_hash: "hashed_token",
     secret_hash: "hashed_secret",
