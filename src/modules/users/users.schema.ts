@@ -1,5 +1,4 @@
 import { z } from "zod";
-import AppConfig from "../../config/AppConfig";
 
 
 
@@ -43,7 +42,7 @@ export const UserSafeSchema = z.object({
     auth_methods_id: z.int().min(1),
     is_connected: z.boolean(),
     is_verified_email: z.boolean(),
-    last_login: z.date(),
+    last_logout_at: z.date(),
 
     created_at: z.date(),
     updated_at: z.date(),
@@ -53,6 +52,7 @@ export const UserSafeSchema = z.object({
  * Schéma de validation pour un utilisateur complet (avec informations sensibles).
  */
 export const UserSchema = UserSafeSchema.extend({
+    last_login: z.date(),
     last_ip: z.ipv4().or(z.ipv6()).nullable(),
 
     email_verify_token_hash: z.string().trim().nullable(),

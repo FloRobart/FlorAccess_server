@@ -13,8 +13,8 @@ import { AppError } from "../../../../core/models/AppError.model";
  */
 export async function userLoginRequest(user: User, tokenHash: string, codeHash: string): Promise<void> {
     try {
-        const query = "UPDATE users SET token_hash = $7, secret_hash = $8 WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
-        const values = [user.id, user.email, user.pseudo, user.last_login.toISOString(), user.updated_at.toISOString(), user.created_at.toISOString(), tokenHash, codeHash];
+        const query = "UPDATE users SET token_hash = $7, secret_hash = $8 WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', last_logout_at) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
+        const values = [user.id, user.email, user.pseudo, user.last_logout_at.toISOString(), user.updated_at.toISOString(), user.created_at.toISOString(), tokenHash, codeHash];
 
         const rows = await Database.execute({ text: query, values: values });
         if (rows.length === 0) { throw new AppError("User not found", 404); }
@@ -31,8 +31,8 @@ export async function userLoginRequest(user: User, tokenHash: string, codeHash: 
  */
 export async function userLoginConfirm(user: User, ip: IPAddress | null): Promise<User> {
     try {
-        const query = "UPDATE users SET last_login = NOW(), is_connected = true, last_ip = $7, secret_hash = null, token_hash = null WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', last_login) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
-        const values = [user.id, user.email, user.pseudo, user.last_login.toISOString(), user.updated_at.toISOString(), user.created_at.toISOString(), ip];
+        const query = "UPDATE users SET last_login = NOW(), is_connected = true, last_ip = $7, secret_hash = null, token_hash = null WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', last_logout_at) = date_trunc('second', $4::timestamp) AND date_trunc('second', updated_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
+        const values = [user.id, user.email, user.pseudo, user.last_logout_at.toISOString(), user.updated_at.toISOString(), user.created_at.toISOString(), ip];
 
         const rows = await Database.execute<User>({ text: query, values: values });
         if (rows.length === 0) { throw new AppError("User not found", 404); }
