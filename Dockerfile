@@ -1,5 +1,5 @@
 # Étape 1 : Build avec TypeScript
-FROM node:latest AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 
 # Copier le code source
@@ -18,7 +18,7 @@ RUN npm ci
 RUN npm run build
 
 # Étape 2 : Image finale
-FROM node:latest AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 
 # Copier uniquement les fichiers nécessaires à l'exécution
