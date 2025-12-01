@@ -282,7 +282,6 @@ const BaseUserSafeSchema: UserSafe = {
     last_logout_at: new Date(),
 
     created_at: new Date(),
-    updated_at: new Date(),
 };
 
 const CorrectUserSafeSchema: UserSafe[] = [
@@ -356,12 +355,6 @@ const IncorrectUserSafeSchema: any[] = [
     },{
         ...BaseUserSafeSchema,
         created_at: 123456789, // should be date
-    },{
-        ...BaseUserSafeSchema,
-        updated_at: "not-a-date", // should be date
-    },{
-        ...BaseUserSafeSchema,
-        updated_at: 123456789, // should be date
     },
 ]
 
