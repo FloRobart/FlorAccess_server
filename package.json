@@ -1,6 +1,6 @@
 {
   "name": "floraccess",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Authentification API",
   "main": "server.js",
   "scripts": {
@@ -42,7 +42,6 @@
     "install": "^0.13.0",
     "jest": "^29.6.1",
     "nodemon": "^3.1.10",
-    "npm": "^11.6.2",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
