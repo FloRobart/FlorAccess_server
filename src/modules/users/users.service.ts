@@ -18,6 +18,8 @@ import escapeHtml from '../../core/utils/parse_html';
  * Creates a new user with the given information.
  * @param user The user object containing the information of the user to create.
  * @param ip The IP address of the user (can be null).
+ * @param application The application name from which the user is being created.
+ * @param domain The domain associated with the user (can be null).
  * @returns JWT for the newly created user.
  * @throws Error if user creation or JWT generation fails.
  */
@@ -67,7 +69,7 @@ export async function selectUser(jwt: string): Promise<UserSafe> {
  */
 export async function updateUser(updateUser: UpdateUser, jwt: string): Promise<string> {
     try {
-        const decodedUser = await verifyJwt(jwt);
+        const decodedUser = verifyJwt(jwt);
         const updatedUser: User = await UsersRepository.updateUser(updateUser, decodedUser);
 
         const userSafe: UserSafe = UserSafeSchema.parse(updatedUser);
@@ -86,7 +88,7 @@ export async function updateUser(updateUser: UpdateUser, jwt: string): Promise<s
  */
 export async function deleteUser(jwt: string): Promise<void> {
     try {
-        const decodedUser = await verifyJwt(jwt);
+        const decodedUser = verifyJwt(jwt);
         await UsersRepository.deleteUser(decodedUser);
     } catch (error) {
         throw error;
@@ -132,7 +134,7 @@ export async function userLoginConfirm(userLoginConfirm: UserLoginConfirm): Prom
  */
 export async function logoutUser(jwt: string): Promise<void> {
     try {
-        const decodedUser = await verifyJwt(jwt);
+        const decodedUser = verifyJwt(jwt);
         await UsersRepository.logoutUser(decodedUser);
     } catch (error) {
         throw error;

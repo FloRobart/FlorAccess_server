@@ -11,7 +11,7 @@ import escapeHtml from "../../core/utils/parse_html";
  * This function sends an email to the user with a link to verify their connection.
  * @param to Email address of the recipient
  * @param app_name Name of the application to be used in the email subject
- * @param token Authentication token to be included in the verification link
+ * @param url Verification URL to be included in the email body
  */
 export async function sendEmailVerify(to: string, app_name: string, url: string): Promise<void> {
     try {

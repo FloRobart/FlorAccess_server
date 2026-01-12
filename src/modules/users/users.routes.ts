@@ -323,6 +323,18 @@ router.post('/logout', authorizationValidator(AuthorizationHeaderSchema), logout
  *         schema:
  *           type: string
  *           example: "verification_token_here"
+ *       - in: query
+ *         name: application
+ *         description: Name of the application where the email verification is being performed
+ *         schema:
+ *           type: string
+ *           example: "MyApp"
+ *       - in: query
+ *         name: domain
+ *         description: Domain name of the application where the email verification is being performed
+ *         schema:
+ *           type: string
+ *           example: "example.com"
  *     responses:
  *       200:
  *         description: token to confirm user login
