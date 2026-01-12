@@ -48,6 +48,23 @@ export const selectUser = async (req: Request, res: Response, next: NextFunction
 
 
 /**
+ * Retrieves user information from the JWT in the request headers.
+ * @param req.headers.authorization Authorization header containing the JWT
+ * @returns User information or error response
+ */
+export const regenerateJwt = async (req: Request, res: Response, next: NextFunction) => {
+    const jwt: string = req.headers.authorization!.split(' ')[1];
+
+    try {
+        const newJwt: string = await UsersService.regenerateJwt(jwt);
+        res.status(200).json({ jwt: newJwt });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+/**
  * Updates a user's information
  * @param req.headers.authorization Authorization header containing the JWT
  * @param req.body.validated updateUser object with the updated user information

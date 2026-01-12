@@ -26,7 +26,7 @@ export async function insertUser(user: InsertUser, ip: IPAddress | null, applica
         const email_verify_token = await generateApiToken();
         const insertedUser: User = await UsersRepository.insertUser(user, ip, await hashString(email_verify_token));
         const validatedUser: UserSafe = UserSafeSchema.parse(insertedUser);
-        
+
         const url = `${AppConfig.base_url}/users/email/verify/${validatedUser.id}?token=${email_verify_token}&application=${encodeURIComponent(application)}&domain=${encodeURIComponent(domain || 'null')}`;
         logger.debug(`Email verification URL for user ${validatedUser.id}: ${url}`);
         if (!AppConfig.app_env.includes('dev')) {
@@ -52,6 +52,25 @@ export async function selectUser(jwt: string): Promise<UserSafe> {
         const selectedUser: User = await UsersRepository.getUser(decodedUserSafe);
 
         return UserSafeSchema.parse(selectedUser);
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
+ * Vérifie le JWT et extrait les informations de l'utilisateur.
+ * @param jwt JWT token to verify and extract user information from.
+ * @returns UserSafe object containing the user's safe information.
+ * @throws Error if user retrieval fails or if the token is invalid.
+ */
+export async function regenerateJwt(jwt: string): Promise<string> {
+    try {
+        const decodedUserSafe = verifyJwt(jwt);
+        const selectedUser: User = await UsersRepository.getUser(decodedUserSafe);
+
+        const userSafe: UserSafe = UserSafeSchema.parse(selectedUser);
+        return generateJwt(userSafe);
     } catch (error) {
         throw error;
     }

@@ -19,6 +19,7 @@ export async function generateJwt(payload: { [key: string|number]: any }): Promi
     }
 }
 
+
 /**
  * Verifies and decodes a JWT token.
  * @param token JWT token to verify
