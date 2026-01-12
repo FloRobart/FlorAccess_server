@@ -1,7 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
+import path from 'path';
 import * as UsersService from './users.service';
 import { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm, UserEmailVerification } from './users.types';
 import { IPAddressSchema } from './users.schema';
+import fs from 'fs/promises';
+import escapeHtml from '../../core/utils/parse_html';
+import AppConfig from '../../config/AppConfig';
 
 
 
@@ -13,9 +17,11 @@ import { IPAddressSchema } from './users.schema';
 export const insertUser = async (req: Request, res: Response, next: NextFunction) => {
     const insertUser: InsertUser = req.body.validated;
     const ip: IPAddress | null = IPAddressSchema.safeParse(req.ip).data || null;
+    const application: string = req.query.application as string || AppConfig.app_name;
+    const domain: string | null = req.query.domain as string || null;
 
     try {
-        const jwt: string = await UsersService.insertUser(insertUser, ip);
+        const jwt: string = await UsersService.insertUser(insertUser, ip, application, domain);
         res.status(201).json({ jwt: jwt });
     } catch (error) {
         next(error);
@@ -142,9 +148,26 @@ export const UserEmailVerify = async (req: Request, res: Response, next: NextFun
     const userEmailVerification: UserEmailVerification = req.body.validated;
 
     try {
-        await UsersService.UserEmailVerify(userEmailVerification);
-        res.status(200).json({ message: 'Email verified successfully.' });
-    } catch (error) {
-        next(error);
+        const html = await UsersService.UserEmailVerify(userEmailVerification);
+
+        return res.status(200).type('html').send(html);
+    } catch (error: any) {
+        const status = error.httpStatus || 500;
+        const message = error.message || 'Une erreur est survenue lors de la vérification de l\'email.';
+
+        try {
+            const templatePath = path.join(process.cwd(), 'public', 'html', 'email_verification_error.html');
+            const raw = await fs.readFile(templatePath, 'utf8');
+
+            const html = raw
+                .replace(/{{\s*status\s*}}/g, escapeHtml(String(status)))
+                .replace(/{{\s*message\s*}}/g, escapeHtml(String(message)))
+                .replace(/{{\s*application\s*}}/g, escapeHtml(userEmailVerification.application || AppConfig.app_name))
+                .replace(/{{\s*domain\s*}}/g, escapeHtml(userEmailVerification.domain || ''));
+
+            return res.status(status).type('html').send(html);
+        } catch (readErr) {
+            return res.status(status).json({ error: message });
+        }
     }
 };

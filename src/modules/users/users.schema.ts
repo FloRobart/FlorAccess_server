@@ -1,4 +1,6 @@
+import { application } from "express";
 import { z } from "zod";
+import { domain } from "zod/v4/core/regexes.cjs";
 
 
 
@@ -126,4 +128,6 @@ export const UserEmailVerificationSchema = z.object({
     token: z.string()
         .trim()
         .regex(/^[0-9a-f]+$/),
+    application: z.string().trim().min(1).max(255).optional(),
+    domain: z.string().trim().min(1).max(255).optional(),
 });
