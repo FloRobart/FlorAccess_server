@@ -8,9 +8,7 @@ import AppConfig from "../../config/AppConfig";
 import { sendEmailVerify } from "./users.email";
 import * as logger from "../../core/utils/logger";
 import { AppError } from "../../core/models/AppError.model";
-import path from "path";
-import fs from "fs/promises";
-import escapeHtml from '../../core/utils/parse_html';
+import { getEmailTemplate } from '../../core/email/get_email_template';
 
 
 
@@ -175,17 +173,12 @@ export async function UserEmailVerify(userEmailVerification: UserEmailVerificati
 
         await UsersRepository.UserEmailVerify(userId);
 
-        const templatePath = path.join(process.cwd(), 'public', 'html', 'email_verification_success.html');
-        const raw = await fs.readFile(templatePath, 'utf8');
-
-        const statusText = `Email '${user.email}' confirmé`;
-        const messageText = "Merci — votre adresse email a bien été vérifiée. Vous pouvez maintenant vous connecter.";
-
-        const html = raw
-            .replace(/{{\s*status\s*}}/g, escapeHtml(statusText))
-            .replace(/{{\s*message\s*}}/g, escapeHtml(messageText))
-            .replace(/{{\s*application\s*}}/g, escapeHtml(application))
-            .replace(/{{\s*domain\s*}}/g, escapeHtml(domain));
+        const html = await getEmailTemplate('email_verification_success', {
+            status: `Email '${user.email}' confirmé`,
+            message: `Merci — votre adresse email a bien été vérifiée. Vous pouvez maintenant vous connecter.`,
+            application: application,
+            domain: domain
+        });
 
         return html;
     } catch (error) {
