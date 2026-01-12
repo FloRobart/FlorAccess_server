@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { updateUser, deleteUser, insertUser, logoutUser, selectUser, userLoginRequest, userLoginConfirm, UserEmailVerify } from './users.controller';
+import * as UsersController from './users.controller';
 import { bodyValidator } from '../../core/middlewares/validators/body_validator.middleware';
-import { UserInsertSchema, AuthorizationHeaderSchema, UserUpdateSchema, UserLoginRequestSchema, UserLoginConfirmSchema, UserEmailVerificationSchema } from './users.schema';
+import * as UsersSchema from './users.schema';
 import { authorizationValidator } from '../../core/middlewares/validators/auth_validator.middleware';
 import { paramsQueryValidator } from '../../core/middlewares/validators/params_query_validator.middleware';
 
@@ -23,6 +23,18 @@ const router = Router();
  *       - in: body
  *         schema:
  *           $ref: '#/components/schemas/InsertUser'
+ *       - in: query
+ *         name: application
+ *         description: Name of the application where the user is being registered
+ *         schema:
+ *           type: string
+ *           example: "MyApp"
+ *       - in: query
+ *         name: domain
+ *         description: Domain name of the application where the user is being registered
+ *         schema:
+ *           type: string
+ *           example: "example.com"
  *     responses:
  *       200:
  *         description: User registered successfully
@@ -43,7 +55,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/', bodyValidator(UserInsertSchema), insertUser);
+router.post('/', bodyValidator(UsersSchema.UserInsertSchema), UsersController.insertUser);
 
 
 /**
@@ -80,7 +92,44 @@ router.post('/', bodyValidator(UserInsertSchema), insertUser);
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.get('/', authorizationValidator(AuthorizationHeaderSchema), selectUser);
+router.get('/', authorizationValidator(UsersSchema.AuthorizationHeaderSchema), UsersController.selectUser);
+
+
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Get user information from JWT
+ *     description: Retrieve information about the authenticated user.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: JWT
+ *         schema:
+ *           type: string
+ *           example: "Bearer your_jwt_token_here"
+ *     responses:
+ *       200:
+ *         description: User information retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JWTResponse'
+ *       401:
+ *         description: Unauthorized access.
+ *       422:
+ *         description: Invalid request parameters.
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.get('/jwt', authorizationValidator(UsersSchema.AuthorizationHeaderSchema), UsersController.regenerateJwt);
 
 
 /**
@@ -122,7 +171,7 @@ router.get('/', authorizationValidator(AuthorizationHeaderSchema), selectUser);
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.put('/', authorizationValidator(AuthorizationHeaderSchema), bodyValidator(UserUpdateSchema), updateUser);
+router.put('/', authorizationValidator(UsersSchema.AuthorizationHeaderSchema), bodyValidator(UsersSchema.UserUpdateSchema), UsersController.updateUser);
 
 
 /**
@@ -168,7 +217,7 @@ router.put('/', authorizationValidator(AuthorizationHeaderSchema), bodyValidator
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.delete('/', authorizationValidator(AuthorizationHeaderSchema), deleteUser);
+router.delete('/', authorizationValidator(UsersSchema.AuthorizationHeaderSchema), UsersController.deleteUser);
 
 
 /**
@@ -209,7 +258,7 @@ router.delete('/', authorizationValidator(AuthorizationHeaderSchema), deleteUser
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/login/request', bodyValidator(UserLoginRequestSchema), userLoginRequest);
+router.post('/login/request', bodyValidator(UsersSchema.UserLoginRequestSchema), UsersController.userLoginRequest);
 
 
 /**
@@ -244,7 +293,7 @@ router.post('/login/request', bodyValidator(UserLoginRequestSchema), userLoginRe
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/login/confirm', bodyValidator(UserLoginConfirmSchema), userLoginConfirm);
+router.post('/login/confirm', bodyValidator(UsersSchema.UserLoginConfirmSchema), UsersController.userLoginConfirm);
 
 
 /**
@@ -285,7 +334,7 @@ router.post('/login/confirm', bodyValidator(UserLoginConfirmSchema), userLoginCo
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/logout', authorizationValidator(AuthorizationHeaderSchema), logoutUser);
+router.post('/logout', authorizationValidator(UsersSchema.AuthorizationHeaderSchema), UsersController.logoutUser);
 
 
 /**
@@ -311,6 +360,18 @@ router.post('/logout', authorizationValidator(AuthorizationHeaderSchema), logout
  *         schema:
  *           type: string
  *           example: "verification_token_here"
+ *       - in: query
+ *         name: application
+ *         description: Name of the application where the email verification is being performed
+ *         schema:
+ *           type: string
+ *           example: "MyApp"
+ *       - in: query
+ *         name: domain
+ *         description: Domain name of the application where the email verification is being performed
+ *         schema:
+ *           type: string
+ *           example: "example.com"
  *     responses:
  *       200:
  *         description: token to confirm user login
@@ -344,7 +405,7 @@ router.post('/logout', authorizationValidator(AuthorizationHeaderSchema), logout
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.get('/email/verify/:userId', paramsQueryValidator(UserEmailVerificationSchema), UserEmailVerify);
+router.get('/email/verify/:userId', paramsQueryValidator(UsersSchema.UserEmailVerificationSchema), UsersController.UserEmailVerify);
 
 
 

@@ -2,20 +2,27 @@ import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
 import { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm, UserEmailVerification } from './users.types';
 import { IPAddressSchema } from './users.schema';
+import AppConfig from '../../config/AppConfig';
+import { getEmailTemplate } from '../../core/email/get_email_template';
 
 
 
 /**
  * Registers a new user with the provided information.
  * @param req.body.validated insertUser object containing the information of the user to create
+ * @param req.ip IP address of the user
+ * @param req.query.application Application name from which the user is being created
+ * @param req.query.domain Domain associated with the user
  * @returns JWT for the newly created user or error response
  */
 export const insertUser = async (req: Request, res: Response, next: NextFunction) => {
     const insertUser: InsertUser = req.body.validated;
     const ip: IPAddress | null = IPAddressSchema.safeParse(req.ip).data || null;
+    const application: string = req.query.application as string || AppConfig.app_name;
+    const domain: string | null = req.query.domain as string || null;
 
     try {
-        const jwt: string = await UsersService.insertUser(insertUser, ip);
+        const jwt: string = await UsersService.insertUser(insertUser, ip, application, domain);
         res.status(201).json({ jwt: jwt });
     } catch (error) {
         next(error);
@@ -34,6 +41,23 @@ export const selectUser = async (req: Request, res: Response, next: NextFunction
     try {
         const userSafe: UserSafe = await UsersService.selectUser(jwt);
         res.status(200).json(userSafe);
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+/**
+ * Retrieves user information from the JWT in the request headers.
+ * @param req.headers.authorization Authorization header containing the JWT
+ * @returns User information or error response
+ */
+export const regenerateJwt = async (req: Request, res: Response, next: NextFunction) => {
+    const jwt: string = req.headers.authorization!.split(' ')[1];
+
+    try {
+        const newJwt: string = await UsersService.regenerateJwt(jwt);
+        res.status(200).json({ jwt: newJwt });
     } catch (error) {
         next(error);
     }
@@ -134,17 +158,32 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
 
 
 /** * Verifies a user's email using the provided token.
- * @param req.body.validated userId and token for email verification
- * @returns Success message
+ * @param req.body.validated UserEmailVerification object containing the verification token and other details.
+ * @returns HTML content indicating the result of the email verification.
  * @throws Error if email verification fails or if the token is invalid.
  */
 export const UserEmailVerify = async (req: Request, res: Response, next: NextFunction) => {
     const userEmailVerification: UserEmailVerification = req.body.validated;
 
     try {
-        await UsersService.UserEmailVerify(userEmailVerification);
-        res.status(200).json({ message: 'Email verified successfully.' });
-    } catch (error) {
-        next(error);
+        const html = await UsersService.UserEmailVerify(userEmailVerification);
+
+        return res.status(200).type('html').send(html);
+    } catch (error: any) {
+        const status = error.httpStatus || 500;
+        const message = error.message || 'Une erreur est survenue lors de la vérification de l\'email.';
+
+        try {
+            const html = await getEmailTemplate('email_verification_error', {
+                status: status,
+                message: message,
+                application: userEmailVerification.application || AppConfig.app_name,
+                domain: userEmailVerification.domain || ''
+            });
+
+            return res.status(status).type('html').send(html);
+        } catch (readErr) {
+            return res.status(status).json({ error: message });
+        }
     }
 };

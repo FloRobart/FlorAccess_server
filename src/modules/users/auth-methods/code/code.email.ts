@@ -1,6 +1,6 @@
 import AppConfig from "../../../../config/AppConfig";
 import sendEmail from "../../../../core/email/mailer";
-import { htmlCodeEmailTemplate } from "../../../../core/email/mailTemplate";
+import { getEmailTemplate } from '../../../../core/email/get_email_template';
 
 
 
@@ -14,10 +14,15 @@ import { htmlCodeEmailTemplate } from "../../../../core/email/mailTemplate";
 export async function sendEmailCode(to: string, app_name: string, code: string): Promise<void> {
     try {
         const appName = app_name || AppConfig.app_name;
+        const stringCode: string = code.toString().replace(/(\d{2})(?=\d)/g, '$1 ');
 
-        const html = htmlCodeEmailTemplate(appName, code);
+        const html = await getEmailTemplate('email_code_template', {
+            appName: appName,
+            code: stringCode,
+            currentYear: String(new Date().getFullYear())
+        });
 
-        await sendEmail(to, `Votre code pour ${appName} : ${code.toString().replace(/(\d{2})(?=\d)/g, '$1 ')}`, html);
+        await sendEmail(to, `Votre code pour ${appName} : ${stringCode}`, html);
     } catch (error) {
         throw error;
     }
