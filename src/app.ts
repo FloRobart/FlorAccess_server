@@ -1,5 +1,5 @@
 import express from 'express';
-import { Request, Response, NextFunction } from 'express';
+import { Request } from 'express';
 import userRoutes from './modules/users/users.routes';
 import { errorHandler } from './core/middlewares/error.middleware';
 import * as logger from './core/utils/logger';
@@ -11,6 +11,8 @@ import { defaultRouteHandler } from './core/middlewares/default_route.middleware
 import path from 'node:path';
 import helmet from 'helmet';
 import { helmetOptions } from './core/middlewares/helmet_http_headers.middleware';
+import morgan from 'morgan';
+import { verifyJwt } from './core/utils/jwt';
 
 
 
@@ -44,10 +46,8 @@ app.get("/favicon.ico", (_req, res) => {
 });
 
 /* Logger */
-app.use(async (req: Request, _res: Response, next: NextFunction) => {
-    logger.info(`Incoming request`, { ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress, method: req.method, url: req.url });
-    next();
-});
+morgan.token("remote-user", (req: Request) => { return verifyJwt(req.headers.authorization!.split(" ")[1]).email || "Unknown User"; });
+app.use(morgan(AppConfig.log_format));
 
 
 /* Users routes */
