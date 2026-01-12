@@ -49,7 +49,12 @@ app.get("/favicon.ico", (_req, res) => {
 morgan.token("remote-user", (req: Request) => {
     const defaultUser = "Unknown User";
     const token = req.headers.authorization?.split(" ")[1];
-    return token !== undefined ? verifyJwt(token)?.email || defaultUser : defaultUser;
+    if (!token) return defaultUser;
+    try {
+        return verifyJwt(token)?.email || defaultUser;
+    } catch (err) {
+        return defaultUser;
+    }
 });
 app.use(morgan(AppConfig.log_format));
 
