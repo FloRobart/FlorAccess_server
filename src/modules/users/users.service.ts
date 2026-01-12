@@ -48,7 +48,7 @@ export async function insertUser(user: InsertUser, ip: IPAddress | null, applica
  */
 export async function selectUser(jwt: string): Promise<UserSafe> {
     try {
-        const decodedUserSafe = await verifyJwt(jwt);
+        const decodedUserSafe = verifyJwt(jwt);
         const selectedUser: User = await UsersRepository.getUser(decodedUserSafe);
 
         return UserSafeSchema.parse(selectedUser);
