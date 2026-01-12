@@ -35,11 +35,12 @@ export async function insertUser(user: InsertUser, ip: IPAddress | null, email_v
  */
 export async function getUser(userSafe: UserSafe): Promise<User> {
     try {
-        let query = "SELECT * FROM users WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_logout_at) = date_trunc('second', $4::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $5::timestamp)";
-        let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_logout_at.toString(), userSafe.created_at.toString()];
+        let query = "SELECT * FROM users WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', created_at) = date_trunc('second', $4::timestamp)";
+        let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.created_at.toString()];
 
         const rows = await Database.execute<User>({ text: query, values: values });
-        if (rows.length === 0) { throw new AppError('User not found', 404); }
+        if (rows.length <= 0) { throw new AppError('User not found', 404); }
+        if (!rows[0].is_connected) { throw new AppError('User is not connected', 401); }
 
         return rows[0];
     } catch (error) {

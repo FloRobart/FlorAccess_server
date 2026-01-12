@@ -19,12 +19,13 @@ export async function generateJwt(payload: { [key: string|number]: any }): Promi
     }
 }
 
+
 /**
  * Verifies and decodes a JWT token.
  * @param token JWT token to verify
  * @returns Decoded JWT payload or null if invalid
  */
-export async function verifyJwt(token: string): Promise<UserSafe> {
+export function verifyJwt(token: string): UserSafe {
     try {
         const decoded = JWT.verify(token, AppConfig.jwt_signing_key);
         return decoded as UserSafe;

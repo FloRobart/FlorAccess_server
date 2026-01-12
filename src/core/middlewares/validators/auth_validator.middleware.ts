@@ -13,7 +13,7 @@ import { verifyJwt } from "../../utils/jwt";
 export const authorizationValidator = (schema: ZodType) => async (req: Request, _res: Response, next: NextFunction) => {
     try {
         schema.parse(req.headers.authorization);
-        await verifyJwt(req.headers.authorization!.split(' ')[1]);
+        verifyJwt(req.headers.authorization!.split(' ')[1]);
         next();
     } catch (error) {
         next(error instanceof AppError ? error : new AppError("Invalid Authorization header", 401));
