@@ -1,8 +1,6 @@
-import path from 'path';
 import AppConfig from '../../config/AppConfig';
-import escapeHtml from '../utils/parse_html';
 import sendEmail from './mailer';
-import fs from 'fs/promises';
+import { getEmailTemplate } from '../email/get_email_template';
 
 
 
@@ -16,12 +14,11 @@ export async function sendErrorEmail(...args: any[]): Promise<void> {
     const errorMessage = args.map(arg => typeof arg === 'string' ? arg : JSON.stringify(arg, null, 2)).join('\n');
     const courrentYear: string = String(new Date().getFullYear());
 
-    const templatePath = path.join(process.cwd(), 'public', 'html', 'email_error_template.html');
-    const raw = await fs.readFile(templatePath, 'utf8');
-    const html = raw
-        .replace(/{{\s*appName\s*}}/g, escapeHtml(AppConfig.app_name))
-        .replace(/{{\s*errorMessage\s*}}/g, escapeHtml(errorMessage))
-        .replace(/{{\s*currentYear\s*}}/g, escapeHtml(courrentYear));
+    const html = await getEmailTemplate('email_error_template', {
+        appName: AppConfig.app_name,
+        errorMessage: errorMessage,
+        currentYear: courrentYear
+    });
 
     try {
         await sendEmail(AppConfig.mail_username, `Erreur dans ${AppConfig.app_name}`, html);

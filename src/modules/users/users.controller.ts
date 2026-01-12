@@ -1,11 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import path from 'path';
 import * as UsersService from './users.service';
 import { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm, UserEmailVerification } from './users.types';
 import { IPAddressSchema } from './users.schema';
-import fs from 'fs/promises';
-import escapeHtml from '../../core/utils/parse_html';
 import AppConfig from '../../config/AppConfig';
+import { getEmailTemplate } from '../../core/email/get_email_template';
 
 
 
@@ -159,14 +157,12 @@ export const UserEmailVerify = async (req: Request, res: Response, next: NextFun
         const message = error.message || 'Une erreur est survenue lors de la vérification de l\'email.';
 
         try {
-            const templatePath = path.join(process.cwd(), 'public', 'html', 'email_verification_error.html');
-            const raw = await fs.readFile(templatePath, 'utf8');
-
-            const html = raw
-                .replace(/{{\s*status\s*}}/g, escapeHtml(String(status)))
-                .replace(/{{\s*message\s*}}/g, escapeHtml(String(message)))
-                .replace(/{{\s*application\s*}}/g, escapeHtml(userEmailVerification.application || AppConfig.app_name))
-                .replace(/{{\s*domain\s*}}/g, escapeHtml(userEmailVerification.domain || ''));
+            const html = await getEmailTemplate('email_verification_error', {
+                status: status,
+                message: message,
+                application: userEmailVerification.application || AppConfig.app_name,
+                domain: userEmailVerification.domain || ''
+            });
 
             return res.status(status).type('html').send(html);
         } catch (readErr) {

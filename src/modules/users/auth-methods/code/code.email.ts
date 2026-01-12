@@ -1,8 +1,6 @@
-import path from "path";
 import AppConfig from "../../../../config/AppConfig";
 import sendEmail from "../../../../core/email/mailer";
-import fs from "fs/promises";
-import escapeHtml from "../../../../core/utils/parse_html";
+import { getEmailTemplate } from '../../../../core/email/get_email_template';
 
 
 
@@ -17,14 +15,12 @@ export async function sendEmailCode(to: string, app_name: string, code: string):
     try {
         const appName = app_name || AppConfig.app_name;
         const stringCode: string = code.toString().replace(/(\d{2})(?=\d)/g, '$1 ');
-        const courrentYear: string = String(new Date().getFullYear());
 
-        const templatePath = path.join(process.cwd(), 'public', 'html', 'email_code_template.html');
-        const raw = await fs.readFile(templatePath, 'utf8');
-        const html = raw
-            .replace(/{{\s*appName\s*}}/g, escapeHtml(appName))
-            .replace(/{{\s*code\s*}}/g, escapeHtml(stringCode))
-            .replace(/{{\s*currentYear\s*}}/g, escapeHtml(courrentYear));
+        const html = await getEmailTemplate('email_code_template', {
+            appName: appName,
+            code: stringCode,
+            currentYear: String(new Date().getFullYear())
+        });
 
         await sendEmail(to, `Votre code pour ${appName} : ${stringCode}`, html);
     } catch (error) {

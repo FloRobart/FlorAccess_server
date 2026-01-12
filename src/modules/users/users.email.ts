@@ -1,8 +1,6 @@
-import path from "path";
 import AppConfig from "../../config/AppConfig";
 import sendEmail from "../../core/email/mailer";
-import fs from "fs/promises";
-import escapeHtml from "../../core/utils/parse_html";
+import { getEmailTemplate } from '../../core/email/get_email_template';
 
 
 
@@ -16,14 +14,11 @@ import escapeHtml from "../../core/utils/parse_html";
 export async function sendEmailVerify(to: string, app_name: string, url: string): Promise<void> {
     try {
         const appName = app_name || AppConfig.app_name;
-        const courrentYear: string = String(new Date().getFullYear());
-
-        const templatePath = path.join(process.cwd(), 'public', 'html', 'email_verification_email.html');
-        const raw = await fs.readFile(templatePath, 'utf8');
-        const html = raw
-            .replace(/{{\s*appName\s*}}/g, escapeHtml(appName))
-            .replace(/{{\s*url\s*}}/g, escapeHtml(url))
-            .replace(/{{\s*currentYear\s*}}/g, escapeHtml(courrentYear));
+        const html = await getEmailTemplate('email_verification_email', {
+            appName: appName,
+            url: url,
+            currentYear: String(new Date().getFullYear())
+        });
 
         await sendEmail(to, `${appName} : Verification de votre email`, html);
     } catch (error) {
