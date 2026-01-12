@@ -12,6 +12,9 @@ import AppConfig from '../../config/AppConfig';
 /**
  * Registers a new user with the provided information.
  * @param req.body.validated insertUser object containing the information of the user to create
+ * @param req.ip IP address of the user
+ * @param req.query.application Application name from which the user is being created
+ * @param req.query.domain Domain associated with the user
  * @returns JWT for the newly created user or error response
  */
 export const insertUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -140,8 +143,8 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
 
 
 /** * Verifies a user's email using the provided token.
- * @param req.body.validated userId and token for email verification
- * @returns Success message
+ * @param req.body.validated UserEmailVerification object containing the verification token and other details.
+ * @returns HTML content indicating the result of the email verification.
  * @throws Error if email verification fails or if the token is invalid.
  */
 export const UserEmailVerify = async (req: Request, res: Response, next: NextFunction) => {
