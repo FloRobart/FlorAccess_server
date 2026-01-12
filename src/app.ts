@@ -42,11 +42,15 @@ app.get('/', (_req, res) => { res.status(200).send('HEALTH CHECK') });
 
 /* Favicon */
 app.get("/favicon.ico", (_req, res) => {
-    res.sendFile(path.join(__dirname, "../public/favicon.ico"));
+    res.sendFile(path.join(process.cwd(), "public", "icons", "favicon.ico"));
 });
 
 /* Logger */
-morgan.token("remote-user", (req: Request) => { return verifyJwt(req.headers.authorization!.split(" ")[1]).email || "Unknown User"; });
+morgan.token("remote-user", (req: Request) => {
+    const defaultUser = "Unknown User";
+    const token = req.headers.authorization?.split(" ")[1];
+    return token !== undefined ? verifyJwt(token)?.email || defaultUser : defaultUser;
+});
 app.use(morgan(AppConfig.log_format));
 
 

@@ -8,6 +8,9 @@ import AppConfig from "../../config/AppConfig";
 import { sendEmailVerify } from "./users.email";
 import * as logger from "../../core/utils/logger";
 import { AppError } from "../../core/models/AppError.model";
+import path from "path";
+import fs from "fs/promises";
+import escapeHtml from '../../core/utils/parse_html';
 
 
 
@@ -18,16 +21,16 @@ import { AppError } from "../../core/models/AppError.model";
  * @returns JWT for the newly created user.
  * @throws Error if user creation or JWT generation fails.
  */
-export async function insertUser(user: InsertUser, ip: IPAddress | null): Promise<string> {
+export async function insertUser(user: InsertUser, ip: IPAddress | null, application: string, domain: string | null): Promise<string> {
     try {
         const email_verify_token = await generateApiToken();
         const insertedUser: User = await UsersRepository.insertUser(user, ip, await hashString(email_verify_token));
         const validatedUser: UserSafe = UserSafeSchema.parse(insertedUser);
         
-        const url = `${AppConfig.base_url}/users/email/verify/${validatedUser.id}?token=${email_verify_token}`;
+        const url = `${AppConfig.base_url}/users/email/verify/${validatedUser.id}?token=${email_verify_token}&application=${encodeURIComponent(application)}&domain=${encodeURIComponent(domain || 'null')}`;
         logger.debug(`Email verification URL for user ${validatedUser.id}: ${url}`);
         if (!AppConfig.app_env.includes('dev')) {
-            sendEmailVerify(user.email, AppConfig.app_name, url);
+            sendEmailVerify(user.email, application, url);
         }
 
         return await generateJwt(validatedUser);
@@ -140,12 +143,15 @@ export async function logoutUser(jwt: string): Promise<void> {
 /**
  * Verifies a user's email.
  * @param userEmailVerification The userEmailVerification object containing the information to verify user email.
+ * @return HTML string to display the result of the email verification.
  * @throws Error if email verification fails or if the information is invalid.
  */
-export async function UserEmailVerify(userEmailVerification: UserEmailVerification): Promise<void> {
+export async function UserEmailVerify(userEmailVerification: UserEmailVerification): Promise<string> {
     try {
         const userId = parseInt(userEmailVerification.userId, 10);
         const token = userEmailVerification.token;
+        const application: string = userEmailVerification.application || AppConfig.app_name;
+        const domain: string = (userEmailVerification.domain !== undefined && userEmailVerification.domain !== 'null') ? userEmailVerification.domain : '';
 
         const user = await UsersRepository._getUserById(userId);
 
@@ -166,6 +172,20 @@ export async function UserEmailVerify(userEmailVerification: UserEmailVerificati
         }
 
         await UsersRepository.UserEmailVerify(userId);
+
+        const templatePath = path.join(process.cwd(), 'public', 'html', 'email_verification_success.html');
+        const raw = await fs.readFile(templatePath, 'utf8');
+
+        const statusText = `Email '${user.email}' confirmé`;
+        const messageText = "Merci — votre adresse email a bien été vérifiée. Vous pouvez maintenant vous connecter.";
+
+        const html = raw
+            .replace(/{{\s*status\s*}}/g, escapeHtml(statusText))
+            .replace(/{{\s*message\s*}}/g, escapeHtml(messageText))
+            .replace(/{{\s*application\s*}}/g, escapeHtml(application))
+            .replace(/{{\s*domain\s*}}/g, escapeHtml(domain));
+
+        return html;
     } catch (error) {
         throw error;
     }
