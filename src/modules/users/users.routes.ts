@@ -23,6 +23,18 @@ const router = Router();
  *       - in: body
  *         schema:
  *           $ref: '#/components/schemas/InsertUser'
+ *       - in: query
+ *         name: application
+ *         description: Name of the application where the user is being registered
+ *         schema:
+ *           type: string
+ *           example: "MyApp"
+ *       - in: query
+ *         name: domain
+ *         description: Domain name of the application where the user is being registered
+ *         schema:
+ *           type: string
+ *           example: "example.com"
  *     responses:
  *       200:
  *         description: User registered successfully
