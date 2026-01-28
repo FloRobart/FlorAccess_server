@@ -44,23 +44,6 @@ app.get("/favicon.ico", (_req, res) => {
     res.sendFile(path.join(process.cwd(), "public", "icons", "favicon.ico"));
 });
 
-/* Logger */
-morgan.token("remote-user", (req: Request) => {
-    const defaultUser = "Unknown User";
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return defaultUser;
-    try {
-        return verifyJwt(token)?.email || defaultUser;
-    } catch (err) {
-        return defaultUser;
-    }
-});
-app.use(morgan(AppConfig.log_format));
-
-
-/* Users routes */
-app.use('/users', userRoutes);
-
 /* Static public files */
 app.use(express.static(path.join(process.cwd(), "public")));
 
@@ -100,6 +83,24 @@ if (AppConfig.app_env.includes('dev')) {
         res.send(swaggerDocs);
     });
 }
+
+
+/* Logger */
+morgan.token("remote-user", (req: Request) => {
+    const defaultUser = "Unknown User";
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return defaultUser;
+    try {
+        return verifyJwt(token)?.email || defaultUser;
+    } catch (err) {
+        return defaultUser;
+    }
+});
+app.use(morgan(AppConfig.log_format));
+
+
+/* Users routes */
+app.use('/users', userRoutes);
 
 
 /* Default Route Handler (404) */
