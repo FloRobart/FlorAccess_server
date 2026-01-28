@@ -61,6 +61,8 @@ app.use(morgan(AppConfig.log_format));
 /* Users routes */
 app.use('/users', userRoutes);
 
+/* Static public files */
+app.use(express.static(path.join(process.cwd(), "public")));
 
 /* Swagger setup for API documentation in development environment */
 if (AppConfig.app_env.includes('dev')) {
