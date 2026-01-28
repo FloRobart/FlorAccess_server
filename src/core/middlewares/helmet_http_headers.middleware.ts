@@ -56,6 +56,9 @@ export const helmetOptions: HelmetOptions = {
     /* Cross-Origin-Opener-Policy (enable in prod) */
     crossOriginOpenerPolicy: AppConfig.app_env.includes('prod') ? { policy: 'same-origin' } : false,
 
+    /* Origin-Agent-Cluster */
+    originAgentCluster: true,
+
     /* Hide powered by (Helmet removes X-Powered-By by default) */
     hidePoweredBy: true,
 } as HelmetOptions;
