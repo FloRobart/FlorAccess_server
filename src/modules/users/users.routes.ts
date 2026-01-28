@@ -19,10 +19,13 @@ const router = Router();
  *       - Users
  *     summary: Register a new user
  *     description: Register a new user by providing an email address and pseudo.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/InsertUser'
  *     parameters:
- *       - in: body
- *         schema:
- *           $ref: '#/components/schemas/InsertUser'
  *       - in: query
  *         name: application
  *         description: Name of the application where the user is being registered
@@ -36,7 +39,7 @@ const router = Router();
  *           type: string
  *           example: "example.com"
  *     responses:
- *       200:
+ *       201:
  *         description: User registered successfully
  *         content:
  *           application/json:
@@ -66,14 +69,8 @@ router.post('/', bodyValidator(UsersSchema.UserInsertSchema), UsersController.in
  *       - Users
  *     summary: Get user information from JWT
  *     description: Retrieve information about the authenticated user.
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         description: JWT
- *         schema:
- *           type: string
- *           example: "Bearer your_jwt_token_here"
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: User information retrieved successfully.
@@ -97,23 +94,17 @@ router.get('/', authorizationValidator(UsersSchema.AuthorizationHeaderSchema), U
 
 /**
  * @swagger
- * /users:
+ * /users/jwt:
  *   get:
  *     tags:
  *       - Users
- *     summary: Get user information from JWT
- *     description: Retrieve information about the authenticated user.
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         description: JWT
- *         schema:
- *           type: string
- *           example: "Bearer your_jwt_token_here"
+ *     summary: Regenerate JWT
+ *     description: Regenerate a new JWT for the authenticated user.
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: User information retrieved successfully.
+ *         description: New JWT generated successfully.
  *         content:
  *           application/json:
  *             schema:
@@ -140,17 +131,14 @@ router.get('/jwt', authorizationValidator(UsersSchema.AuthorizationHeaderSchema)
  *       - Users
  *     summary: Update user information
  *     description: Update the information of an existing user.
- *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         description: JWT token for user authentication
- *         schema:
- *           type: string
- *           example: "Bearer your_jwt_token_here"
- *       - in: body
- *         schema:
- *           $ref: '#/components/schemas/UpdateUser'
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateUser'
  *     responses:
  *       200:
  *         description: User updated successfully
@@ -182,14 +170,8 @@ router.put('/', authorizationValidator(UsersSchema.AuthorizationHeaderSchema), b
  *       - Users
  *     summary: Delete user
  *     description: Delete the user associated with the provided JWT token.
- *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         description: JWT token for user authentication
- *         schema:
- *           type: string
- *           example: "Bearer your_jwt_token_here"
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: User deleted successfully
@@ -228,10 +210,12 @@ router.delete('/', authorizationValidator(UsersSchema.AuthorizationHeaderSchema)
  *       - Users
  *     summary: Request login for a user
  *     description: Request login for a user by providing the necessary credentials.
- *     parameters:
- *       - in: body
- *         schema:
- *           $ref: '#/components/schemas/UserLoginRequest'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserLoginRequest'
  *     responses:
  *       200:
  *         description: token to confirm user login
@@ -269,10 +253,12 @@ router.post('/login/request', bodyValidator(UsersSchema.UserLoginRequestSchema),
  *       - Users
  *     summary: Confirm login for a user
  *     description: Confirm login for a user by providing the necessary credentials.
- *     parameters:
- *       - in: body
- *         schema:
- *           $ref: '#/components/schemas/UserLoginConfirm'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserLoginConfirm'
  *     responses:
  *       200:
  *         description: token to confirm user login
@@ -304,14 +290,8 @@ router.post('/login/confirm', bodyValidator(UsersSchema.UserLoginConfirmSchema),
  *       - Users
  *     summary: Logout a user
  *     description: Logout a user by invalidating the authentication token.
- *     parameters:
- *       - in: headers
- *         name: Authorization
- *         required: true
- *         description: JWT token for user authentication
- *         schema:
- *           type: string
- *           example: "Bearer your_jwt_token_here"
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: User logged out successfully
@@ -376,16 +356,11 @@ router.post('/logout', authorizationValidator(UsersSchema.AuthorizationHeaderSch
  *       200:
  *         description: token to confirm user login
  *         content:
- *           application/json:
+ *           text/html:
  *             schema:
- *               type: object
- *               required:
- *                 - message
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Confirmation message for successful email verification
- *                   example: "Email verified successfully."
+ *               type: string
+ *               description: HTML content indicating the result of the email verification
+ *               example: "<html><body><h1>Email Verified</h1><p>Your email has been successfully verified.</p></body></html>"
  *       400:
  *         description: Bad request. Change your request to fix this error
  *         content:

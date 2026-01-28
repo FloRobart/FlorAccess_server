@@ -59,9 +59,9 @@ export async function selectUser(jwt: string): Promise<UserSafe> {
 
 
 /**
- * Vérifie le JWT et extrait les informations de l'utilisateur.
+ * Vérifie le JWT, extrait les informations de l'utilisateur et génère un nouveau JWT.
  * @param jwt JWT token to verify and extract user information from.
- * @returns UserSafe object containing the user's safe information.
+ * @returns New JWT for the user.
  * @throws Error if user retrieval fails or if the token is invalid.
  */
 export async function regenerateJwt(jwt: string): Promise<string> {

@@ -50,3 +50,14 @@
  *         jwt:
  *           type: string
  */
+
+/* Security Schemes */
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */

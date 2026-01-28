@@ -48,9 +48,9 @@ export const selectUser = async (req: Request, res: Response, next: NextFunction
 
 
 /**
- * Retrieves user information from the JWT in the request headers.
+ * Regenerates a JWT for the user based on the provided JWT.
  * @param req.headers.authorization Authorization header containing the JWT
- * @returns User information or error response
+ * @returns New JWT for the user or error response
  */
 export const regenerateJwt = async (req: Request, res: Response, next: NextFunction) => {
     const jwt: string = req.headers.authorization!.split(' ')[1];

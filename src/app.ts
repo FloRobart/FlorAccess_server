@@ -2,7 +2,6 @@ import express from 'express';
 import { Request } from 'express';
 import userRoutes from './modules/users/users.routes';
 import { errorHandler } from './core/middlewares/error.middleware';
-import * as logger from './core/utils/logger';
 import fs from 'node:fs';
 import AppConfig from './config/AppConfig';
 import { limiter } from './core/middlewares/rate_limiter.middleware';
@@ -28,7 +27,7 @@ app.use(helmet(helmetOptions));
 
 /* Trust proxy in production */
 if (AppConfig.app_env.includes('prod')) {
-    app.set('trust proxy', true);
+    app.set('trust proxy', 1);
 }
 
 /* Rate Limiter */
@@ -44,6 +43,47 @@ app.get('/', (_req, res) => { res.status(200).send('HEALTH CHECK') });
 app.get("/favicon.ico", (_req, res) => {
     res.sendFile(path.join(process.cwd(), "public", "icons", "favicon.ico"));
 });
+
+/* Static public files */
+app.use(express.static(path.join(process.cwd(), "public")));
+
+/* Swagger setup for API documentation in development environment */
+if (AppConfig.app_env.includes('dev')) {
+    const swaggerUi = require('swagger-ui-express');
+    const swaggerJsDoc = require('swagger-jsdoc');
+    const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+    const swaggerOptions = {
+        swaggerDefinition: {
+            openapi: '3.0.0',
+            info: {
+                title: AppConfig.app_name,
+                version: packageJson.version,
+                description: `${AppConfig.app_name} documentation`,
+            },
+        },
+        apis: [
+            `${__dirname}/modules/**/*.ts`,
+            `${__dirname}/modules/**/*.js`,
+            `${__dirname}/swagger/**/*.ts`,
+            `${__dirname}/swagger/**/*.js`,
+        ],
+    };
+
+    const swaggerUiOptions = {
+        explorer: false,
+        swaggerOptions: {
+            deepLinking: false,
+        },
+    };
+
+    const swaggerDocs = swaggerJsDoc(swaggerOptions);
+    app.use('/api-docs', morgan(AppConfig.log_format), swaggerUi.serve, swaggerUi.setup(swaggerDocs, swaggerUiOptions));
+    app.get('/api-docs.json', (_req, res) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(swaggerDocs);
+    });
+}
+
 
 /* Logger */
 morgan.token("remote-user", (req: Request) => {
@@ -62,51 +102,6 @@ app.use(morgan(AppConfig.log_format));
 /* Users routes */
 app.use('/users', userRoutes);
 
-
-/* Swagger - only in development */
-if (AppConfig.app_env.includes('dev')) {
-    const SWAGGER_JSON_PATH = `${__dirname}/swagger/json/swagger.json`;
-    try {
-        /* Swagger setup */
-        const swaggerUi = require('swagger-ui-express');
-        const swaggerJsDoc = require('swagger-jsdoc');
-        const swaggerOptions = {
-            swaggerDefinition: {
-                openapi: '3.0.0',
-                info: {
-                    title: `${AppConfig.app_name} API`,
-                    version: '2.0.0',
-                    description: 'API documentation',
-                },
-                servers: [
-                    {
-                        url: AppConfig.base_url,
-                    },
-                ],
-            },
-            apis: [`${__dirname}/modules/**/*.ts`, `${__dirname}/swagger/**/*.ts`, `${__dirname}/modules/**/*.js`, `${__dirname}/swagger/**/*.js`],
-        };
-
-        const swaggerDocs = swaggerJsDoc(swaggerOptions);
-        app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-        app.get('/api-docs.json', (_req, res) => {
-            if (!app.locals.swaggerJsonFileCreated) {
-                res.status(500).json({ error: "The Swagger JSON file encountered a problem creating it. Please see : " + AppConfig.base_url + "/api-docs" });
-                return;
-            }
-            return res.download(SWAGGER_JSON_PATH)
-        });
-
-        /* Create swagger json file */
-        fs.writeFileSync(SWAGGER_JSON_PATH, Buffer.from(JSON.stringify(swaggerDocs), 'utf8'));
-        app.locals.swaggerJsonFileCreated = true;
-        logger.success("Swagger JSON file created at :", SWAGGER_JSON_PATH);
-    } catch (err) {
-        logger.error(err);
-        app.locals.swaggerJsonFileCreated = false;
-        logger.error("Error creating swagger JSON file at :", SWAGGER_JSON_PATH);
-    }
-}
 
 /* Default Route Handler (404) */
 app.use(defaultRouteHandler);
