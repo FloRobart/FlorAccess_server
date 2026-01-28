@@ -4,7 +4,6 @@ services:
       context: ./Database
       dockerfile: Dockerfile
     image: floraccess-db:latest
-    restart: always
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
