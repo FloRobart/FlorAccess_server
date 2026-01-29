@@ -54,3 +54,37 @@
  *           type: Date
  *           example: "2025-10-10T20:16:25.183Z"
  */
+
+
+/*========*/
+/* UPDATE */
+/*========*/
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     UserAdminUpdate:
+ *       type: object
+ *       required:
+ *         - email
+ *         - pseudo
+ *         - auth_methods_id
+ *         - is_connected
+ *         - is_verified_email
+ *       properties:
+ *         email:
+ *           type: string
+ *           example: "john.doe@email.com"
+ *         pseudo:
+ *           type: string
+ *           example: "John Doe"
+ *         auth_methods_id:
+ *           type: number
+ *           example: 1
+ *         is_connected:
+ *           type: boolean
+ *           example: true
+ *         is_verified_email:
+ *           type: boolean
+ *           example: false
+ */

@@ -1,4 +1,5 @@
 import type { User, UserSafe } from '../users/users.types';
+import type { UserAdmin, UserAdminUpdate } from './admins.types';
 
 import { Database } from '../../core/models/Database.model';
 import { AppError } from '../../core/models/AppError.model';
@@ -27,6 +28,10 @@ export async function isAdmin(userSafe: UserSafe): Promise<boolean> {
     }
 }
 
+
+/*========*/
+/* SELECT */
+/*========*/
 /**
  * Retrieves information about all users.
  * @returns List of User objects.
@@ -37,6 +42,45 @@ export async function selectUsers(): Promise<User[]> {
         let query = "SELECT * FROM users";
         const rows = await Database.execute<User>({ text: query, values: [] });
         return rows;
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/*========*/
+/* UPDATE */
+/*========*/
+/**
+ * Updates user in the database.
+ * @param updateUser The user object containing the updated user information.
+ * @param userAdmin The userAdmin object containing the current information of the user to update.
+ * @returns The updated user object with sensitive information.
+ * @throws Error if user update fails or if the user is not found.
+ */
+export async function updateUser(updateUser: UserAdminUpdate, userAdmin: User): Promise<User> {
+    try {
+        let query = "UPDATE users SET ";
+        let setClauses: string[] = [];
+        let values: (string | number | boolean | null)[] = [];
+        values.push(userAdmin.id, userAdmin.is_connected, userAdmin.email, userAdmin.pseudo, userAdmin.last_logout_at.toISOString(), userAdmin.created_at.toISOString());
+    
+        for (const key in updateUser) {
+            if (updateUser.hasOwnProperty(key)) {
+                const value = updateUser[key as keyof UserAdminUpdate];
+                if (value === undefined) continue;
+
+                setClauses.push(`${key} = $${values.length + 1}`);
+                values.push(value);
+            }
+        }
+    
+        query += setClauses.join(', ') + " WHERE id = $1 AND is_connected = $2 AND email = $3 AND pseudo = $4 AND date_trunc('second', last_logout_at) = date_trunc('second', $5::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $6::timestamp) RETURNING *";
+
+        const rows = await Database.execute<User>({ text: query, values: values });
+        if (rows.length === 0) { throw new AppError('User not found', 404); }
+
+        return rows[0];
     } catch (error) {
         throw error;
     }

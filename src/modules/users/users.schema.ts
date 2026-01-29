@@ -1,12 +1,11 @@
 import { z } from "zod";
-import { is } from "zod/v4/locales";
 
 
 
 /**
  * Schéma de validation pour un email, avec prétraitement pour normaliser l'email.
  */
-const EmailSchema = z.preprocess(
+export const EmailSchema = z.preprocess(
     (val) => typeof val === "string" ? val.toLowerCase().replace(/\s+/g, "") : val,
     z.email()
 );
@@ -14,7 +13,7 @@ const EmailSchema = z.preprocess(
 /**
  * Schéma de validation pour un pseudo.
  */
-const PseudoSchema = z.string().trim().min(3).max(255);
+export const PseudoSchema = z.string().trim().min(3).max(255);
 
 
 /*========*/
