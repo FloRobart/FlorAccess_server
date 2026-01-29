@@ -50,9 +50,8 @@
  *         - auth_methods_id
  *         - is_connected
  *         - is_verified_email
- *         - last_login
+ *         - last_logout_at
  *         - created_at
- *         - updated_at
  *       properties:
  *         id:
  *           type: number
@@ -72,13 +71,10 @@
  *         is_verified_email:
  *           type: boolean
  *           example: false
- *         last_login:
+ *         last_logout_at:
  *           type: Date
  *           example: "2025-10-10T20:16:25.183Z"
  *         created_at:
- *           type: Date
- *           example: "2025-10-10T20:16:25.183Z"
- *         updated_at:
  *           type: Date
  *           example: "2025-10-10T20:16:25.183Z"
  */
