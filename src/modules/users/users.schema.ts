@@ -1,6 +1,5 @@
-import { application } from "express";
 import { z } from "zod";
-import { domain } from "zod/v4/core/regexes.cjs";
+import { is } from "zod/v4/locales";
 
 
 
@@ -55,10 +54,12 @@ export const UserSafeSchema = z.object({
 export const UserSchema = UserSafeSchema.extend({
     last_login: z.date(),
     last_ip: z.ipv4().or(z.ipv6()).nullable(),
-
+    
     email_verify_token_hash: z.string().trim().nullable(),
     secret_hash: z.string().trim().nullable(),
     token_hash: z.string().trim().nullable(),
+
+    is_admin: z.boolean(),
 });
 
 /**
