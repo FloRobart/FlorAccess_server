@@ -1,10 +1,8 @@
 import { Router } from 'express';
 import * as AdminsController from './admins.controller';
-import { bodyValidator } from '../../core/middlewares/validators/body_validator.middleware';
-import { UserInsertSchema } from '../users/users.schema';
-import { EmailAdminSchema, UserAdminSchema, UserAdminUpdateSchema, UserIdListParamsSchema, UserIdListSchema, UserIdSchema } from './admins.schema';
-import { paramsQueryValidator } from '../../core/middlewares/validators/params_query_validator.middleware';
 import { requestValidator } from '../../core/middlewares/validators/request_validator.middleware';
+import { UserInsertSchema } from '../users/users.schema';
+import * as AdminsSchema from './admins.schema';
 
 
 
@@ -48,7 +46,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/user', bodyValidator(UserInsertSchema), AdminsController.insertUser);
+router.post('/user', requestValidator(UserInsertSchema), AdminsController.insertUser);
 
 
 /**
@@ -128,7 +126,7 @@ router.get('/users', AdminsController.selectUsers);
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.put('/user/:userId', requestValidator(UserIdSchema), requestValidator(UserAdminUpdateSchema), AdminsController.updateUser);
+router.put('/user/:userId', requestValidator(AdminsSchema.UserIdSchema), requestValidator(AdminsSchema.UserAdminUpdateSchema), AdminsController.updateUser);
 
 
 /**
@@ -165,7 +163,7 @@ router.put('/user/:userId', requestValidator(UserIdSchema), requestValidator(Use
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.delete('/user/:userId', requestValidator(UserIdSchema), AdminsController.deleteUser);
+router.delete('/user/:userId', requestValidator(AdminsSchema.UserIdSchema), AdminsController.deleteUser);
 
 
 /**
@@ -204,7 +202,7 @@ router.delete('/user/:userId', requestValidator(UserIdSchema), AdminsController.
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/users/send/verify-email', requestValidator(UserIdListParamsSchema), AdminsController.sendVerifyEmail);
+router.post('/users/send/verify-email', requestValidator(AdminsSchema.UserIdListParamsSchema), AdminsController.sendVerifyEmail);
 
 
 /**
@@ -243,7 +241,7 @@ router.post('/users/send/verify-email', requestValidator(UserIdListParamsSchema)
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/users/send/email', requestValidator(EmailAdminSchema), AdminsController.sendEmailAdmin);
+router.post('/users/send/email', requestValidator(AdminsSchema.EmailAdminSchema), AdminsController.sendEmailAdmin);
 
 
 

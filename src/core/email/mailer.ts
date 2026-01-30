@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import * as logger from '../utils/logger';
+import logger from '../utils/logger';
 import AppConfig from '../../config/AppConfig';
 import { AppError } from '../models/AppError.model';
 
