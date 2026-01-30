@@ -1,13 +1,14 @@
 import type { InsertUser, User, UserSafe } from "../users/users.types";
-import type { UserAdmin, UserAdminUpdate } from "./admins.types";
+import type { UserAdmin, UserAdminUpdate, UserIdList } from "./admins.types";
 
 import * as AdminsRepository from "./admins.repository";
 import { ZodError } from "zod";
 import { AppError } from "../../core/models/AppError.model";
 import { UserAdminSchema } from "./admins.schema";
-import { insertUser as UsersService_InsertUser } from "../users/users.service";
-import { getUser as UsersRepository_SelectUser, _getUserById } from "../users/users.repository";
+import { insertUser as UsersService_InsertUser, sendVerificationEmail as UsersService_sendVerificationEmail } from "../users/users.service";
+import { getUser as UsersRepository_SelectUser, _getUserById, updateUserEmailVerifyTokenHash } from "../users/users.repository";
 import { verifyJwt } from "../../core/utils/jwt";
+import { generateApiToken, hashString } from "../../core/utils/securities";
 
 
 
@@ -98,5 +99,43 @@ export async function updateUser(userId: number, updateUserData: UserAdminUpdate
         if (error instanceof ZodError) { throw new AppError('Data validation error', 500); }
         if (error instanceof AppError) { throw error; }
         throw new AppError('Unknown error in admin updateUser', 500);
+    }
+}
+
+
+/*====================*/
+/* Email verification */
+/*====================*/
+/**
+ * Sends verification emails to a list of users.
+ * @param userIdList The list of user IDs to send verification emails to.
+ * @returns List of user IDs for whom the email was sent.
+ * @throws AppError if email sending fails.
+ */
+export async function sendVerifyEmail(userIdList: number[]): Promise<UserIdList> {
+    try {
+        const userIdListSuccess: UserIdList = [];
+        for (const userId of userIdList) {
+            /* Retrieve user info */
+            const user: User = await _getUserById(userId);
+
+            /* Generate email verification token */
+            const email_verify_token = await generateApiToken();
+
+            /* Update email_verify_token_hash in database */
+            await updateUserEmailVerifyTokenHash(userId, await hashString(email_verify_token));
+
+            /* Send verification email */
+            await UsersService_sendVerificationEmail(userId, user.email, email_verify_token);
+
+            /* Add userId to success list */
+            userIdListSuccess.push(userId);
+        }
+
+        /* Return list of userIds for whom the email was sent */
+        return userIdListSuccess;
+    } catch (error) {
+        if (error instanceof AppError) { throw error; }
+        throw new AppError('Unknown error in admin sendVerifyEmail', 500);
     }
 }

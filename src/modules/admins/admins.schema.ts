@@ -37,3 +37,19 @@ export const UserAdminUpdateSchema = UserAdminSchema.omit({
     last_login: true,
     last_logout_at: true,
 }).partial();
+
+
+/*====================*/
+/* Email verification */
+/*====================*/
+/**
+ * Schéma de validation pour la liste des IDs d'utilisateurs dans le corps de la requête.
+ */
+export const UserIdListParamsSchema = z.object({
+    userIdList: z.array(z.number().int().positive()).min(1),
+});
+
+/**
+ * Schéma de validation pour la liste des IDs d'utilisateurs.
+ */
+export const UserIdListSchema = UserIdListParamsSchema.transform((obj) => obj.userIdList);

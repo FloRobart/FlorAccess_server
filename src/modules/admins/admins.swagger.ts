@@ -88,3 +88,20 @@
  *           type: boolean
  *           example: false
  */
+
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     UserIdList:
+ *       type: object
+ *       required:
+ *         - userIdList
+ *       properties:
+ *         userIdList:
+ *           type: array
+ *           items:
+ *             type: number
+ *           example: [1, 2, 3]
+ */
