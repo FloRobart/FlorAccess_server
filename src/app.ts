@@ -12,6 +12,9 @@ import helmet from 'helmet';
 import { helmetOptions } from './core/middlewares/helmet_http_headers.middleware';
 import morgan from 'morgan';
 import { verifyJwt } from './core/utils/jwt';
+import { adminsAuthorizationValidator } from './core/middlewares/validators/admins_auth_validator.middleware';
+import { AuthorizationHeaderSchema } from './modules/users/users.schema';
+import adminsRoutes from './modules/admins/admins.routes';
 
 
 
@@ -102,6 +105,8 @@ app.use(morgan(AppConfig.log_format));
 /* Users routes */
 app.use('/users', userRoutes);
 
+/* Admins routes */
+app.use('/admins', adminsAuthorizationValidator(AuthorizationHeaderSchema), adminsRoutes);
 
 /* Default Route Handler (404) */
 app.use(defaultRouteHandler);

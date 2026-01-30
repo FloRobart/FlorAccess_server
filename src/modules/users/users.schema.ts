@@ -1,13 +1,11 @@
-import { application } from "express";
 import { z } from "zod";
-import { domain } from "zod/v4/core/regexes.cjs";
 
 
 
 /**
  * Schéma de validation pour un email, avec prétraitement pour normaliser l'email.
  */
-const EmailSchema = z.preprocess(
+export const EmailSchema = z.preprocess(
     (val) => typeof val === "string" ? val.toLowerCase().replace(/\s+/g, "") : val,
     z.email()
 );
@@ -15,7 +13,7 @@ const EmailSchema = z.preprocess(
 /**
  * Schéma de validation pour un pseudo.
  */
-const PseudoSchema = z.string().trim().min(3).max(255);
+export const PseudoSchema = z.string().trim().min(3).max(255);
 
 
 /*========*/
@@ -59,6 +57,8 @@ export const UserSchema = UserSafeSchema.extend({
     email_verify_token_hash: z.string().trim().nullable(),
     secret_hash: z.string().trim().nullable(),
     token_hash: z.string().trim().nullable(),
+
+    is_admin: z.boolean(),
 });
 
 /**

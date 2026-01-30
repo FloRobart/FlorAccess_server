@@ -366,6 +366,7 @@ const BaseUserSchema: User = {
     email_verify_token_hash: "hashed_token",
     secret_hash: "hashed_secret",
     token_hash: "hashed_token",
+    is_admin: false,
 };
 
 const CorrectUserSchema: User[] = [
