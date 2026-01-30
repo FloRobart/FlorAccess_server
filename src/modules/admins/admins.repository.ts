@@ -85,3 +85,21 @@ export async function updateUser(updateUser: UserAdminUpdate, userAdmin: User): 
         throw error;
     }
 }
+
+
+/*========*/
+/* DELETE */
+/*========*/
+/**
+ * Deletes a user.
+ * @param userId The ID of the user to delete
+ */
+export async function deleteUser(userId: number): Promise<void> {
+    try {
+        let query = "DELETE FROM users WHERE id = $1 RETURNING *";
+        const rows = await Database.execute<User>({ text: query, values: [userId] });
+        if (rows.length === 0) { throw new AppError('User not found', 404); }
+    } catch (error) {
+        throw error;
+    }
+}
