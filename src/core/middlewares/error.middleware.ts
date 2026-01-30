@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import * as logger from '../utils/logger';
+import logger from '../utils/logger';
 import { AppError } from '../models/AppError.model';
 
 

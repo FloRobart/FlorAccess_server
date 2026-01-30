@@ -1,5 +1,5 @@
 import type { User, UserSafe } from '../users/users.types';
-import type { UserAdmin, UserAdminUpdate } from './admins.types';
+import type { UserAdminUpdate } from './admins.types';
 
 import { Database } from '../../core/models/Database.model';
 import { AppError } from '../../core/models/AppError.model';

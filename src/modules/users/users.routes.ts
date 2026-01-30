@@ -1,9 +1,8 @@
 import { Router } from 'express';
 import * as UsersController from './users.controller';
-import { bodyValidator } from '../../core/middlewares/validators/body_validator.middleware';
 import * as UsersSchema from './users.schema';
 import { authorizationValidator } from '../../core/middlewares/validators/auth_validator.middleware';
-import { paramsQueryValidator } from '../../core/middlewares/validators/params_query_validator.middleware';
+import { requestValidator } from '../../core/middlewares/validators/request_validator.middleware';
 
 
 
@@ -58,7 +57,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/', bodyValidator(UsersSchema.UserInsertSchema), UsersController.insertUser);
+router.post('/', requestValidator(UsersSchema.UserInsertSchema), UsersController.insertUser);
 
 
 /**
@@ -159,7 +158,7 @@ router.get('/jwt', authorizationValidator(UsersSchema.AuthorizationHeaderSchema)
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.put('/', authorizationValidator(UsersSchema.AuthorizationHeaderSchema), bodyValidator(UsersSchema.UserUpdateSchema), UsersController.updateUser);
+router.put('/', authorizationValidator(UsersSchema.AuthorizationHeaderSchema), requestValidator(UsersSchema.UserUpdateSchema), UsersController.updateUser);
 
 
 /**
@@ -242,7 +241,7 @@ router.delete('/', authorizationValidator(UsersSchema.AuthorizationHeaderSchema)
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/login/request', bodyValidator(UsersSchema.UserLoginRequestSchema), UsersController.userLoginRequest);
+router.post('/login/request', requestValidator(UsersSchema.UserLoginRequestSchema), UsersController.userLoginRequest);
 
 
 /**
@@ -279,7 +278,7 @@ router.post('/login/request', bodyValidator(UsersSchema.UserLoginRequestSchema),
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/login/confirm', bodyValidator(UsersSchema.UserLoginConfirmSchema), UsersController.userLoginConfirm);
+router.post('/login/confirm', requestValidator(UsersSchema.UserLoginConfirmSchema), UsersController.userLoginConfirm);
 
 
 /**
@@ -380,7 +379,7 @@ router.post('/logout', authorizationValidator(UsersSchema.AuthorizationHeaderSch
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.get('/email/verify/:userId', paramsQueryValidator(UsersSchema.UserEmailVerificationSchema), UsersController.UserEmailVerify);
+router.get('/email/verify/:userId', requestValidator(UsersSchema.UserEmailVerificationSchema), UsersController.UserEmailVerify);
 
 
 

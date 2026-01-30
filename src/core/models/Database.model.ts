@@ -1,5 +1,5 @@
 import pg from 'pg';
-import * as logger from "../utils/logger";
+import logger from "../utils/logger";
 import { AppError } from './AppError.model';
 
 

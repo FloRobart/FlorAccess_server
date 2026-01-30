@@ -1,9 +1,10 @@
+import type { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm, UserEmailVerification } from './users.types';
+
 import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
-import { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm, UserEmailVerification } from './users.types';
+import * as UsersSchema from './users.schema';
 import { IPAddressSchema } from './users.schema';
 import AppConfig from '../../config/AppConfig';
-import { getEmailTemplate } from '../../core/email/get_email_template';
 
 
 
@@ -16,7 +17,7 @@ import { getEmailTemplate } from '../../core/email/get_email_template';
  * @returns JWT for the newly created user or error response
  */
 export const insertUser = async (req: Request, res: Response, next: NextFunction) => {
-    const insertUser: InsertUser = req.body.validated;
+    const insertUser: InsertUser = UsersSchema.UserInsertSchema.parse(req.body.validatedData);
     const ip: IPAddress | null = IPAddressSchema.safeParse(req.ip).data || null;
     const application: string = req.query.application as string || AppConfig.app_name;
     const domain: string | null = req.query.domain as string || null;
@@ -71,7 +72,7 @@ export const regenerateJwt = async (req: Request, res: Response, next: NextFunct
  * @returns Updated JWT or error response
  */
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
-    const updateUser: UpdateUser = req.body.validated;
+    const updateUser: UpdateUser = UsersSchema.UserUpdateSchema.parse(req.body.validatedData);
     const jwt: string = req.headers.authorization!.split(' ')[1];
 
     try {
@@ -108,7 +109,7 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
  * @throws Error if login fails or if the email is invalid.
  */
 export const userLoginRequest = async (req: Request, res: Response, next: NextFunction) => {
-    const userLoginRequest: UserLoginRequest = req.body.validated;
+    const userLoginRequest: UserLoginRequest = UsersSchema.UserLoginRequestSchema.parse(req.body.validatedData);
 
     try {
         const token: string = await UsersService.userLoginRequest(userLoginRequest);
@@ -126,7 +127,7 @@ export const userLoginRequest = async (req: Request, res: Response, next: NextFu
  * @param next The next middleware function.
  */
 export const userLoginConfirm = async (req: Request, res: Response, next: NextFunction) => {
-    const userLoginConfirm: UserLoginConfirm = req.body.validated;
+    const userLoginConfirm: UserLoginConfirm = UsersSchema.UserLoginConfirmSchema.parse(req.body.validatedData);
     const ip: IPAddress | null = IPAddressSchema.safeParse(req.ip).data || null;
     userLoginConfirm.ip = ip;
 
@@ -163,7 +164,7 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
  * @throws Error if email verification fails or if the token is invalid.
  */
 export const UserEmailVerify = async (req: Request, res: Response, next: NextFunction) => {
-    const userEmailVerification: UserEmailVerification = req.body.validated;
+    const userEmailVerification: UserEmailVerification = UsersSchema.UserEmailVerificationSchema.parse(req.body.validatedData);
 
     try {
         const html = await UsersService.UserEmailVerify(userEmailVerification);
