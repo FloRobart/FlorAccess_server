@@ -9,7 +9,7 @@ import { insertUser as UsersService_InsertUser, sendVerificationEmail as UsersSe
 import { getUser as UsersRepository_SelectUser, _getUserById, updateUserEmailVerifyTokenHash } from "../users/users.repository";
 import { verifyJwt } from "../../core/utils/jwt";
 import { generateApiToken, hashString } from "../../core/utils/securities";
-import * as logger from "../../core/utils/logger";
+import logger from "../../core/utils/logger";
 import AppConfig from "../../config/AppConfig";
 import sendEmail from "../../core/email/mailer";
 import { getEmailTemplate } from "../../core/email/get_email_template";

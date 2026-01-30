@@ -6,7 +6,7 @@ import { getRandomValues } from "node:crypto";
 import { generateApiToken, generateSecureRandomDelay, hashString, verifyHash } from "../../../../core/utils/securities";
 import { generateJwt } from "../../../../core/utils/jwt";
 import { UserSafeSchema } from "../../users.schema";
-import * as logger from "../../../../core/utils/logger";
+import logger from "../../../../core/utils/logger";
 
 
 

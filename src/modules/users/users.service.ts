@@ -6,7 +6,7 @@ import { loginDispatcher } from "../../core/dispatcher/login.dispatcher";
 import { generateApiToken, hashString, verifyHash } from "../../core/utils/securities";
 import AppConfig from "../../config/AppConfig";
 import { sendEmailVerify } from "./users.email";
-import * as logger from "../../core/utils/logger";
+import logger from "../../core/utils/logger";
 import { AppError } from "../../core/models/AppError.model";
 import { getEmailTemplate } from '../../core/email/get_email_template';
 

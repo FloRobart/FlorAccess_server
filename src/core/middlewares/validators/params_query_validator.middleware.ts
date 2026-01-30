@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodType } from "zod";
 import { AppError } from "../../models/AppError.model";
-import * as logger from "../../utils/logger";
+import logger from "../../utils/logger";
 
 
 
