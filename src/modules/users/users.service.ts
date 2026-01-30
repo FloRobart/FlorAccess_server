@@ -1,7 +1,8 @@
+import type { InsertUser, UserLoginRequest, UpdateUser, User, UserSafe, UserLoginConfirm, IPAddress, UserEmailVerification } from "./users.types";
+
 import { generateJwt, verifyJwt } from "../../core/utils/jwt";
 import * as UsersRepository from "./users.repository";
 import { UserSafeSchema } from "./users.schema";
-import { InsertUser, UserLoginRequest, UpdateUser, User, UserSafe, UserLoginConfirm, IPAddress, UserEmailVerification } from "./users.types";
 import { loginDispatcher } from "../../core/dispatcher/login.dispatcher";
 import { generateApiToken, hashString, verifyHash } from "../../core/utils/securities";
 import AppConfig from "../../config/AppConfig";
