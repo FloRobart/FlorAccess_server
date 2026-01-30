@@ -1,5 +1,6 @@
+import type { InsertUser, IPAddress, UpdateUser, User, UserSafe } from './users.types';
+
 import { Database } from '../../core/models/Database.model';
-import { InsertUser, IPAddress, UpdateUser, User, UserSafe } from './users.types';
 import AppConfig from '../../config/AppConfig';
 import { AppError } from '../../core/models/AppError.model';
 
