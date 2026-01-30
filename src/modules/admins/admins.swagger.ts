@@ -105,3 +105,27 @@
  *             type: number
  *           example: [1, 2, 3]
  */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     EmailAdmin:
+ *       type: object
+ *       required:
+ *         - userIdList
+ *         - object
+ *         - message
+ *       properties:
+ *         userIdList:
+ *           type: array
+ *           items:
+ *             type: number
+ *           example: [1, 2, 3]
+ *         object:
+ *           type: string
+ *           example: "Message de l'administrateur"
+ *         message:
+ *           type: string
+ *           example: "Bienvenue sur notre plateforme !"
+ */

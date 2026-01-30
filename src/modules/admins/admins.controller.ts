@@ -1,10 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
-import type { UserAdmin, UserAdminUpdate, UserIdList } from "./admins.types";
+import type { EmailAdmin, UserAdmin, UserAdminUpdate, UserIdList } from "./admins.types";
 import type { InsertUser } from "../users/users.types";
 
 import * as AdminsService from "./admins.service";
 import AppConfig from "../../config/AppConfig";
-import { UserAdminSchema, UserAdminUpdateSchema, UserIdListSchema, UserIdSchema } from "./admins.schema";
+import { EmailAdminSchema, UserAdminUpdateSchema, UserIdListSchema, UserIdSchema } from "./admins.schema";
 
 
 
@@ -58,11 +58,8 @@ export const selectUsers = async (_req: Request, res: Response, next: NextFuncti
  * @returns Updated UserAdmin object or error response
  */
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
-    const userId: number = req.body.validatedData.userId;
+    const userId: number = UserIdSchema.parse(req.body.validatedData.userId).userId;
     const updateUserData: UserAdminUpdate = UserAdminUpdateSchema.parse(req.body.validatedData);
-
-    console.debug("AdminsController.updateUser - userId:", userId);
-    console.debug("AdminsController.updateUser - updateUserData:", updateUserData);
 
     try {
         const updatedUser: UserAdmin = await AdminsService.updateUser(userId, updateUserData);
@@ -73,9 +70,9 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
 };
 
 
-/*====================*/
-/* Email verification */
-/*====================*/
+/*=======*/
+/* Email */
+/*=======*/
 /**
  * Sends verification emails to a list of users.
  * @param req Request object containing the list of user IDs
@@ -88,6 +85,24 @@ export const sendVerifyEmail = async (req: Request, res: Response, next: NextFun
 
     try {
         const userIdListSuccess: UserIdList = await AdminsService.sendVerifyEmail(userIdList);
+        res.status(200).json(userIdListSuccess);
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Sends emails to a list of users.
+ * @param req Request object containing the email data
+ * @param res Response object
+ * @param next NextFunction for error handling
+ * @returns List of user IDs of users to whom the email was sent or error response
+ */
+export const sendEmailAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    const emailAdmin: EmailAdmin = EmailAdminSchema.parse(req.body.validatedData);
+
+    try {
+        const userIdListSuccess: UserIdList = await AdminsService.sendEmailAdmin(emailAdmin);
         res.status(200).json(userIdListSuccess);
     } catch (error) {
         next(error);
