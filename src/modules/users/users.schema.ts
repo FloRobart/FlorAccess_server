@@ -53,7 +53,7 @@ export const UserSafeSchema = z.object({
 export const UserSchema = UserSafeSchema.extend({
     last_login: z.date(),
     last_ip: z.ipv4().or(z.ipv6()).nullable(),
-    
+
     email_verify_token_hash: z.string().trim().nullable(),
     secret_hash: z.string().trim().nullable(),
     token_hash: z.string().trim().nullable(),
