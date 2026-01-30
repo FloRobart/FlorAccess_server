@@ -2,7 +2,7 @@ import { Router } from 'express';
 import * as AdminsController from './admins.controller';
 import { bodyValidator } from '../../core/middlewares/validators/body_validator.middleware';
 import { UserInsertSchema } from '../users/users.schema';
-import { UserAdminSchema, UserAdminUpdateSchema, UserIdListParamsSchema, UserIdListSchema, UserIdSchema } from './admins.schema';
+import { EmailAdminSchema, UserAdminSchema, UserAdminUpdateSchema, UserIdListParamsSchema, UserIdListSchema, UserIdSchema } from './admins.schema';
 import { paramsQueryValidator } from '../../core/middlewares/validators/params_query_validator.middleware';
 import { requestValidator } from '../../core/middlewares/validators/request_validator.middleware';
 
@@ -168,6 +168,45 @@ router.put('/user/:userId', requestValidator(UserIdSchema), requestValidator(Use
  *               $ref: '#/components/schemas/error500'
  */
 router.post('/users/send/verify-email', requestValidator(UserIdListParamsSchema), AdminsController.sendVerifyEmail);
+
+
+/**
+ * @swagger
+ * /admins/users/send/email:
+ *   post:
+ *     tags:
+ *       - Admins
+ *     summary: Send emails to a list of users
+ *     description: Sends emails to a list of users by providing their user IDs, subject, and message.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EmailAdmin'
+ *     responses:
+ *       200:
+ *         description: Emails sent successfully. Return the list of user IDs for whom the email was sent.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserIdList'
+ *       400:
+ *         description: Bad request. Change your request to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error400'
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.post('/users/send/email', requestValidator(EmailAdminSchema), AdminsController.sendEmailAdmin);
 
 
 

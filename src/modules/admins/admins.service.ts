@@ -1,14 +1,18 @@
 import type { InsertUser, User, UserSafe } from "../users/users.types";
-import type { UserAdmin, UserAdminUpdate, UserIdList } from "./admins.types";
+import type { EmailAdmin, UserAdmin, UserAdminUpdate, UserIdList } from "./admins.types";
 
 import * as AdminsRepository from "./admins.repository";
-import { ZodError } from "zod";
+import { object, ZodError } from "zod";
 import { AppError } from "../../core/models/AppError.model";
 import { UserAdminSchema } from "./admins.schema";
 import { insertUser as UsersService_InsertUser, sendVerificationEmail as UsersService_sendVerificationEmail } from "../users/users.service";
 import { getUser as UsersRepository_SelectUser, _getUserById, updateUserEmailVerifyTokenHash } from "../users/users.repository";
 import { verifyJwt } from "../../core/utils/jwt";
 import { generateApiToken, hashString } from "../../core/utils/securities";
+import * as logger from "../../core/utils/logger";
+import AppConfig from "../../config/AppConfig";
+import sendEmail from "../../core/email/mailer";
+import { getEmailTemplate } from "../../core/email/get_email_template";
 
 
 
@@ -73,6 +77,7 @@ export async function selectUsers(): Promise<UserAdmin[]> {
         const users: User[] = await AdminsRepository.selectUsers();
         return UserAdminSchema.array().parse(users);
     } catch (error) {
+        console.debug("AdminsService.selectUsers - error:", error);
         if (error instanceof ZodError) { throw new AppError('Data validation error', 500); }
         if (error instanceof AppError) { throw error; }
         throw new AppError('Unknown error in admin selectUsers', 500);
@@ -103,9 +108,9 @@ export async function updateUser(userId: number, updateUserData: UserAdminUpdate
 }
 
 
-/*====================*/
-/* Email verification */
-/*====================*/
+/*=======*/
+/* Email */
+/*=======*/
 /**
  * Sends verification emails to a list of users.
  * @param userIdList The list of user IDs to send verification emails to.
@@ -137,5 +142,39 @@ export async function sendVerifyEmail(userIdList: number[]): Promise<UserIdList>
     } catch (error) {
         if (error instanceof AppError) { throw error; }
         throw new AppError('Unknown error in admin sendVerifyEmail', 500);
+    }
+}
+
+/**
+ * Sends emails to a list of users.
+ * @param emailData The email data containing userIdList, object, and message.
+ * @returns List of user IDs for whom the email was sent.
+ */
+export async function sendEmailAdmin(emailData: EmailAdmin): Promise<UserIdList> {
+    try {
+        const userIdListSuccess: UserIdList = [];
+        for (const userId of emailData.userIdList) {
+            /* Retrieve user info */
+            const user: User = await _getUserById(userId);
+
+            /* Send email */
+            logger.debug(`Sending email to ${user.email} with object "${emailData.object}" and message "${emailData.message}"`);
+            if (!AppConfig.app_env.includes('dev')) {
+                sendEmail(user.email, emailData.object, await getEmailTemplate("email_from_admin_template", {
+                    object: emailData.object,
+                    message: emailData.message,
+                    currentYear: new Date().getFullYear().toString(),
+                }));
+            }
+
+            /* Add userId to success list */
+            userIdListSuccess.push(userId);
+        }
+
+        /* Return list of userIds for whom the email was sent */
+        return userIdListSuccess;
+    } catch (error) {
+        if (error instanceof AppError) { throw error; }
+        throw new AppError('Unknown error in sendEmailAdmin', 500);
     }
 }

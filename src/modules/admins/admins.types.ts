@@ -10,3 +10,4 @@ export type UserAdminUpdate = z.infer<typeof AdminsSchema.UserAdminUpdateSchema>
 
 export type UserIdListParams = z.infer<typeof AdminsSchema.UserIdListParamsSchema>;
 export type UserIdList = z.infer<typeof AdminsSchema.UserIdListSchema>;
+export type EmailAdmin = z.infer<typeof AdminsSchema.EmailAdminSchema>;
