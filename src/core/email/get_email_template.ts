@@ -15,6 +15,8 @@ export async function getEmailTemplate(templateName: string, variables: Record<s
     const raw = await fs.readFile(templatePath, 'utf8');
     let html = raw;
     for (const [key, value] of Object.entries(variables)) {
+        if (value === undefined || value === null) continue;
+
         const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
         html = html.replace(regex, escapeHtml(value));
     }

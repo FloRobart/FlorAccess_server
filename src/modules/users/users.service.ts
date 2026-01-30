@@ -27,11 +27,7 @@ export async function insertUser(user: InsertUser, ip: IPAddress | null, applica
         const insertedUser: User = await UsersRepository.insertUser(user, ip, await hashString(email_verify_token));
         const validatedUser: UserSafe = UserSafeSchema.parse(insertedUser);
 
-        const url = `${AppConfig.base_url}/users/email/verify/${validatedUser.id}?token=${email_verify_token}&application=${encodeURIComponent(application)}&domain=${encodeURIComponent(domain || 'null')}`;
-        logger.debug(`Email verification URL for user ${validatedUser.id}: ${url}`);
-        if (!AppConfig.app_env.includes('dev')) {
-            sendEmailVerify(user.email, application, url);
-        }
+        sendVerificationEmail(insertedUser.id, insertedUser.email, email_verify_token, application, domain);
 
         return await generateJwt(validatedUser);
     } catch (error) {
@@ -160,47 +156,85 @@ export async function logoutUser(jwt: string): Promise<void> {
 
 
 /**
+ * Sends a verification email to the user.
+ * @param userId The ID of the user to send the verification email to.
+ * @param userEmail The email address of the user.
+ * @param email_verify_token The email verification token.
+ * @param application The name of the application. Defaults to AppConfig.app_name.
+ * @param domain The domain of the application. Defaults to null.
+ * @throws Error if sending the verification email fails.
+ */
+export async function sendVerificationEmail(userId: number, userEmail: string, email_verify_token: string, application: string = AppConfig.app_name, domain: string | null = null): Promise<void> {
+    try {
+        const url = `${AppConfig.base_url}/users/email/verify/${userId}?token=${email_verify_token}&application=${encodeURIComponent(application)}&domain=${encodeURIComponent(domain || 'null')}`;
+        logger.debug(`Email verification URL for user ${userId}: ${url}`);
+        if (!AppConfig.app_env.includes('dev')) {
+            sendEmailVerify(userEmail, application, url);
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
  * Verifies a user's email.
  * @param userEmailVerification The userEmailVerification object containing the information to verify user email.
  * @return HTML string to display the result of the email verification.
  * @throws Error if email verification fails or if the information is invalid.
  */
 export async function UserEmailVerify(userEmailVerification: UserEmailVerification): Promise<string> {
+    const application: string | undefined = userEmailVerification.application;
+    const domain: string | undefined = userEmailVerification.domain === 'null' ? undefined : userEmailVerification.domain;
+
     try {
         const userId = parseInt(userEmailVerification.userId, 10);
         const token = userEmailVerification.token;
-        const application: string = userEmailVerification.application || AppConfig.app_name;
-        const domain: string = (userEmailVerification.domain !== undefined && userEmailVerification.domain !== 'null') ? userEmailVerification.domain : '';
 
         const user = await UsersRepository._getUserById(userId);
 
         if (!user) {
-            throw new AppError("User not found", 404);
+            throw new AppError("Utilisateur non trouvé. Cet incident sera signalé.", 404);
         }
 
         if (user.is_verified_email) {
-            throw new AppError("Email is already verified", 410);
+            return await getEmailTemplate('email_verification_success', {
+                status: `Email '${user.email}' déjà confirmé`,
+                message: `Merci — votre adresse email à déjà été vérifiée.`,
+                button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
+            });
         }
 
         if (!user.email_verify_token_hash) {
-            throw new AppError("No email verification token found for this user", 400);
+            throw new AppError("Nous ne pouvons pas vérifier votre adresse email en toute sécurité pour le moment. Demandez un nouveau lien de vérification à l'administrateur.", 400);
         }
 
         if (!await verifyHash(token, user.email_verify_token_hash)) {
-            throw new AppError("Invalid token", 400);
+            throw new AppError("Token invalide. Cet incident sera signalé.", 400);
         }
 
         await UsersRepository.UserEmailVerify(userId);
 
-        const html = await getEmailTemplate('email_verification_success', {
+        return await getEmailTemplate('email_verification_success', {
             status: `Email '${user.email}' confirmé`,
             message: `Merci — votre adresse email a bien été vérifiée. Vous pouvez maintenant vous connecter.`,
-            application: application,
-            domain: domain
+            button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
         });
 
-        return html;
     } catch (error) {
-        throw error;
+        if (error instanceof AppError) {
+            return await getEmailTemplate('email_verification_error', {
+                status: `Erreur ${error.httpStatus}`,
+                message: `${error.message}`,
+                button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
+            });
+        }
+
+        logger.error("Unknown error in UserEmailVerify :", error);
+        return await getEmailTemplate('email_verification_error', {
+            status: `Erreur Inconnue`,
+            message: `Une erreur inconnue est survenue lors de la vérification de votre adresse email. Veuillez réessayer plus tard.`,
+            button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
+        });
     }
 }

@@ -1,10 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
-import type { UserAdmin, UserAdminUpdate } from "./admins.types";
+import type { UserAdmin, UserAdminUpdate, UserIdList } from "./admins.types";
 import type { InsertUser } from "../users/users.types";
 
 import * as AdminsService from "./admins.service";
 import AppConfig from "../../config/AppConfig";
-import { UserAdminSchema, UserAdminUpdateSchema, UserIdSchema } from "./admins.schema";
+import { UserAdminSchema, UserAdminUpdateSchema, UserIdListSchema, UserIdSchema } from "./admins.schema";
 
 
 
@@ -50,6 +50,13 @@ export const selectUsers = async (_req: Request, res: Response, next: NextFuncti
 /*========*/
 /* UPDATE */
 /*========*/
+/**
+ * Updates a user.
+ * @param req Request object containing the user ID and update data
+ * @param res Response object
+ * @param next NextFunction for error handling
+ * @returns Updated UserAdmin object or error response
+ */
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     const userId: number = req.body.validatedData.userId;
     const updateUserData: UserAdminUpdate = UserAdminUpdateSchema.parse(req.body.validatedData);
@@ -60,6 +67,28 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
     try {
         const updatedUser: UserAdmin = await AdminsService.updateUser(userId, updateUserData);
         res.status(200).json(updatedUser);
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+/*====================*/
+/* Email verification */
+/*====================*/
+/**
+ * Sends verification emails to a list of users.
+ * @param req Request object containing the list of user IDs
+ * @param res Response object
+ * @param next NextFunction for error handling
+ * @returns List of user IDs of users to whom the verification email was sent or error response
+ */
+export const sendVerifyEmail = async (req: Request, res: Response, next: NextFunction) => {
+    const userIdList: UserIdList = UserIdListSchema.parse(req.body.validatedData);
+
+    try {
+        const userIdListSuccess: UserIdList = await AdminsService.sendVerifyEmail(userIdList);
+        res.status(200).json(userIdListSuccess);
     } catch (error) {
         next(error);
     }

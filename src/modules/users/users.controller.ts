@@ -168,22 +168,8 @@ export const UserEmailVerify = async (req: Request, res: Response, next: NextFun
     try {
         const html = await UsersService.UserEmailVerify(userEmailVerification);
 
-        return res.status(200).type('html').send(html);
+        res.status(200).type('html').send(html);
     } catch (error: any) {
-        const status = error.httpStatus || 500;
-        const message = error.message || 'Une erreur est survenue lors de la vérification de l\'email.';
-
-        try {
-            const html = await getEmailTemplate('email_verification_error', {
-                status: status,
-                message: message,
-                application: userEmailVerification.application || AppConfig.app_name,
-                domain: userEmailVerification.domain || ''
-            });
-
-            return res.status(status).type('html').send(html);
-        } catch (readErr) {
-            return res.status(status).json({ error: message });
-        }
+        next(error);
     }
 };

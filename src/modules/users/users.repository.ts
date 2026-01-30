@@ -125,6 +125,24 @@ export async function logoutUser(userSafe: UserSafe): Promise<User> {
 
 
 /**
+ * Updates a user's email verification token hash.
+ * @param userId The ID of the user to update.
+ * @param email_verify_token_hash The new email verification token hash.
+ * @throws Error if query fails.
+ */
+export async function updateUserEmailVerifyTokenHash(userId: number, email_verify_token_hash: string | null): Promise<void> {
+    try {
+        const query = "UPDATE users SET email_verify_token_hash = $1 WHERE id = $2";
+        const values = [email_verify_token_hash, userId];
+
+        await Database.execute<void>({ text: query, values: values });
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
  * Verifies a user's email.
  * @param userId The ID of the user to verify email.
  * @throws Error if query fails.
