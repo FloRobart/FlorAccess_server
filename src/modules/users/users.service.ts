@@ -198,7 +198,7 @@ export async function UserEmailVerify(userEmailVerification: UserEmailVerificati
         }
 
         if (user.is_verified_email) {
-            return await getEmailTemplate('email_verification_success', {
+            return await getEmailTemplate('verification_email_success', {
                 status: `Email '${user.email}' déjà confirmé`,
                 message: `Merci — votre adresse email à déjà été vérifiée.`,
                 button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
@@ -215,7 +215,7 @@ export async function UserEmailVerify(userEmailVerification: UserEmailVerificati
 
         await UsersRepository.UserEmailVerify(userId);
 
-        return await getEmailTemplate('email_verification_success', {
+        return await getEmailTemplate('verification_email_success', {
             status: `Email '${user.email}' confirmé`,
             message: `Merci — votre adresse email a bien été vérifiée. Vous pouvez maintenant vous connecter.`,
             button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
@@ -223,7 +223,7 @@ export async function UserEmailVerify(userEmailVerification: UserEmailVerificati
 
     } catch (error) {
         if (error instanceof AppError) {
-            return await getEmailTemplate('email_verification_error', {
+            return await getEmailTemplate('verification_email_error', {
                 status: `Erreur ${error.httpStatus}`,
                 message: `${error.message}`,
                 button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
@@ -231,7 +231,7 @@ export async function UserEmailVerify(userEmailVerification: UserEmailVerificati
         }
 
         logger.error("Unknown error in UserEmailVerify :", error);
-        return await getEmailTemplate('email_verification_error', {
+        return await getEmailTemplate('verification_email_error', {
             status: `Erreur Inconnue`,
             message: `Une erreur inconnue est survenue lors de la vérification de votre adresse email. Veuillez réessayer plus tard.`,
             button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',

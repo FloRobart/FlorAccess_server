@@ -106,7 +106,7 @@ app.use(morgan(AppConfig.log_format));
 app.use('/users', userRoutes);
 
 /* Admins routes */
-app.use('/admins', adminsAuthorizationValidator(AuthorizationHeaderSchema), adminsRoutes);
+app.use('/admins', /*adminsAuthorizationValidator(AuthorizationHeaderSchema),*/ adminsRoutes);
 
 /* Default Route Handler (404) */
 app.use(defaultRouteHandler);
