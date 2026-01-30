@@ -13,7 +13,7 @@ export const UserAdminSchema = UserSafeSchema.extend({
     last_login: z.date(),
     last_ip: z.ipv4().or(z.ipv6()).nullable(),
     updated_at: z.date(),
-    // is_admin: z.boolean(),
+    is_admin: z.boolean(),
 });
 
 
@@ -37,7 +37,7 @@ export const UserAdminUpdateSchema = UserAdminSchema.omit({
     last_ip: true,
     last_login: true,
     last_logout_at: true,
-    // is_admin: true,
+    is_admin: true,
 }).partial();
 
 
