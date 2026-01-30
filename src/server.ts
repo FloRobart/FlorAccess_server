@@ -1,7 +1,7 @@
 import app from './app';
 import AppConfig from './config/AppConfig';
 import http from 'http';
-import * as logger from './core/utils/logger';
+import logger from './core/utils/logger';
 import { Database } from './core/models/Database.model';
 
 
