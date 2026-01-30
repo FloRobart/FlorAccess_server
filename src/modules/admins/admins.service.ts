@@ -108,6 +108,23 @@ export async function updateUser(userId: number, updateUserData: UserAdminUpdate
 }
 
 
+/*========*/
+/* DELETE */
+/*========*/
+/**
+ * Deletes a user.
+ * @param userId The ID of the user to delete
+ */
+export async function deleteUser(userId: number): Promise<void> {
+    try {
+        await AdminsRepository.deleteUser(userId);
+    } catch (error) {
+        if (error instanceof AppError) { throw error; }
+        throw new AppError('Unknown error in admin deleteUser', 500);
+    }
+}
+
+
 /*=======*/
 /* Email */
 /*=======*/

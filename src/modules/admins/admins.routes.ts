@@ -91,7 +91,7 @@ router.get('/users', AdminsController.selectUsers);
  *     tags:
  *       - Admins
  *     summary: Update an existing user
- *     description: Update an existing user by providing an email address and pseudo.
+ *     description: Update an existing user
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -129,6 +129,43 @@ router.get('/users', AdminsController.selectUsers);
  *               $ref: '#/components/schemas/error500'
  */
 router.put('/user/:userId', requestValidator(UserIdSchema), requestValidator(UserAdminUpdateSchema), AdminsController.updateUser);
+
+
+/**
+ * @swagger
+ * /admins/user/{userId}:
+ *   delete:
+ *     tags:
+ *       - Admins
+ *     summary: Delete an existing user
+ *     description: Delete an existing user
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: The ID of the user to delete
+ *         schema:
+ *           type: string
+ *           example: "1"
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       400:
+ *         description: Bad request. Change your request to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error400'
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.delete('/user/:userId', requestValidator(UserIdSchema), AdminsController.deleteUser);
 
 
 /**

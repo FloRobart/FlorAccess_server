@@ -58,12 +58,34 @@ export const selectUsers = async (_req: Request, res: Response, next: NextFuncti
  * @returns Updated UserAdmin object or error response
  */
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
-    const userId: number = UserIdSchema.parse(req.body.validatedData.userId).userId;
+    const userId: number = UserIdSchema.parse(req.body.validatedData).userId;
     const updateUserData: UserAdminUpdate = UserAdminUpdateSchema.parse(req.body.validatedData);
 
     try {
         const updatedUser: UserAdmin = await AdminsService.updateUser(userId, updateUserData);
         res.status(200).json(updatedUser);
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+/*========*/
+/* DELETE */
+/*========*/
+/**
+ * Deletes a user.
+ * @param req Request object containing the user ID to delete
+ * @param res Response object
+ * @param next NextFunction for error handling
+ * @returns Success message or error response
+ */
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+    const userId: number = UserIdSchema.parse(req.body.validatedData).userId;
+
+    try {
+        await AdminsService.deleteUser(userId);
+        res.status(200).send();
     } catch (error) {
         next(error);
     }
