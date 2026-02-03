@@ -1,5 +1,5 @@
 import type { User, UserSafe } from '../users/users.types';
-import type { UserAdminUpdate } from './admins.types';
+import type { AuthorizedQueryParams, UserAdminUpdate } from './admins.types';
 
 import { Database } from '../../core/models/Database.model';
 import { AppError } from '../../core/models/AppError.model';
@@ -37,15 +37,29 @@ export async function isAdmin(userSafe: UserSafe): Promise<boolean> {
  * @returns List of User objects.
  * @throws Error if user retrieval fails.
  */
-export async function selectUsers(): Promise<User[]> {
+export async function selectUsers(queryParams: AuthorizedQueryParams): Promise<User[]> {
     try {
-        let query = "SELECT * FROM users";
-        const rows = await Database.execute<User>({ text: query, values: [] });
+        let query = "SELECT * FROM users ORDER BY id LIMIT $1 OFFSET $2";
+        const rows = await Database.execute<User>({ text: query, values: [queryParams.limit, queryParams.offset] });
         return rows;
     } catch (error) {
         throw error;
     }
 }
+
+/**
+ * Counts the total number of users.
+ * @returns Total number of users or error response
+ */
+export async function countUsers(): Promise<number> {
+    try {
+        let query = "SELECT COUNT(*) FROM users";
+        const rows = await Database.execute<{ count: string }>({ text: query, values: [] });
+        return parseInt(rows[0].count, 10);
+    } catch (error) {
+        throw error;
+    }
+};
 
 
 /*========*/
