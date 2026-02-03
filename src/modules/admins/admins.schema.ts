@@ -16,6 +16,14 @@ export const UserAdminSchema = UserSafeSchema.extend({
     is_admin: z.boolean(),
 });
 
+/**
+ * Schéma de validation pour les paramètres de requête autorisés pour la sélection des utilisateurs.
+ */
+export const authorizedQueryParamsSchema = z.object({
+    limit: z.coerce.number().int().min(1).nullable().default(null),
+    offset: z.coerce.number().int().min(0).default(0),
+});
+
 
 /*========*/
 /* UPDATE */

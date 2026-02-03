@@ -1,10 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
-import type { EmailAdmin, UserAdmin, UserAdminUpdate, UserIdList } from "./admins.types";
+import type { AuthorizedQueryParams, EmailAdmin, UserAdmin, UserAdminUpdate, UserIdList } from "./admins.types";
 import type { InsertUser } from "../users/users.types";
 
 import * as AdminsService from "./admins.service";
 import AppConfig from "../../config/AppConfig";
-import { EmailAdminSchema, UserAdminUpdateSchema, UserIdListSchema, UserIdSchema } from "./admins.schema";
+import { authorizedQueryParamsSchema, EmailAdminSchema, UserAdminUpdateSchema, UserIdListSchema, UserIdSchema } from "./admins.schema";
 import { UserInsertSchema } from "../users/users.schema";
 
 
@@ -36,12 +36,33 @@ export const insertUser = async (req: Request, res: Response, next: NextFunction
 /*========*/
 /**
  * Retrieves no sensitive information about all users.
+ * @param req.body.validatedData AuthorizedQueryParams object containing query parameters
+ * @param res Response object
+ * @param next NextFunction for error handling
  * @returns List of UserAdmin objects or error response
  */
-export const selectUsers = async (_req: Request, res: Response, next: NextFunction) => {
+export const selectUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userAdmin: UserAdmin[] = await AdminsService.selectUsers();
+        const queryParams: AuthorizedQueryParams = authorizedQueryParamsSchema.parse(req.body.validatedData);
+
+        const userAdmin: UserAdmin[] = await AdminsService.selectUsers(queryParams);
         res.status(200).json(userAdmin);
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Counts the total number of users.
+ * @param _req Request object
+ * @param res Response object
+ * @param next NextFunction for error handling
+ * @returns Total number of users or error response
+ */
+export const countUsers = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+        const count: number = await AdminsService.countUsers();
+        res.status(200).json({ count: count });
     } catch (error) {
         next(error);
     }

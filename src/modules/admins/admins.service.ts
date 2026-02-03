@@ -1,5 +1,5 @@
 import type { InsertUser, User, UserSafe } from "../users/users.types";
-import type { EmailAdmin, UserAdmin, UserAdminUpdate, UserIdList } from "./admins.types";
+import type { AuthorizedQueryParams, EmailAdmin, UserAdmin, UserAdminUpdate, UserIdList } from "./admins.types";
 
 import * as AdminsRepository from "./admins.repository";
 import { ZodError } from "zod";
@@ -72,9 +72,9 @@ export async function insertUser(user: InsertUser, application: string): Promise
  * @returns List of UserAdmin objects.
  * @throws AppError if user retrieval or data validation fails.
  */
-export async function selectUsers(): Promise<UserAdmin[]> {
+export async function selectUsers(queryParams: AuthorizedQueryParams): Promise<UserAdmin[]> {
     try {
-        const users: User[] = await AdminsRepository.selectUsers();
+        const users: User[] = await AdminsRepository.selectUsers(queryParams);
         return UserAdminSchema.array().parse(users);
     } catch (error) {
         console.debug("AdminsService.selectUsers - error:", error);
@@ -83,6 +83,19 @@ export async function selectUsers(): Promise<UserAdmin[]> {
         throw new AppError('Unknown error in admin selectUsers', 500);
     }
 }
+
+/**
+ * Counts the total number of users.
+ * @returns Total number of users or error response
+ */
+export async function countUsers(): Promise<number> {
+    try {
+        return await AdminsRepository.countUsers();
+    } catch (error) {
+        if (error instanceof AppError) { throw error; }
+        throw new AppError('Unknown error in admin countUsers', 500);
+    }
+};
 
 
 /*========*/
