@@ -59,6 +59,21 @@ router.post('/user', requestValidator(UserInsertSchema), AdminsController.insert
  *     description: Retrieve no sensitive information about all users.
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: The maximum number of users to return (default is all users)
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *       - in: query
+ *         name: offset
+ *         required: false
+ *         description: The number of users to skip before starting to collect the result set (default is 0)
+ *         schema:
+ *           type: integer
+ *           example: 0
  *     responses:
  *       200:
  *         description: A list of users.
@@ -79,7 +94,44 @@ router.post('/user', requestValidator(UserInsertSchema), AdminsController.insert
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.get('/users', AdminsController.selectUsers);
+router.get('/users', requestValidator(AdminsSchema.authorizedQueryParamsSchema), AdminsController.selectUsers);
+
+
+/**
+ * @swagger
+ * /admins/users/count:
+ *   get:
+ *     tags:
+ *       - Admins
+ *     summary: Get the count of all users
+ *     description: Retrieve the count of all users.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: The count of users.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - count
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                   example: 42
+ *       401:
+ *         description: Unauthorized access.
+ *       422:
+ *         description: Invalid request parameters.
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.get('/users/count', AdminsController.countUsers);
 
 
 /**
