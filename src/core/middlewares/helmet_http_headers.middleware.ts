@@ -12,7 +12,7 @@ export const helmetOptions: HelmetOptions = {
         directives: {
             defaultSrc: ["'none'"],
             scriptSrc: ["'none'"],
-            styleSrc: ["'none'"],
+            styleSrc: ["'self'"],
             imgSrc: ["'self'"],
             connectSrc: ["'none'"],
             objectSrc: ["'none'"],
