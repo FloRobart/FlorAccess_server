@@ -12,7 +12,7 @@ export const helmetOptions: HelmetOptions = {
         directives: {
             defaultSrc: ["'none'"],
             scriptSrc: ["'none'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'"],
             imgSrc: ["'self'"],
             connectSrc: ["'none'"],
             objectSrc: ["'none'"],
@@ -57,7 +57,7 @@ export const helmetOptions: HelmetOptions = {
     crossOriginOpenerPolicy: AppConfig.app_env.includes('prod') ? { policy: 'same-origin' } : false,
 
     /* Origin-Agent-Cluster */
-    originAgentCluster: true,
+    originAgentCluster: false,
 
     /* Hide powered by (Helmet removes X-Powered-By by default) */
     hidePoweredBy: true,
