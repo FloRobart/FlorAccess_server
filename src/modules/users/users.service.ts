@@ -116,8 +116,22 @@ export async function deleteUser(jwt: string): Promise<void> {
  * @returns JWT for the user.
  * @throws Error if login fails or if the information is invalid.
  */
-export async function userLoginRequest(userLoginRequest: UserLoginRequest): Promise<string> {
+export async function userLoginRequest(userLoginRequest: UserLoginRequest, ip: IPAddress | null): Promise<string> {
     try {
+        /* Create the user if it doesn't exist */
+        const user = await UsersRepository._getUserByEmail(userLoginRequest.email);
+        if (user === null) {
+            const email_verify_token = await generateApiToken();
+            const userToInsert: InsertUser = {
+                email: userLoginRequest.email,
+                pseudo: userLoginRequest.email.split('@')[0],
+            };
+
+
+            await UsersRepository.insertUser(userToInsert, ip, await hashString(email_verify_token));
+        }
+
+        /* Dispatch the login request to the appropriate authentication method handler */
         return await loginDispatcher(userLoginRequest);
     } catch (error) {
         throw error;
