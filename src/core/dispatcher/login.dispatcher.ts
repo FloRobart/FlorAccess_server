@@ -15,20 +15,22 @@ import { UserLoginConfirmSchema, UserLoginRequestSchema } from "../../modules/us
  */
 export async function loginDispatcher(userLogin: UserLoginRequest | UserLoginConfirm): Promise<string> {
     try {
-        const user: User = await UsersRepository._getUserByEmail(userLogin.email);
+        const user: User | null = await UsersRepository._getUserByEmail(userLogin.email);
+        if (!user) { throw new AppError("User not found", 404); }
+
         const auth_method = await AuthMethodsRepository._getAuth_methodsById(user.auth_methods_id);
 
         switch (auth_method.immuable_method_name) {
             case "PASSWORD":
-                if (UserLoginConfirmSchema.safeParse(userLogin).success === true) {
+                if (UserLoginConfirmSchema.safeParse(userLogin).success) {
                     return await usersLoginConfirmPassword();
-                } else if (UserLoginRequestSchema.safeParse(userLogin).success === true) {
+                } else if (UserLoginRequestSchema.safeParse(userLogin).success) {
                     return await usersLoginRequestPassword(user);
                 }
             case "EMAIL_CODE":
-                if (UserLoginConfirmSchema.safeParse(userLogin).success === true) {
+                if (UserLoginConfirmSchema.safeParse(userLogin).success) {
                     return await usersLoginConfirm(user, userLogin as UserLoginConfirm);
-                } else if (UserLoginRequestSchema.safeParse(userLogin).success === true) {
+                } else if (UserLoginRequestSchema.safeParse(userLogin).success) {
                     return await usersLoginRequest(user);
                 }
             default:

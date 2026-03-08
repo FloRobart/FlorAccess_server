@@ -164,15 +164,15 @@ export async function UserEmailVerify(userId: number): Promise<void> {
  * Gets a user by email.
  * 
  * This fonction is used by the login dispatcher.
- * @param email The email of the user to retrieve.
+ * @param email The email of the user to retrieve or null if the user doesn't exist.
  */
-export async function _getUserByEmail(email: string): Promise<User> {
+export async function _getUserByEmail(email: string): Promise<User | null> {
     try {
         const query = "SELECT * FROM users WHERE email = $1";
         const values = [email];
         
         const rows = await Database.execute<User>({ text: query, values: values });
-        if (rows.length === 0) { throw new AppError('User not found', 404); }
+        if (rows.length === 0) { return null; }
 
         return rows[0];
     } catch (error) {

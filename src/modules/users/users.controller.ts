@@ -110,9 +110,10 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
  */
 export const userLoginRequest = async (req: Request, res: Response, next: NextFunction) => {
     const userLoginRequest: UserLoginRequest = UsersSchema.UserLoginRequestSchema.parse(req.body.validatedData);
+    const ip: IPAddress | null = IPAddressSchema.safeParse(req.ip).data || null;
 
     try {
-        const token: string = await UsersService.userLoginRequest(userLoginRequest);
+        const token: string = await UsersService.userLoginRequest(userLoginRequest, ip);
         res.status(200).json({ token: token });
     } catch (error) {
         next(error);
