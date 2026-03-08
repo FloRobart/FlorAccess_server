@@ -7,6 +7,7 @@ import { generateApiToken, generateSecureRandomDelay, hashString, verifyHash } f
 import { generateJwt } from "../../../../core/utils/jwt";
 import { UserSafeSchema } from "../../users.schema";
 import logger from "../../../../core/utils/logger";
+import { AppError } from "../../../../core/models/AppError.model";
 
 
 
@@ -45,11 +46,15 @@ export async function usersLoginConfirm(user: User, userLoginConfirm: UserLoginC
         const timeStamp = parseInt(userLoginConfirm.token.split(".")[1], 10);
 
         if (Date.now() - timeStamp > AppConfig.token_expiration * 1000) {
-            throw new Error("Token has expired");
+            throw new AppError("Token has expired", 401);
         }
 
-        if (!(await verifyHash(userLoginConfirm.secret, user.secret_hash!))) {
-            throw new Error("Invalid token");
+        if (user.secret_hash === null || user.token_hash === null) {
+            throw new AppError("Invalid token", 401);
+        }
+
+        if (!(await verifyHash(userLoginConfirm.secret, user.secret_hash))) {
+            throw new AppError("Invalid token", 401);
         }
 
 
