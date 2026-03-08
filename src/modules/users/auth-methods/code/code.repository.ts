@@ -31,7 +31,7 @@ export async function userLoginRequest(user: User, tokenHash: string, codeHash: 
  */
 export async function userLoginConfirm(user: User, ip: IPAddress | null): Promise<User> {
     try {
-        const query = "UPDATE users SET last_login = NOW(), is_connected = true, last_ip = $6, secret_hash = null, token_hash = null WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', last_logout_at) = date_trunc('second', $4::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $5::timestamp) RETURNING *";
+        const query = "UPDATE users SET last_login = NOW(), is_connected = true, last_ip = $6, secret_hash = null, token_hash = null, is_verified_email = true WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', last_logout_at) = date_trunc('second', $4::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $5::timestamp) RETURNING *";
         const values = [user.id, user.email, user.pseudo, user.last_logout_at.toISOString(), user.created_at.toISOString(), ip];
 
         const rows = await Database.execute<User>({ text: query, values: values });
