@@ -105,7 +105,8 @@ const UserToInsert = {
     pseudo: "Pseudo",
 };
 
-const InsertedUser: User = {
+/* The type assertion keeps this fixture valid when other fields are added to the users */
+const InsertedUser = {
     id: 1,
     email: UserToInsert.email,
     pseudo: UserToInsert.pseudo,
@@ -123,7 +124,7 @@ const InsertedUser: User = {
 
     is_admin: false,
     created_at: new Date(),
-};
+} as User;
 
 /**
  * Lets the promises which are not awaited by the service finish, such as the sending of the email.
