@@ -28,7 +28,9 @@ export async function insertUser(user: InsertUser, ip: IPAddress | null, applica
         const insertedUser: User = await UsersRepository.insertUser(user, ip, await hashString(email_verify_token));
         const validatedUser: UserSafe = UserSafeSchema.parse(insertedUser);
 
-        sendVerificationEmail(insertedUser.id, insertedUser.email, email_verify_token, application, domain);
+        /* The registration does not wait for the email, but a failed sending must never stay unhandled : an unhandled rejection stops the server */
+        sendVerificationEmail(insertedUser.id, insertedUser.email, email_verify_token, application, domain)
+            .catch((error: unknown) => logger.error("Failed to send the verification email :", error));
 
         return await generateJwt(validatedUser);
     } catch (error) {
@@ -184,7 +186,7 @@ export async function sendVerificationEmail(userId: number, userEmail: string, e
         const url = `${AppConfig.base_url}/users/email/verify/${userId}?token=${email_verify_token}&application=${encodeURIComponent(application)}&domain=${encodeURIComponent(domain || 'null')}`;
         logger.debug(`Email verification URL for user ${userId}: ${url}`);
         if (!AppConfig.app_env.includes('dev')) {
-            sendEmailVerify(userEmail, application, url);
+            await sendEmailVerify(userEmail, application, url);
         }
     } catch (error) {
         throw error;
