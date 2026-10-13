@@ -212,9 +212,10 @@ export async function UserEmailVerify(userEmailVerification: UserEmailVerificati
             throw new AppError("Utilisateur non trouvé. Cet incident sera signalé.", 404);
         }
 
+        /* The token can not be checked anymore once the email is verified : the address is not displayed, otherwise anyone could read the email of every user by trying the user IDs one by one */
         if (user.is_verified_email) {
             return await getEmailTemplate('verification_email_success', {
-                status: `Email '${user.email}' déjà confirmé`,
+                status: `Adresse email déjà confirmée`,
                 message: `Merci — votre adresse email à déjà été vérifiée.`,
                 button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
             });
