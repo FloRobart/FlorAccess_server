@@ -15,6 +15,22 @@ export const EmailSchema = z.preprocess(
  */
 export const PseudoSchema = z.string().trim().min(3).max(255);
 
+/**
+ * Validation schema for the user ID and the token carried by the links sent by email.
+ */
+const EmailLinkSchema = z.object({
+    userId: z.string()
+        .trim()
+        .regex(/^[0-9]+$/)
+        .refine((val) => {
+            const n = Number(val);
+            return Number.isInteger(n) && n > 0;
+        }),
+    token: z.string()
+        .trim()
+        .regex(/^[0-9a-f]+$/),
+});
+
 
 /*========*/
 /* INSERT */
@@ -57,6 +73,10 @@ export const UserSchema = UserSafeSchema.extend({
     email_verify_token_hash: z.string().trim().nullable(),
     secret_hash: z.string().trim().nullable(),
     token_hash: z.string().trim().nullable(),
+    login_requested_at: z.date().nullable(),
+    login_code_attempts: z.int().min(0),
+    login_block_token_hash: z.string().trim().nullable(),
+    login_blocked_until: z.date().nullable(),
 
     is_admin: z.boolean(),
 });
@@ -110,6 +130,11 @@ export const UserLoginConfirmSchema = z.object({
     ip: data.ip || null,
 }));
 
+/**
+ * Validation schema for the link of the login code email which blocks the logins of a user.
+ */
+export const UserLoginBlockSchema = EmailLinkSchema;
+
 
 /*====================*/
 /* Email verification */
@@ -117,17 +142,7 @@ export const UserLoginConfirmSchema = z.object({
 /**
  * Schéma de validation pour la vérification d'email d'un utilisateur.
  */
-export const UserEmailVerificationSchema = z.object({
-    userId: z.string()
-        .trim()
-        .regex(/^[0-9]+$/)
-        .refine((val) => {
-            const n = Number(val);
-            return Number.isInteger(n) && n > 0;
-        }),
-    token: z.string()
-        .trim()
-        .regex(/^[0-9a-f]+$/),
+export const UserEmailVerificationSchema = EmailLinkSchema.extend({
     application: z.string().trim().min(1).max(255).optional(),
     domain: z.string().trim().min(1).max(255).optional(),
 });

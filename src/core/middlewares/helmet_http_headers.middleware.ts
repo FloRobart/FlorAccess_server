@@ -18,7 +18,8 @@ export const helmetOptions: HelmetOptions = {
             objectSrc: ["'none'"],
             frameAncestors: ["'none'"],
             baseUri: ["'none'"],
-            formAction: ["'none'"],
+            /* 'self' is required by the form of the login block page */
+            formAction: ["'self'"],
             blockAllMixedContent: [],
         },
     },

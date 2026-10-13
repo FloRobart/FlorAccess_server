@@ -1,4 +1,4 @@
-import type { InsertUser, UserLoginRequest, UpdateUser, User, UserSafe, UserLoginConfirm, IPAddress, UserEmailVerification } from "./users.types";
+import type { InsertUser, UserLoginRequest, UpdateUser, User, UserSafe, UserLoginConfirm, UserLoginBlock, IPAddress, UserEmailVerification } from "./users.types";
 
 import { generateJwt, verifyJwt } from "../../core/utils/jwt";
 import * as UsersRepository from "./users.repository";
@@ -252,4 +252,146 @@ export async function UserEmailVerify(userEmailVerification: UserEmailVerificati
             button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
         });
     }
+}
+
+
+/*=============*/
+/* Login block */
+/*=============*/
+const INVALID_LOGIN_BLOCK_LINK_MESSAGE = "Invalid login block link";
+
+/**
+ * Builds the page which asks the user to confirm that he wants to block the logins on his account.
+ *
+ * The link of the email only opens this page, the block itself needs the form to be sent :
+ * some email clients open the links of the emails by themselves and would block the account without the user.
+ * The token is checked before the page is built, because the page displays the email address of the account.
+ * @param userLoginBlock The userLoginBlock object containing the user ID and the token of the block link.
+ * @returns HTML string of the confirmation page, or of the result page if the link is not valid.
+ */
+export async function getUserLoginBlockPage(userLoginBlock: UserLoginBlock): Promise<string> {
+    try {
+        const user: User = await getUserFromLoginBlockLink(userLoginBlock);
+
+        return await getEmailTemplate('login_block_confirmation', {
+            email: user.email,
+            blockDuration: `${getLoginBlockDurationInHours()} h`,
+            currentYear: String(new Date().getFullYear()),
+        });
+    } catch (error) {
+        return await getLoginBlockFailurePage(error);
+    }
+}
+
+
+/**
+ * Blocks the logins of a user from the link of a login code email.
+ *
+ * If someone logged in with the code of this email, the user is also logged out from all his devices.
+ * @param userLoginBlock The userLoginBlock object containing the user ID and the token of the block link.
+ * @returns HTML string to display the result of the block.
+ */
+export async function blockUserLogin(userLoginBlock: UserLoginBlock): Promise<string> {
+    try {
+        const user = await getUserFromLoginBlockLink(userLoginBlock);
+
+        const mustLogoutFromAllDevices = wasLastLoginCodeUsed(user);
+        const isLoginBlocked = await UsersRepository.blockUserLogin(user.id, user.login_block_token_hash, AppConfig.login_block_duration, mustLogoutFromAllDevices);
+        if (!isLoginBlocked) {
+            throw new AppError(INVALID_LOGIN_BLOCK_LINK_MESSAGE, 400);
+        }
+
+        const logoutMessage = mustLogoutFromAllDevices ? ` Quelqu'un s'était connecté avec le code reçu : votre compte a été déconnecté de tous les appareils.` : ``;
+
+        return await getLoginBlockResultPage(
+            "success",
+            `Connexions bloquées`,
+            `Plus personne ne peut se connecter à votre compte pendant ${getLoginBlockDurationInHours()} h, le blocage se lèvera ensuite automatiquement.${logoutMessage}`,
+        );
+    } catch (error) {
+        return await getLoginBlockFailurePage(error);
+    }
+}
+
+
+/**
+ * Retrieves the user targeted by a block link, after checking the token of the link.
+ * @param userLoginBlock The userLoginBlock object containing the user ID and the token of the block link.
+ * @returns The user, with a block token hash which is never null.
+ * @throws AppError if the user does not exist or if the token does not match his block link.
+ */
+async function getUserFromLoginBlockLink(userLoginBlock: UserLoginBlock): Promise<User & { login_block_token_hash: string }> {
+    const user: User = await UsersRepository._getUserById(parseInt(userLoginBlock.userId, 10));
+
+    const blockTokenHash = user.login_block_token_hash;
+    if (blockTokenHash === null || !(await verifyHash(userLoginBlock.token, blockTokenHash))) {
+        throw new AppError(INVALID_LOGIN_BLOCK_LINK_MESSAGE, 400);
+    }
+
+    return { ...user, login_block_token_hash: blockTokenHash };
+}
+
+
+/**
+ * Builds the page displayed when a block link can not be used.
+ *
+ * The same page is returned for an unknown user and for a wrong token, so that the link does not reveal which accounts exist.
+ * @param error The error which prevented the use of the block link.
+ * @returns HTML string of the result page.
+ */
+async function getLoginBlockFailurePage(error: unknown): Promise<string> {
+    const isInvalidLink = error instanceof AppError && error.httpStatus < 500;
+    if (isInvalidLink) {
+        return await getLoginBlockResultPage(
+            "invalid",
+            `Lien invalide`,
+            `Ce lien de blocage n'est plus valide. Si vous venez de bloquer les connexions, votre compte est déjà protégé.`,
+        );
+    }
+
+    logger.error("Error with a login block link :", error);
+    return await getLoginBlockResultPage(
+        "error",
+        `Erreur`,
+        `Une erreur est survenue lors du blocage des connexions. Veuillez réessayer plus tard.`,
+    );
+}
+
+
+/**
+ * Builds the page which displays the result of a login block.
+ * @param statusKind The kind of result, which selects the icon and the color of the page.
+ * @param status The title of the page.
+ * @param message The explanation displayed under the title.
+ * @returns HTML string of the result page.
+ */
+async function getLoginBlockResultPage(statusKind: "success" | "invalid" | "error", status: string, message: string): Promise<string> {
+    return await getEmailTemplate('login_block', {
+        statusKind: statusKind,
+        status: status,
+        message: message,
+        currentYear: String(new Date().getFullYear()),
+    });
+}
+
+
+/**
+ * Checks if someone logged in with the last login code sent to a user.
+ * @param user The user who received the login code.
+ * @returns True if a login happened after the last login code was sent.
+ */
+function wasLastLoginCodeUsed(user: User): boolean {
+    if (user.login_requested_at === null) { return false; }
+
+    return user.last_login.getTime() >= user.login_requested_at.getTime();
+}
+
+
+/**
+ * Converts the duration of the login block into hours, to display it to the user.
+ * @returns Duration of the login block in hours, rounded up.
+ */
+function getLoginBlockDurationInHours(): number {
+    const millisecondsPerHour = 60 * 60 * 1000;
+    return Math.ceil(AppConfig.login_block_duration / millisecondsPerHour);
 }

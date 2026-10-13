@@ -234,6 +234,10 @@ router.delete('/', authorizationValidator(UsersSchema.AuthorizationHeaderSchema)
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/error404'
+ *       403:
+ *         description: The logins are temporarily blocked for this account
+ *       429:
+ *         description: A login code was sent recently. Wait before requesting a new one
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -271,6 +275,12 @@ router.post('/login/request', requestValidator(UsersSchema.UserLoginRequestSchem
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/error400'
+ *       401:
+ *         description: Invalid token, invalid code or expired code
+ *       403:
+ *         description: The logins are temporarily blocked for this account
+ *       429:
+ *         description: Too many attempts on this login code. Request a new one
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -279,6 +289,98 @@ router.post('/login/request', requestValidator(UsersSchema.UserLoginRequestSchem
  *               $ref: '#/components/schemas/error500'
  */
 router.post('/login/confirm', requestValidator(UsersSchema.UserLoginConfirmSchema), UsersController.userLoginConfirm);
+
+
+/**
+ * @swagger
+ * /users/login/block/{userId}:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Display the login block confirmation page
+ *     description: Display the page which asks the user to confirm that he wants to block the logins on his account. This is the link sent in the login code email, it does not block anything by itself.
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: The ID of the user whose logins will be blocked.
+ *         schema:
+ *           type: string
+ *           example: "1"
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         description: The block token sent in the login code email.
+ *         schema:
+ *           type: string
+ *           example: "block_token_here"
+ *     responses:
+ *       200:
+ *         description: Confirmation page
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *       400:
+ *         description: Bad request. Change your request to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error400'
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.get('/login/block/:userId', requestValidator(UsersSchema.UserLoginBlockSchema), UsersController.userLoginBlockPage);
+
+
+/**
+ * @swagger
+ * /users/login/block/{userId}:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: Block the logins of a user
+ *     description: Block the logins of a user for a limited time and cancel his pending login code. If someone logged in with the code sent with this link, the user is also logged out from all his devices.
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: The ID of the user whose logins are blocked.
+ *         schema:
+ *           type: string
+ *           example: "1"
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         description: The block token sent in the login code email.
+ *         schema:
+ *           type: string
+ *           example: "block_token_here"
+ *     responses:
+ *       200:
+ *         description: Page indicating the result of the block (blocked, invalid link or error)
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *       400:
+ *         description: Bad request. Change your request to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error400'
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.post('/login/block/:userId', requestValidator(UsersSchema.UserLoginBlockSchema), UsersController.userLoginBlock);
 
 
 /**
