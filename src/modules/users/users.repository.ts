@@ -144,13 +144,16 @@ export async function updateUserEmailVerifyTokenHash(userId: number, email_verif
 
 
 /**
- * Verifies a user's email.
+ * Verifies a user's email, and closes the sessions opened before this verification.
+ *
+ * Anyone can register an account with an email address he does not own and get a JWT for it.
+ * The sessions opened before the address was proven are closed, so that only its real owner keeps an access.
  * @param userId The ID of the user to verify email.
  * @throws Error if query fails.
  */
 export async function UserEmailVerify(userId: number): Promise<void> {
     try {
-        const query = "UPDATE users SET is_verified_email = true, email_verify_token_hash = null WHERE id = $1";
+        const query = "UPDATE users SET is_verified_email = true, email_verify_token_hash = null, is_connected = false, last_logout_at = NOW() WHERE id = $1";
         const values = [userId];
 
         await Database.execute<void>({ text: query, values: values });
@@ -191,6 +194,54 @@ export async function _getUserById(id: number): Promise<User> {
     try {
         const query = "SELECT * FROM users WHERE id = $1";
         const values = [id];
+
+        const rows = await Database.execute<User>({ text: query, values: values });
+        if (rows.length === 0) { throw new AppError('User not found', 404); }
+
+        return rows[0];
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
+ * Updates a user whose email address changes, and marks the new address as not verified.
+ *
+ * Both changes are made by the same query, so that a new address can never stay marked as verified.
+ * @param updateUser The user object containing the updated user information.
+ * @param userSafe The userSafe object containing the current information of the user to update.
+ * @param email_verify_token_hash The hash of the token sent to the new address to verify it.
+ * @returns The updated user object with sensitive information.
+ * @throws Error if user update fails or if the user is not found.
+ */
+export async function updateUserWithUnverifiedEmail(updateUser: UpdateUser, userSafe: UserSafe, email_verify_token_hash: string): Promise<User> {
+    try {
+        const query = "UPDATE users SET email = $6, pseudo = $7, is_verified_email = false, email_verify_token_hash = $8 WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_logout_at) = date_trunc('second', $4::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $5::timestamp) RETURNING *";
+        const values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_logout_at.toString(), userSafe.created_at.toString(), updateUser.email, updateUser.pseudo, email_verify_token_hash];
+
+        const rows = await Database.execute<User>({ text: query, values: values });
+        if (rows.length === 0) { throw new AppError('User not found', 404); }
+
+        return rows[0];
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
+ * Invalidates every JWT already issued for a user, without logging him out.
+ *
+ * A JWT carries the date of the last logout of its user : changing this date makes the JWT issued before stop matching the user.
+ * @param userId The ID of the user whose JWT are invalidated.
+ * @returns The updated user object, to use to generate a new JWT.
+ * @throws Error if the query fails or if the user is not found.
+ */
+export async function invalidateUserSessions(userId: number): Promise<User> {
+    try {
+        const query = "UPDATE users SET last_logout_at = NOW() WHERE id = $1 RETURNING *";
+        const values = [userId];
 
         const rows = await Database.execute<User>({ text: query, values: values });
         if (rows.length === 0) { throw new AppError('User not found', 404); }
