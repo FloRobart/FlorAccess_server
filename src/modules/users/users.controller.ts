@@ -19,8 +19,9 @@ import AppConfig from '../../config/AppConfig';
 export const insertUser = async (req: Request, res: Response, next: NextFunction) => {
     const insertUser: InsertUser = UsersSchema.UserInsertSchema.parse(req.body.validatedData);
     const ip: IPAddress | null = IPAddressSchema.safeParse(req.ip).data || null;
-    const application: string = req.query.application as string || AppConfig.app_name;
-    const domain: string | null = req.query.domain as string || null;
+    const userApplication = UsersSchema.UserApplicationSchema.parse(req.body.validatedData);
+    const application: string = userApplication.application || AppConfig.app_name;
+    const domain: string | null = userApplication.domain || null;
 
     try {
         const jwt: string = await UsersService.insertUser(insertUser, ip, application, domain);

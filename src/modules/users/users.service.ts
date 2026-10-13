@@ -10,6 +10,7 @@ import { sendEmailVerify } from "./users.email";
 import logger from "../../core/utils/logger";
 import { AppError } from "../../core/models/AppError.model";
 import { getEmailTemplate } from '../../core/email/get_email_template';
+import escapeHtml from '../../core/utils/parse_html';
 
 
 
@@ -193,14 +194,57 @@ export async function sendVerificationEmail(userId: number, userEmail: string, e
 
 
 /**
+ * Builds the button which sends the user back to the application he comes from.
+ *
+ * The application and the domain come from the URL, which anyone can write : the button is only built
+ * for the domains of the applications allowed to use this API, otherwise this page could display a link to any website.
+ * @param application Name of the application, displayed on the button.
+ * @param domain Domain of the application, target of the button.
+ * @returns HTML string of the button, or an empty string if there is no allowed application to go back to.
+ */
+function buildApplicationButton(application: string | undefined, domain: string | undefined): string {
+    if (application === undefined || domain === undefined) { return ''; }
+    if (!isAllowedApplicationDomain(domain)) { return ''; }
+
+    return `<a class="btn" href="https://${escapeHtml(domain)}">Aller sur ${escapeHtml(application)}</a>`;
+}
+
+
+/**
+ * Checks if a domain is the one of an application allowed to use this API.
+ *
+ * The allowed applications are the origins of the CORS configuration, there is no second list to maintain.
+ * @param domain Domain to check (example: "example.com").
+ * @returns True if the domain belongs to an allowed application.
+ */
+function isAllowedApplicationDomain(domain: string): boolean {
+    const allowedDomains: (string | null)[] = AppConfig.corsOptions.origin.map(getOriginHost);
+    return allowedDomains.includes(domain.toLowerCase());
+}
+
+
+/**
+ * Extracts the host of an origin.
+ * @param origin Origin to read (example: "https://example.com").
+ * @returns Host of the origin (example: "example.com"), or null if the origin is not a valid URL.
+ */
+function getOriginHost(origin: string): string | null {
+    try {
+        return new URL(origin).host;
+    } catch (error) {
+        return null;
+    }
+}
+
+
+/**
  * Verifies a user's email.
  * @param userEmailVerification The userEmailVerification object containing the information to verify user email.
  * @return HTML string to display the result of the email verification.
  * @throws Error if email verification fails or if the information is invalid.
  */
 export async function UserEmailVerify(userEmailVerification: UserEmailVerification): Promise<string> {
-    const application: string | undefined = userEmailVerification.application;
-    const domain: string | undefined = userEmailVerification.domain === 'null' ? undefined : userEmailVerification.domain;
+    const applicationButton: string = buildApplicationButton(userEmailVerification.application, userEmailVerification.domain);
 
     try {
         const userId = parseInt(userEmailVerification.userId, 10);
@@ -216,8 +260,7 @@ export async function UserEmailVerify(userEmailVerification: UserEmailVerificati
             return await getEmailTemplate('verification_email_success', {
                 status: `Email '${user.email}' déjà confirmé`,
                 message: `Merci — votre adresse email à déjà été vérifiée.`,
-                button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
-            });
+            }, { button: applicationButton });
         }
 
         if (!user.email_verify_token_hash) {
@@ -233,23 +276,20 @@ export async function UserEmailVerify(userEmailVerification: UserEmailVerificati
         return await getEmailTemplate('verification_email_success', {
             status: `Email '${user.email}' confirmé`,
             message: `Merci — votre adresse email a bien été vérifiée. Vous pouvez maintenant vous connecter.`,
-            button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
-        });
+        }, { button: applicationButton });
 
     } catch (error) {
         if (error instanceof AppError) {
             return await getEmailTemplate('verification_email_error', {
                 status: `Erreur ${error.httpStatus}`,
                 message: `${error.message}`,
-                button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
-            });
+            }, { button: applicationButton });
         }
 
         logger.error("Unknown error in UserEmailVerify :", error);
         return await getEmailTemplate('verification_email_error', {
             status: `Erreur Inconnue`,
             message: `Une erreur inconnue est survenue lors de la vérification de votre adresse email. Veuillez réessayer plus tard.`,
-            button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
-        });
+        }, { button: applicationButton });
     }
 }

@@ -57,7 +57,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/error500'
  */
-router.post('/', requestValidator(UsersSchema.UserInsertSchema), UsersController.insertUser);
+router.post('/', requestValidator(UsersSchema.UserInsertSchema), requestValidator(UsersSchema.UserApplicationSchema), UsersController.insertUser);
 
 
 /**
