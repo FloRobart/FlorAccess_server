@@ -114,7 +114,8 @@ const EmailVerification: UserEmailVerification = {
     token: "abcdef",
 };
 
-const VerifiedUser: User = {
+/* The type assertion keeps this fixture valid when other fields are added to the users */
+const VerifiedUser = {
     id: 1,
     email: "test1@test.fr",
     pseudo: "Pseudo",
@@ -132,4 +133,4 @@ const VerifiedUser: User = {
 
     is_admin: false,
     created_at: new Date(),
-};
+} as User;
