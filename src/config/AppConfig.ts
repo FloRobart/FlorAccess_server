@@ -8,6 +8,25 @@ dotenv.config();
 
 
 
+/**
+ * Converts a duration read from the environment into milliseconds.
+ * A number without unit is read as seconds, any other value ("30min", "1h") is read by the ms library.
+ * @param rawDuration Duration as written in the environment
+ * @param defaultDurationInMilliseconds Duration used when the environment value is missing or invalid
+ * @returns Duration in milliseconds
+ */
+function parseDurationToMilliseconds(rawDuration: string | undefined, defaultDurationInMilliseconds: number): number {
+    const duration = rawDuration?.trim();
+    if (!duration) { return defaultDurationInMilliseconds; }
+
+    const isNumberWithoutUnit = /^\d+$/.test(duration);
+    if (isNumberWithoutUnit) { return Number(duration) * 1000; }
+
+    return ms(duration as StringValue) || defaultDurationInMilliseconds;
+}
+
+
+
 interface AppConfigInterface {
     /* Application configuration */
     readonly app_name: string;
@@ -37,6 +56,9 @@ interface AppConfigInterface {
     /* Authentication */
     readonly default_auth_method: string;
     readonly code_data_set: string;
+    readonly login_code_max_attempts: number;
+    readonly login_request_cooldown: number;
+    readonly login_block_duration: number;
 
     /* Rate Limiting */
     readonly request_limit_per_second: number;
@@ -75,11 +97,14 @@ const AppConfig: AppConfigInterface = {
     /* Security */
     hash_rounds: Math.round(Number(process.env.HASH_ROUNDS)) || 10,
     token_length: (Math.round(Number(process.env.TOKEN_LENGTH)) / 2) || (512/2),
-    token_expiration: (ms((process.env.TOKEN_EXPIRATION as StringValue) || "30min") || (30 * 60 * 1000)),
+    token_expiration: parseDurationToMilliseconds(process.env.TOKEN_EXPIRATION, 30 * 60 * 1000),
 
     /* Authentication */
     default_auth_method: process.env.DEFAULT_AUTH_METHOD || 'EMAIL_CODE',
     code_data_set: process.env.CODE_DATA_SET || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+    login_code_max_attempts: Math.round(Number(process.env.LOGIN_CODE_MAX_ATTEMPTS)) || 5,
+    login_request_cooldown: parseDurationToMilliseconds(process.env.LOGIN_REQUEST_COOLDOWN, 60 * 1000),
+    login_block_duration: parseDurationToMilliseconds(process.env.LOGIN_BLOCK_DURATION, 24 * 60 * 60 * 1000),
 
     /* Rate Limiting */
     request_limit_per_second: Math.round(Number(process.env.REQUEST_LIMIT_PER_SECOND)) || 10,
