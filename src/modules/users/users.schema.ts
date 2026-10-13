@@ -27,6 +27,16 @@ export const UserInsertSchema = z.object({
     pseudo: PseudoSchema,
 });
 
+/**
+ * Validation schema for the application from which a user registers (query parameters).
+ * The name of the application is written in the emails, so it is limited to a short text without special characters.
+ * The domain is not restricted here : it is only used to build a link if it belongs to an allowed application.
+ */
+export const UserApplicationSchema = z.object({
+    application: z.string().trim().min(1).max(50).regex(/^[\p{L}\p{N} ._-]+$/u).optional(),
+    domain: z.string().trim().min(1).max(255).optional(),
+});
+
 
 /*========*/
 /* SELECT */
