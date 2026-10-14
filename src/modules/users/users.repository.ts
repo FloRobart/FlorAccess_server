@@ -126,6 +126,30 @@ export async function logoutUser(userSafe: UserSafe): Promise<User> {
 
 
 /**
+ * Blocks the logins of a user for a given time and cancels his pending login code.
+ *
+ * The block token hash is part of the condition, so that a block link can only be used once.
+ * @param userId The ID of the user to block.
+ * @param blockTokenHash The hashed token of the block link which was checked.
+ * @param blockDurationInMilliseconds The time during which the logins stay blocked.
+ * @param mustLogoutFromAllDevices True to also close the sessions of the user on all his devices.
+ * @returns True if the logins were blocked, false if the block link was already used or replaced.
+ * @throws Error if the query fails.
+ */
+export async function blockUserLogin(userId: number, blockTokenHash: string, blockDurationInMilliseconds: number, mustLogoutFromAllDevices: boolean): Promise<boolean> {
+    try {
+        const query = "UPDATE users SET login_blocked_until = NOW() + ($3::double precision * INTERVAL '1 millisecond'), login_block_token_hash = null, secret_hash = null, token_hash = null, is_connected = CASE WHEN $4::boolean THEN false ELSE is_connected END, last_logout_at = CASE WHEN $4::boolean THEN NOW() ELSE last_logout_at END WHERE id = $1 AND login_block_token_hash = $2 RETURNING id";
+        const values = [userId, blockTokenHash, blockDurationInMilliseconds, mustLogoutFromAllDevices];
+
+        const rows = await Database.execute({ text: query, values: values });
+        return rows.length > 0;
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
  * Updates a user's email verification token hash.
  * @param userId The ID of the user to update.
  * @param email_verify_token_hash The new email verification token hash.
