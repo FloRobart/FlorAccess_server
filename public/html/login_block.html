@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Blocage des connexions - FlorAccess</title>
+    <link rel="icon" href="/icons/favicon.ico" />
+    <link rel="stylesheet" href="/css/login_block.css" />
+  </head>
+
+  <body>
+    <!-- Icons of the possible results, the one named by statusKind is drawn in the card -->
+    <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="icon-success" viewBox="0 0 48 48">
+        <path d="M15 25 L21.5 31.5 L33.5 17.5" />
+      </symbol>
+      <symbol id="icon-invalid" viewBox="0 0 48 48">
+        <path d="M24 14 V27" />
+        <path d="M24 34 V34.01" />
+      </symbol>
+      <symbol id="icon-error" viewBox="0 0 48 48">
+        <path d="M17 17 L31 31" />
+        <path d="M31 17 L17 31" />
+      </symbol>
+    </svg>
+
+    <main class="page">
+      <header class="brand">
+        <img class="brand-logo" src="/icons/logo-96.png" alt="" width="44" height="44" />
+        <span class="brand-name">FlorAccess</span>
+      </header>
+
+      <section class="card">
+        <svg class="status-icon status-icon-{{statusKind}}" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle class="status-icon-background" cx="24" cy="24" r="24" />
+          <use href="#icon-{{statusKind}}" />
+        </svg>
+
+        <h1>{{status}}</h1>
+        <p>
+          {{message}}
+        </p>
+
+        <p class="note">Vous pouvez fermer cette page.</p>
+      </section>
+
+      <footer class="footer">
+        Copyright © {{currentYear}} -
+        <a href="https://florobart.github.io/" target="_blank" rel="noopener">Floris Robart</a>
+      </footer>
+    </main>
+  </body>
+</html>

@@ -3,6 +3,7 @@ import type { InsertUser, IPAddress, UpdateUser, User, UserSafe } from './users.
 import { Database } from '../../core/models/Database.model';
 import AppConfig from '../../config/AppConfig';
 import { AppError } from '../../core/models/AppError.model';
+import { isJwtFromClosedSession } from '../../core/utils/jwt';
 
 
 
@@ -42,6 +43,9 @@ export async function getUser(userSafe: UserSafe): Promise<User> {
         const rows = await Database.execute<User>({ text: query, values: values });
         if (rows.length <= 0) { throw new AppError('User not found', 404); }
         if (!rows[0].is_connected) { throw new AppError('User is not connected', 401); }
+
+        /* Without this check, the JWT issued before a logout work again as soon as the user logs back in */
+        if (isJwtFromClosedSession(userSafe, rows[0].last_logout_at)) { throw new AppError('Session closed, please log in again', 401); }
 
         return rows[0];
     } catch (error) {
@@ -126,6 +130,30 @@ export async function logoutUser(userSafe: UserSafe): Promise<User> {
 
 
 /**
+ * Blocks the logins of a user for a given time and cancels his pending login code.
+ *
+ * The block token hash is part of the condition, so that a block link can only be used once.
+ * @param userId The ID of the user to block.
+ * @param blockTokenHash The hashed token of the block link which was checked.
+ * @param blockDurationInMilliseconds The time during which the logins stay blocked.
+ * @param mustLogoutFromAllDevices True to also close the sessions of the user on all his devices.
+ * @returns True if the logins were blocked, false if the block link was already used or replaced.
+ * @throws Error if the query fails.
+ */
+export async function blockUserLogin(userId: number, blockTokenHash: string, blockDurationInMilliseconds: number, mustLogoutFromAllDevices: boolean): Promise<boolean> {
+    try {
+        const query = "UPDATE users SET login_blocked_until = NOW() + ($3::double precision * INTERVAL '1 millisecond'), login_block_token_hash = null, secret_hash = null, token_hash = null, is_connected = CASE WHEN $4::boolean THEN false ELSE is_connected END, last_logout_at = CASE WHEN $4::boolean THEN NOW() ELSE last_logout_at END WHERE id = $1 AND login_block_token_hash = $2 RETURNING id";
+        const values = [userId, blockTokenHash, blockDurationInMilliseconds, mustLogoutFromAllDevices];
+
+        const rows = await Database.execute({ text: query, values: values });
+        return rows.length > 0;
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
  * Updates a user's email verification token hash.
  * @param userId The ID of the user to update.
  * @param email_verify_token_hash The new email verification token hash.
@@ -144,13 +172,16 @@ export async function updateUserEmailVerifyTokenHash(userId: number, email_verif
 
 
 /**
- * Verifies a user's email.
+ * Verifies a user's email, and closes the sessions opened before this verification.
+ *
+ * Anyone can register an account with an email address he does not own and get a JWT for it.
+ * The sessions opened before the address was proven are closed, so that only its real owner keeps an access.
  * @param userId The ID of the user to verify email.
  * @throws Error if query fails.
  */
 export async function UserEmailVerify(userId: number): Promise<void> {
     try {
-        const query = "UPDATE users SET is_verified_email = true, email_verify_token_hash = null WHERE id = $1";
+        const query = "UPDATE users SET is_verified_email = true, email_verify_token_hash = null, is_connected = false, last_logout_at = NOW() WHERE id = $1";
         const values = [userId];
 
         await Database.execute<void>({ text: query, values: values });
@@ -191,6 +222,54 @@ export async function _getUserById(id: number): Promise<User> {
     try {
         const query = "SELECT * FROM users WHERE id = $1";
         const values = [id];
+
+        const rows = await Database.execute<User>({ text: query, values: values });
+        if (rows.length === 0) { throw new AppError('User not found', 404); }
+
+        return rows[0];
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
+ * Updates a user whose email address changes, and marks the new address as not verified.
+ *
+ * Both changes are made by the same query, so that a new address can never stay marked as verified.
+ * @param updateUser The user object containing the updated user information.
+ * @param userSafe The userSafe object containing the current information of the user to update.
+ * @param email_verify_token_hash The hash of the token sent to the new address to verify it.
+ * @returns The updated user object with sensitive information.
+ * @throws Error if user update fails or if the user is not found.
+ */
+export async function updateUserWithUnverifiedEmail(updateUser: UpdateUser, userSafe: UserSafe, email_verify_token_hash: string): Promise<User> {
+    try {
+        const query = "UPDATE users SET email = $6, pseudo = $7, is_verified_email = false, email_verify_token_hash = $8 WHERE id = $1 AND is_connected = true AND email = $2 AND pseudo = $3 AND date_trunc('second', last_logout_at) = date_trunc('second', $4::timestamp) AND date_trunc('second', created_at) = date_trunc('second', $5::timestamp) RETURNING *";
+        const values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.last_logout_at.toString(), userSafe.created_at.toString(), updateUser.email, updateUser.pseudo, email_verify_token_hash];
+
+        const rows = await Database.execute<User>({ text: query, values: values });
+        if (rows.length === 0) { throw new AppError('User not found', 404); }
+
+        return rows[0];
+    } catch (error) {
+        throw error;
+    }
+}
+
+
+/**
+ * Invalidates every JWT already issued for a user, without logging him out.
+ *
+ * A JWT carries the date of the last logout of its user : changing this date makes the JWT issued before stop matching the user.
+ * @param userId The ID of the user whose JWT are invalidated.
+ * @returns The updated user object, to use to generate a new JWT.
+ * @throws Error if the query fails or if the user is not found.
+ */
+export async function invalidateUserSessions(userId: number): Promise<User> {
+    try {
+        const query = "UPDATE users SET last_logout_at = NOW() WHERE id = $1 RETURNING *";
+        const values = [userId];
 
         const rows = await Database.execute<User>({ text: query, values: values });
         if (rows.length === 0) { throw new AppError('User not found', 404); }

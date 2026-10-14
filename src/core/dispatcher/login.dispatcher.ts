@@ -17,6 +17,7 @@ export async function loginDispatcher(userLogin: UserLoginRequest | UserLoginCon
     try {
         const user: User | null = await UsersRepository._getUserByEmail(userLogin.email);
         if (!user) { throw new AppError("User not found", 404); }
+        if (isUserLoginBlocked(user)) { throw new AppError("Logins are temporarily blocked for this account", 403); }
 
         const auth_method = await AuthMethodsRepository._getAuth_methodsById(user.auth_methods_id);
 
@@ -39,4 +40,18 @@ export async function loginDispatcher(userLogin: UserLoginRequest | UserLoginCon
     } catch (error) {
         throw error;
     }
+}
+
+
+/**
+ * Checks if the user blocked the logins on his account from the link of a login code email.
+ *
+ * The block has an end date, so that it stops by itself without any action.
+ * @param user The user who tries to log in.
+ * @returns True if the logins are currently blocked for this user.
+ */
+function isUserLoginBlocked(user: User): boolean {
+    if (user.login_blocked_until === null) { return false; }
+
+    return user.login_blocked_until.getTime() > Date.now();
 }

@@ -3,6 +3,7 @@ import type { AuthorizedQueryParams, UserAdminUpdate } from './admins.types';
 
 import { Database } from '../../core/models/Database.model';
 import { AppError } from '../../core/models/AppError.model';
+import { isJwtFromClosedSession } from '../../core/utils/jwt';
 
 
 
@@ -15,12 +16,15 @@ import { AppError } from '../../core/models/AppError.model';
  */
 export async function isAdmin(userSafe: UserSafe): Promise<boolean> {
     try {
-        let query = "SELECT is_connected, is_admin FROM users WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', created_at) = date_trunc('second', $4::timestamp)";
+        let query = "SELECT is_connected, is_admin, last_logout_at FROM users WHERE id = $1 AND email = $2 AND pseudo = $3 AND date_trunc('second', created_at) = date_trunc('second', $4::timestamp)";
         let values = [userSafe.id, userSafe.email, userSafe.pseudo, userSafe.created_at.toString()];
 
         const rows = await Database.execute<User>({ text: query, values: values });
         if (rows.length <= 0) { throw new AppError('User not found', 404); }
         if (!rows[0].is_connected) { throw new AppError('User is not connected', 401); }
+
+        /* Without this check, the JWT issued before a logout work again as soon as the admin logs back in */
+        if (isJwtFromClosedSession(userSafe, rows[0].last_logout_at)) { throw new AppError('Session closed, please log in again', 401); }
 
         return rows[0].is_admin;
     } catch (error) {

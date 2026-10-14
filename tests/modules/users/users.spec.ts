@@ -1,5 +1,5 @@
 import { ZodError } from "zod";
-import { AuthorizationHeaderSchema, IPAddressSchema, UserInsertSchema, UserLoginConfirmSchema, UserLoginRequestSchema, UserSafeSchema, UserSchema, UserUpdateSchema, UserEmailVerificationSchema } from "../../../src/modules/users/users.schema";
+import { AuthorizationHeaderSchema, IPAddressSchema, UserInsertSchema, UserLoginBlockSchema, UserLoginConfirmSchema, UserLoginRequestSchema, UserSafeSchema, UserSchema, UserUpdateSchema, UserEmailVerificationSchema } from "../../../src/modules/users/users.schema";
 import { AuthorizationHeader, InsertUser, IPAddress, UpdateUser, User, UserLoginConfirm, UserSafe, UserEmailVerification } from "../../../src/modules/users/users.types";
 
 
@@ -160,6 +160,22 @@ describe('Users Schemas tests', () => {
         it('Incorrect User Login Confirm schema', () => {
             for (const data of IncorrectUserLoginConfirmSchema) {
                 expect(() => UserLoginConfirmSchema.parse(data)).toThrow(ZodError);
+            }
+        });
+    });
+
+
+    /* User Login Block */
+    describe('User Login Block schema', () => {
+        it('Correct User Login Block schema', () => {
+            for (const data of CorrectUserEmailVerificationSchema) {
+                expect(UserLoginBlockSchema.parse(data)).toStrictEqual(CorrectUserEmailVerificationSchema[0]);
+            }
+        });
+
+        it('Incorrect User Login Block schema', () => {
+            for (const data of IncorrectUserEmailVerificationSchema) {
+                expect(() => UserLoginBlockSchema.parse(data)).toThrow(ZodError);
             }
         });
     });
@@ -366,6 +382,10 @@ const BaseUserSchema: User = {
     email_verify_token_hash: "hashed_token",
     secret_hash: "hashed_secret",
     token_hash: "hashed_token",
+    login_requested_at: new Date(),
+    login_code_attempts: 0,
+    login_block_token_hash: "hashed_block_token",
+    login_blocked_until: new Date(),
     is_admin: false,
 };
 
@@ -389,6 +409,9 @@ const CorrectUserSchema: User[] = [
         email_verify_token_hash: null,
         secret_hash: null,
         token_hash: null,
+        login_requested_at: null,
+        login_block_token_hash: null,
+        login_blocked_until: null,
     }
 ];
 
