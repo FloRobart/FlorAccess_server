@@ -3,6 +3,7 @@ import type { InsertUser, IPAddress, UpdateUser, User, UserSafe } from './users.
 import { Database } from '../../core/models/Database.model';
 import AppConfig from '../../config/AppConfig';
 import { AppError } from '../../core/models/AppError.model';
+import { isJwtFromClosedSession } from '../../core/utils/jwt';
 
 
 
@@ -42,6 +43,9 @@ export async function getUser(userSafe: UserSafe): Promise<User> {
         const rows = await Database.execute<User>({ text: query, values: values });
         if (rows.length <= 0) { throw new AppError('User not found', 404); }
         if (!rows[0].is_connected) { throw new AppError('User is not connected', 401); }
+
+        /* Without this check, the JWT issued before a logout work again as soon as the user logs back in */
+        if (isJwtFromClosedSession(userSafe, rows[0].last_logout_at)) { throw new AppError('Session closed, please log in again', 401); }
 
         return rows[0];
     } catch (error) {

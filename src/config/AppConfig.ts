@@ -42,6 +42,7 @@ interface AppConfigInterface {
     /* JWT */
     readonly jwt_signing_key: string;
     readonly jwt_expiration: number;
+    readonly session_max_duration: number;
 
     /* Email */
     readonly mail_service: string;
@@ -93,6 +94,7 @@ const AppConfig: AppConfigInterface = {
     /* JWT */
     jwt_signing_key: process.env.JWT_SIGNING_KEY || 'ABCD',
     jwt_expiration: (ms((process.env.JWT_EXPIRATION as StringValue) || "1d") || (1 * 24 * 60 * 60 * 1000)) / 1000,
+    session_max_duration: (ms((process.env.SESSION_MAX_DURATION as StringValue) || "90d") || (90 * 24 * 60 * 60 * 1000)),
 
     /* Security */
     hash_rounds: Math.round(Number(process.env.HASH_ROUNDS)) || 10,

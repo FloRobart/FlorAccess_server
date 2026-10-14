@@ -1,6 +1,6 @@
 import type { InsertUser, UserLoginRequest, UpdateUser, User, UserSafe, UserLoginConfirm, UserLoginBlock, IPAddress, UserEmailVerification } from "./users.types";
 
-import { generateJwt, verifyJwt } from "../../core/utils/jwt";
+import { generateJwt, renewJwt, verifyJwt } from "../../core/utils/jwt";
 import * as UsersRepository from "./users.repository";
 import { UserSafeSchema } from "./users.schema";
 import { loginDispatcher } from "../../core/dispatcher/login.dispatcher";
@@ -68,7 +68,7 @@ export async function regenerateJwt(jwt: string): Promise<string> {
         const selectedUser: User = await UsersRepository.getUser(decodedUserSafe);
 
         const userSafe: UserSafe = UserSafeSchema.parse(selectedUser);
-        return generateJwt(userSafe);
+        return renewJwt(jwt, userSafe);
     } catch (error) {
         throw error;
     }
@@ -88,7 +88,7 @@ export async function updateUser(updateUser: UpdateUser, jwt: string): Promise<s
         const updatedUser: User = await UsersRepository.updateUser(updateUser, decodedUser);
 
         const userSafe: UserSafe = UserSafeSchema.parse(updatedUser);
-        return generateJwt(userSafe);
+        return renewJwt(jwt, userSafe);
     } catch (error) {
         throw error;
     }
