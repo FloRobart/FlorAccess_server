@@ -1,6 +1,6 @@
-import type { InsertUser, UserLoginRequest, UpdateUser, User, UserSafe, UserLoginConfirm, IPAddress, UserEmailVerification } from "./users.types";
+import type { InsertUser, UserLoginRequest, UpdateUser, User, UserSafe, UserLoginConfirm, UserLoginBlock, IPAddress, UserEmailVerification } from "./users.types";
 
-import { generateJwt, verifyJwt } from "../../core/utils/jwt";
+import { generateJwt, renewJwt, verifyJwt } from "../../core/utils/jwt";
 import * as UsersRepository from "./users.repository";
 import { UserSafeSchema } from "./users.schema";
 import { loginDispatcher } from "../../core/dispatcher/login.dispatcher";
@@ -10,6 +10,7 @@ import { sendEmailVerify } from "./users.email";
 import logger from "../../core/utils/logger";
 import { AppError } from "../../core/models/AppError.model";
 import { getEmailTemplate } from '../../core/email/get_email_template';
+import escapeHtml from '../../core/utils/parse_html';
 
 
 
@@ -28,7 +29,9 @@ export async function insertUser(user: InsertUser, ip: IPAddress | null, applica
         const insertedUser: User = await UsersRepository.insertUser(user, ip, await hashString(email_verify_token));
         const validatedUser: UserSafe = UserSafeSchema.parse(insertedUser);
 
-        sendVerificationEmail(insertedUser.id, insertedUser.email, email_verify_token, application, domain);
+        /* The registration does not wait for the email, but a failed sending must never stay unhandled : an unhandled rejection stops the server */
+        sendVerificationEmail(insertedUser.id, insertedUser.email, email_verify_token, application, domain)
+            .catch((error: unknown) => logger.error("Failed to send the verification email :", error));
 
         return await generateJwt(validatedUser);
     } catch (error) {
@@ -67,7 +70,7 @@ export async function regenerateJwt(jwt: string): Promise<string> {
         const selectedUser: User = await UsersRepository.getUser(decodedUserSafe);
 
         const userSafe: UserSafe = UserSafeSchema.parse(selectedUser);
-        return generateJwt(userSafe);
+        return renewJwt(jwt, userSafe);
     } catch (error) {
         throw error;
     }
@@ -84,13 +87,37 @@ export async function regenerateJwt(jwt: string): Promise<string> {
 export async function updateUser(updateUser: UpdateUser, jwt: string): Promise<string> {
     try {
         const decodedUser = verifyJwt(jwt);
-        const updatedUser: User = await UsersRepository.updateUser(updateUser, decodedUser);
+        const updatedUser: User = await updateUserAndRequireEmailProof(updateUser, decodedUser);
 
         const userSafe: UserSafe = UserSafeSchema.parse(updatedUser);
-        return generateJwt(userSafe);
+        return renewJwt(jwt, userSafe);
     } catch (error) {
         throw error;
     }
+}
+
+
+/**
+ * Updates a user, and asks for a proof of his email address when it changes.
+ *
+ * Without this, a user could take an email address he does not own and keep it marked as verified.
+ * @param updateUser The user object containing the updated user information.
+ * @param currentUser The current information of the user, taken from his JWT.
+ * @returns The updated user object with sensitive information.
+ * @throws Error if user update fails or if the user is not found.
+ */
+async function updateUserAndRequireEmailProof(updateUser: UpdateUser, currentUser: UserSafe): Promise<User> {
+    const hasEmailChanged = updateUser.email !== currentUser.email;
+    if (!hasEmailChanged) { return await UsersRepository.updateUser(updateUser, currentUser); }
+
+    const email_verify_token = await generateApiToken();
+    const updatedUser: User = await UsersRepository.updateUserWithUnverifiedEmail(updateUser, currentUser, await hashString(email_verify_token));
+
+    /* The update does not wait for the email, but a failed sending must never stay unhandled : an unhandled rejection stops the server */
+    sendVerificationEmail(updatedUser.id, updatedUser.email, email_verify_token)
+        .catch((error: unknown) => logger.error("Failed to send the verification email :", error));
+
+    return updatedUser;
 }
 
 
@@ -184,10 +211,54 @@ export async function sendVerificationEmail(userId: number, userEmail: string, e
         const url = `${AppConfig.base_url}/users/email/verify/${userId}?token=${email_verify_token}&application=${encodeURIComponent(application)}&domain=${encodeURIComponent(domain || 'null')}`;
         logger.debug(`Email verification URL for user ${userId}: ${url}`);
         if (!AppConfig.app_env.includes('dev')) {
-            sendEmailVerify(userEmail, application, url);
+            await sendEmailVerify(userEmail, application, url);
         }
     } catch (error) {
         throw error;
+    }
+}
+
+
+/**
+ * Builds the button which sends the user back to the application he comes from.
+ *
+ * The application and the domain come from the URL, which anyone can write : the button is only built
+ * for the domains of the applications allowed to use this API, otherwise this page could display a link to any website.
+ * @param application Name of the application, displayed on the button.
+ * @param domain Domain of the application, target of the button.
+ * @returns HTML string of the button, or an empty string if there is no allowed application to go back to.
+ */
+function buildApplicationButton(application: string | undefined, domain: string | undefined): string {
+    if (application === undefined || domain === undefined) { return ''; }
+    if (!isAllowedApplicationDomain(domain)) { return ''; }
+
+    return `<a class="btn" href="https://${escapeHtml(domain)}">Aller sur ${escapeHtml(application)}</a>`;
+}
+
+
+/**
+ * Checks if a domain is the one of an application allowed to use this API.
+ *
+ * The allowed applications are the origins of the CORS configuration, there is no second list to maintain.
+ * @param domain Domain to check (example: "example.com").
+ * @returns True if the domain belongs to an allowed application.
+ */
+function isAllowedApplicationDomain(domain: string): boolean {
+    const allowedDomains: (string | null)[] = AppConfig.corsOptions.origin.map(getOriginHost);
+    return allowedDomains.includes(domain.toLowerCase());
+}
+
+
+/**
+ * Extracts the host of an origin.
+ * @param origin Origin to read (example: "https://example.com").
+ * @returns Host of the origin (example: "example.com"), or null if the origin is not a valid URL.
+ */
+function getOriginHost(origin: string): string | null {
+    try {
+        return new URL(origin).host;
+    } catch (error) {
+        return null;
     }
 }
 
@@ -199,8 +270,7 @@ export async function sendVerificationEmail(userId: number, userEmail: string, e
  * @throws Error if email verification fails or if the information is invalid.
  */
 export async function UserEmailVerify(userEmailVerification: UserEmailVerification): Promise<string> {
-    const application: string | undefined = userEmailVerification.application;
-    const domain: string | undefined = userEmailVerification.domain === 'null' ? undefined : userEmailVerification.domain;
+    const applicationButton: string = buildApplicationButton(userEmailVerification.application, userEmailVerification.domain);
 
     try {
         const userId = parseInt(userEmailVerification.userId, 10);
@@ -212,12 +282,12 @@ export async function UserEmailVerify(userEmailVerification: UserEmailVerificati
             throw new AppError("Utilisateur non trouvé. Cet incident sera signalé.", 404);
         }
 
+        /* The token can not be checked anymore once the email is verified : the address is not displayed, otherwise anyone could read the email of every user by trying the user IDs one by one */
         if (user.is_verified_email) {
             return await getEmailTemplate('verification_email_success', {
-                status: `Email '${user.email}' déjà confirmé`,
+                status: `Adresse email déjà confirmée`,
                 message: `Merci — votre adresse email à déjà été vérifiée.`,
-                button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
-            });
+            }, { button: applicationButton });
         }
 
         if (!user.email_verify_token_hash) {
@@ -233,23 +303,162 @@ export async function UserEmailVerify(userEmailVerification: UserEmailVerificati
         return await getEmailTemplate('verification_email_success', {
             status: `Email '${user.email}' confirmé`,
             message: `Merci — votre adresse email a bien été vérifiée. Vous pouvez maintenant vous connecter.`,
-            button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
-        });
+        }, { button: applicationButton });
 
     } catch (error) {
         if (error instanceof AppError) {
             return await getEmailTemplate('verification_email_error', {
                 status: `Erreur ${error.httpStatus}`,
                 message: `${error.message}`,
-                button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
-            });
+            }, { button: applicationButton });
         }
 
         logger.error("Unknown error in UserEmailVerify :", error);
         return await getEmailTemplate('verification_email_error', {
             status: `Erreur Inconnue`,
             message: `Une erreur inconnue est survenue lors de la vérification de votre adresse email. Veuillez réessayer plus tard.`,
-            button: (application !== undefined && domain !== undefined) ? `<a class="btn" href="https://${domain}">Aller sur ${application}</a>` : '',
-        });
+        }, { button: applicationButton });
     }
+}
+
+
+/*=============*/
+/* Login block */
+/*=============*/
+const INVALID_LOGIN_BLOCK_LINK_MESSAGE = "Invalid login block link";
+
+/**
+ * Builds the page which asks the user to confirm that he wants to block the logins on his account.
+ *
+ * The link of the email only opens this page, the block itself needs the form to be sent :
+ * some email clients open the links of the emails by themselves and would block the account without the user.
+ * The token is checked before the page is built, because the page displays the email address of the account.
+ * @param userLoginBlock The userLoginBlock object containing the user ID and the token of the block link.
+ * @returns HTML string of the confirmation page, or of the result page if the link is not valid.
+ */
+export async function getUserLoginBlockPage(userLoginBlock: UserLoginBlock): Promise<string> {
+    try {
+        const user: User = await getUserFromLoginBlockLink(userLoginBlock);
+
+        return await getEmailTemplate('login_block_confirmation', {
+            email: user.email,
+            blockDuration: `${getLoginBlockDurationInHours()} h`,
+            currentYear: String(new Date().getFullYear()),
+        });
+    } catch (error) {
+        return await getLoginBlockFailurePage(error);
+    }
+}
+
+
+/**
+ * Blocks the logins of a user from the link of a login code email.
+ *
+ * If someone logged in with the code of this email, the user is also logged out from all his devices.
+ * @param userLoginBlock The userLoginBlock object containing the user ID and the token of the block link.
+ * @returns HTML string to display the result of the block.
+ */
+export async function blockUserLogin(userLoginBlock: UserLoginBlock): Promise<string> {
+    try {
+        const user = await getUserFromLoginBlockLink(userLoginBlock);
+
+        const mustLogoutFromAllDevices = wasLastLoginCodeUsed(user);
+        const isLoginBlocked = await UsersRepository.blockUserLogin(user.id, user.login_block_token_hash, AppConfig.login_block_duration, mustLogoutFromAllDevices);
+        if (!isLoginBlocked) {
+            throw new AppError(INVALID_LOGIN_BLOCK_LINK_MESSAGE, 400);
+        }
+
+        const logoutMessage = mustLogoutFromAllDevices ? ` Quelqu'un s'était connecté avec le code reçu : votre compte a été déconnecté de tous les appareils.` : ``;
+
+        return await getLoginBlockResultPage(
+            "success",
+            `Connexions bloquées`,
+            `Plus personne ne peut se connecter à votre compte pendant ${getLoginBlockDurationInHours()} h, le blocage se lèvera ensuite automatiquement.${logoutMessage}`,
+        );
+    } catch (error) {
+        return await getLoginBlockFailurePage(error);
+    }
+}
+
+
+/**
+ * Retrieves the user targeted by a block link, after checking the token of the link.
+ * @param userLoginBlock The userLoginBlock object containing the user ID and the token of the block link.
+ * @returns The user, with a block token hash which is never null.
+ * @throws AppError if the user does not exist or if the token does not match his block link.
+ */
+async function getUserFromLoginBlockLink(userLoginBlock: UserLoginBlock): Promise<User & { login_block_token_hash: string }> {
+    const user: User = await UsersRepository._getUserById(parseInt(userLoginBlock.userId, 10));
+
+    const blockTokenHash = user.login_block_token_hash;
+    if (blockTokenHash === null || !(await verifyHash(userLoginBlock.token, blockTokenHash))) {
+        throw new AppError(INVALID_LOGIN_BLOCK_LINK_MESSAGE, 400);
+    }
+
+    return { ...user, login_block_token_hash: blockTokenHash };
+}
+
+
+/**
+ * Builds the page displayed when a block link can not be used.
+ *
+ * The same page is returned for an unknown user and for a wrong token, so that the link does not reveal which accounts exist.
+ * @param error The error which prevented the use of the block link.
+ * @returns HTML string of the result page.
+ */
+async function getLoginBlockFailurePage(error: unknown): Promise<string> {
+    const isInvalidLink = error instanceof AppError && error.httpStatus < 500;
+    if (isInvalidLink) {
+        return await getLoginBlockResultPage(
+            "invalid",
+            `Lien invalide`,
+            `Ce lien de blocage n'est plus valide. Si vous venez de bloquer les connexions, votre compte est déjà protégé.`,
+        );
+    }
+
+    logger.error("Error with a login block link :", error);
+    return await getLoginBlockResultPage(
+        "error",
+        `Erreur`,
+        `Une erreur est survenue lors du blocage des connexions. Veuillez réessayer plus tard.`,
+    );
+}
+
+
+/**
+ * Builds the page which displays the result of a login block.
+ * @param statusKind The kind of result, which selects the icon and the color of the page.
+ * @param status The title of the page.
+ * @param message The explanation displayed under the title.
+ * @returns HTML string of the result page.
+ */
+async function getLoginBlockResultPage(statusKind: "success" | "invalid" | "error", status: string, message: string): Promise<string> {
+    return await getEmailTemplate('login_block', {
+        statusKind: statusKind,
+        status: status,
+        message: message,
+        currentYear: String(new Date().getFullYear()),
+    });
+}
+
+
+/**
+ * Checks if someone logged in with the last login code sent to a user.
+ * @param user The user who received the login code.
+ * @returns True if a login happened after the last login code was sent.
+ */
+function wasLastLoginCodeUsed(user: User): boolean {
+    if (user.login_requested_at === null) { return false; }
+
+    return user.last_login.getTime() >= user.login_requested_at.getTime();
+}
+
+
+/**
+ * Converts the duration of the login block into hours, to display it to the user.
+ * @returns Duration of the login block in hours, rounded up.
+ */
+function getLoginBlockDurationInHours(): number {
+    const millisecondsPerHour = 60 * 60 * 1000;
+    return Math.ceil(AppConfig.login_block_duration / millisecondsPerHour);
 }

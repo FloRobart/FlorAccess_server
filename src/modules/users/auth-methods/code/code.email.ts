@@ -9,9 +9,10 @@ import { getEmailTemplate } from '../../../../core/email/get_email_template';
  * This function sends an email to the user with a link to verify their connection.
  * @param to Email address of the recipient
  * @param app_name Name of the application to be used in the email subject
- * @param token Authentication token to be included in the verification link
+ * @param code Login code to be displayed in the email
+ * @param loginBlockUrl Link which lets the recipient block the logins on his account if he did not request the code
  */
-export async function sendEmailCode(to: string, app_name: string, code: string): Promise<void> {
+export async function sendEmailCode(to: string, app_name: string, code: string, loginBlockUrl: string): Promise<void> {
     try {
         const appName = app_name || AppConfig.app_name;
         const stringCode: string = code.toString().replace(/(\d{2})(?=\d)/g, '$1 ');
@@ -19,6 +20,7 @@ export async function sendEmailCode(to: string, app_name: string, code: string):
         const html = await getEmailTemplate('email_code_template', {
             appName: appName,
             code: stringCode,
+            loginBlockUrl: loginBlockUrl,
             currentYear: String(new Date().getFullYear())
         });
 

@@ -21,8 +21,9 @@ export const requestValidator = (schema: ZodType) => (req: Request, _res: Respon
         req.body = { ...req.body, validatedData: { ...req.body?.validatedData, ...validatedData }};
         next();
     } catch (error) {
+        /* An invalid request is a mistake of the client, not an error of the server : it must not send an error email */
         if (error instanceof ZodError) {
-            logger.error(JSON.stringify(error.issues));
+            logger.warning(JSON.stringify(error.issues));
         }
 
         next(error instanceof AppError ? error : new AppError("Bad Request", 400));

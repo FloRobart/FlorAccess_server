@@ -17,6 +17,7 @@ export type UpdateUser = z.infer<typeof UserSchema.UserUpdateSchema>;
 /* LOGIN */
 export type UserLoginRequest = z.infer<typeof UserSchema.UserLoginRequestSchema>;
 export type UserLoginConfirm = z.infer<typeof UserSchema.UserLoginConfirmSchema>;
+export type UserLoginBlock = z.infer<typeof UserSchema.UserLoginBlockSchema>;
 
 /* Email verification */
 export type UserEmailVerification = z.infer<typeof UserSchema.UserEmailVerificationSchema>;
