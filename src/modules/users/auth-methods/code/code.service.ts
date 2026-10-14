@@ -2,6 +2,7 @@ import AppConfig from "../../../../config/AppConfig";
 import { User, UserLoginConfirm, UserSafe } from "../../users.types";
 import { sendEmailCode } from "./code.email";
 import * as CodeRepository from "./code.repository";
+import * as UsersRepository from "../../users.repository";
 import { getRandomValues } from "node:crypto";
 import { generateApiToken, generateSecureRandomDelay, hashString, verifyHash } from "../../../../core/utils/securities";
 import { generateJwt } from "../../../../core/utils/jwt";
@@ -84,7 +85,8 @@ export async function usersLoginConfirm(user: User, userLoginConfirm: UserLoginC
         }
 
 
-        const updatedUser: User = await CodeRepository.userLoginConfirm(user, userLoginConfirm.ip);
+        const loggedInUser: User = await CodeRepository.userLoginConfirm(user, userLoginConfirm.ip);
+        const updatedUser: User = await closeSessionsOpenedBeforeEmailProof(user, loggedInUser);
         const userSafe: UserSafe = UserSafeSchema.parse(updatedUser);
 
         return generateJwt(userSafe);
@@ -153,4 +155,20 @@ async function generateCode(length: number): Promise<string> {
     } catch (error) {
         throw error;
     }
+}
+
+
+/**
+ * Closes the sessions opened on an account before its email address was proven for the first time.
+ *
+ * Anyone can register an account with an email address he does not own and get a JWT for it.
+ * When the real owner of the address proves it with a login code, these earlier JWT must stop working.
+ * @param userBeforeLogin The user as he was before this login.
+ * @param loggedInUser The user returned by the login confirmation.
+ * @returns The user to use to generate the JWT of this login.
+ */
+async function closeSessionsOpenedBeforeEmailProof(userBeforeLogin: User, loggedInUser: User): Promise<User> {
+    if (userBeforeLogin.is_verified_email) { return loggedInUser; }
+
+    return await UsersRepository.invalidateUserSessions(loggedInUser.id);
 }
