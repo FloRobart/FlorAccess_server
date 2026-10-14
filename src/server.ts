@@ -6,6 +6,17 @@ import { Database } from './core/models/Database.model';
 
 
 
+/*============*/
+/* Safety net */
+/*============*/
+/* Node.js stops the process when a rejected promise is handled by nobody. */
+/* A forgotten "await" must not be enough to stop the authentication of every application, so the error is logged instead. */
+process.on('unhandledRejection', (reason: unknown) => {
+    logger.error("Unhandled promise rejection :", reason);
+});
+
+
+
 (async () => {
     /*========================*/
     /* Connection to Database */

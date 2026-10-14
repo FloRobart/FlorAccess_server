@@ -190,7 +190,7 @@ export async function sendEmailAdmin(emailData: EmailAdmin): Promise<UserIdList>
             /* Send email */
             logger.debug(`Sending email to ${user.email} with object "${emailData.object}" and message "${emailData.message}"`);
             if (!AppConfig.app_env.includes('dev')) {
-                sendEmail(user.email, emailData.object, await getEmailTemplate("email_from_admin_template", {
+                await sendEmail(user.email, emailData.object, await getEmailTemplate("email_from_admin_template", {
                     object: emailData.object,
                     message: emailData.message,
                     currentYear: new Date().getFullYear().toString(),
