@@ -4,7 +4,7 @@ import userRoutes from './modules/users/users.routes';
 import { errorHandler } from './core/middlewares/error.middleware';
 import fs from 'node:fs';
 import AppConfig from './config/AppConfig';
-import { limiter } from './core/middlewares/rate_limiter.middleware';
+import { authLimiter, limiter } from './core/middlewares/rate_limiter.middleware';
 import cors from 'cors';
 import { defaultRouteHandler } from './core/middlewares/default_route.middleware';
 import path from 'node:path';
@@ -101,6 +101,11 @@ morgan.token("remote-user", (req: Request) => {
 });
 app.use(morgan(AppConfig.log_format));
 
+
+/* Stricter rate limit on the routes which send emails or check secrets (registration, login, email verification) */
+app.post('/users', authLimiter);
+app.use('/users/login', authLimiter);
+app.use('/users/email', authLimiter);
 
 /* Users routes */
 app.use('/users', userRoutes);

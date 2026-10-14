@@ -20,8 +20,8 @@ class Logger {
             console.error(this.prefix('[❌]'), ...args);
 
             if (AppConfig.app_env.includes('prod')) {
-                sendErrorEmail(...args).then(() => {
-                    this.success('Error email sent successfully !');
+                sendErrorEmail(...args).then((wasEmailSent: boolean) => {
+                    if (wasEmailSent) { this.success('Error email sent successfully !'); }
                 }).catch((err: Error) => {
                     console.error(this.prefix('[❌]'), 'Failed to send error email :', err);
                 });

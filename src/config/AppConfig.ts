@@ -48,6 +48,7 @@ interface AppConfigInterface {
     readonly mail_service: string;
     readonly mail_username: string;
     readonly mail_password: string;
+    readonly error_email_cooldown: number;
 
     /* Security */
     readonly hash_rounds: number;
@@ -64,6 +65,8 @@ interface AppConfigInterface {
     /* Rate Limiting */
     readonly request_limit_per_second: number;
     readonly request_limit_time: number;
+    readonly auth_request_limit: number;
+    readonly auth_request_limit_time: number;
 
     /* CORS */
     readonly corsOptions: {
@@ -90,6 +93,7 @@ const AppConfig: AppConfigInterface = {
     mail_service: process.env.MAIL_SERVICE || 'gmail',
     mail_username: process.env.MAIL_USERNAME || '',
     mail_password: process.env.MAIL_PASSWORD || '',
+    error_email_cooldown: (ms((process.env.ERROR_EMAIL_COOLDOWN as StringValue) || "15min") || (15 * 60 * 1000)),
 
     /* JWT */
     jwt_signing_key: process.env.JWT_SIGNING_KEY || 'ABCD',
@@ -111,6 +115,8 @@ const AppConfig: AppConfigInterface = {
     /* Rate Limiting */
     request_limit_per_second: Math.round(Number(process.env.REQUEST_LIMIT_PER_SECOND)) || 10,
     request_limit_time: (ms((process.env.REQUEST_LIMIT_TIME as StringValue) || "30min") || (30 * 60 * 1000)),
+    auth_request_limit: Math.round(Number(process.env.AUTH_REQUEST_LIMIT)) || 30,
+    auth_request_limit_time: (ms((process.env.AUTH_REQUEST_LIMIT_TIME as StringValue) || "15min") || (15 * 60 * 1000)),
 
     /* CORS */
     corsOptions: {
