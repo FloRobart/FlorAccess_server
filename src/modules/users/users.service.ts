@@ -87,13 +87,37 @@ export async function regenerateJwt(jwt: string): Promise<string> {
 export async function updateUser(updateUser: UpdateUser, jwt: string): Promise<string> {
     try {
         const decodedUser = verifyJwt(jwt);
-        const updatedUser: User = await UsersRepository.updateUser(updateUser, decodedUser);
+        const updatedUser: User = await updateUserAndRequireEmailProof(updateUser, decodedUser);
 
         const userSafe: UserSafe = UserSafeSchema.parse(updatedUser);
         return renewJwt(jwt, userSafe);
     } catch (error) {
         throw error;
     }
+}
+
+
+/**
+ * Updates a user, and asks for a proof of his email address when it changes.
+ *
+ * Without this, a user could take an email address he does not own and keep it marked as verified.
+ * @param updateUser The user object containing the updated user information.
+ * @param currentUser The current information of the user, taken from his JWT.
+ * @returns The updated user object with sensitive information.
+ * @throws Error if user update fails or if the user is not found.
+ */
+async function updateUserAndRequireEmailProof(updateUser: UpdateUser, currentUser: UserSafe): Promise<User> {
+    const hasEmailChanged = updateUser.email !== currentUser.email;
+    if (!hasEmailChanged) { return await UsersRepository.updateUser(updateUser, currentUser); }
+
+    const email_verify_token = await generateApiToken();
+    const updatedUser: User = await UsersRepository.updateUserWithUnverifiedEmail(updateUser, currentUser, await hashString(email_verify_token));
+
+    /* The update does not wait for the email, but a failed sending must never stay unhandled : an unhandled rejection stops the server */
+    sendVerificationEmail(updatedUser.id, updatedUser.email, email_verify_token)
+        .catch((error: unknown) => logger.error("Failed to send the verification email :", error));
+
+    return updatedUser;
 }
 
 
