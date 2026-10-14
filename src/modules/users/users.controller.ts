@@ -1,4 +1,4 @@
-import type { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm, UserEmailVerification } from './users.types';
+import type { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm, UserLoginBlock, UserEmailVerification } from './users.types';
 
 import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
@@ -136,6 +136,40 @@ export const userLoginConfirm = async (req: Request, res: Response, next: NextFu
     try {
         const jwt = await UsersService.userLoginConfirm(userLoginConfirm);
         res.status(200).json({ jwt: jwt });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+/**
+ * Displays the page which asks the user to confirm that he wants to block the logins on his account.
+ * @param req.body.validated UserLoginBlock object containing the user ID and the token of the block link.
+ * @returns HTML content of the confirmation page.
+ */
+export const userLoginBlockPage = async (req: Request, res: Response, next: NextFunction) => {
+    const userLoginBlock: UserLoginBlock = UsersSchema.UserLoginBlockSchema.parse(req.body.validatedData);
+
+    try {
+        const html: string = await UsersService.getUserLoginBlockPage(userLoginBlock);
+        res.status(200).type('html').send(html);
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+/**
+ * Blocks the logins of a user from the link of a login code email.
+ * @param req.body.validated UserLoginBlock object containing the user ID and the token of the block link.
+ * @returns HTML content indicating the result of the block.
+ */
+export const userLoginBlock = async (req: Request, res: Response, next: NextFunction) => {
+    const userLoginBlock: UserLoginBlock = UsersSchema.UserLoginBlockSchema.parse(req.body.validatedData);
+
+    try {
+        const html: string = await UsersService.blockUserLogin(userLoginBlock);
+        res.status(200).type('html').send(html);
     } catch (error) {
         next(error);
     }
