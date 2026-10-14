@@ -4,14 +4,12 @@
  * @returns The escaped string with HTML special characters replaced.
  */
 const escapeHtml = (unsafe: string) => {
-  unsafe
+  return unsafe
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-
-  return unsafe;
 };
 
 
