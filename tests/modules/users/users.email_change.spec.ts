@@ -1,3 +1,5 @@
+import type { Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { UpdateUser, User, UserSafe } from "../../../src/modules/users/users.types";
 
 import { updateUser } from "../../../src/modules/users/users.service";
@@ -9,8 +11,7 @@ import { sendEmailVerify } from "../../../src/modules/users/users.email";
 
 
 /* The emails are only sent outside of the development environment */
-jest.mock("../../../src/config/AppConfig", () => ({
-    __esModule: true,
+vi.mock("../../../src/config/AppConfig", () => ({
     default: {
         app_env: "prod",
         app_name: "Floraccess",
@@ -19,44 +20,43 @@ jest.mock("../../../src/config/AppConfig", () => ({
 }));
 
 /* The database, the hashing, the emails and the JWT are replaced, only the rules of the service are tested */
-jest.mock("../../../src/modules/users/users.repository", () => ({
-    updateUser: jest.fn(),
-    updateUserWithUnverifiedEmail: jest.fn(),
+vi.mock("../../../src/modules/users/users.repository", () => ({
+    updateUser: vi.fn(),
+    updateUserWithUnverifiedEmail: vi.fn(),
 }));
 
-jest.mock("../../../src/core/utils/securities", () => ({
-    generateApiToken: jest.fn(),
-    hashString: jest.fn(),
-    verifyHash: jest.fn(),
+vi.mock("../../../src/core/utils/securities", () => ({
+    generateApiToken: vi.fn(),
+    hashString: vi.fn(),
+    verifyHash: vi.fn(),
 }));
 
 /* renewJwt is the function which generates the JWT on the branch fix/logout-revocation : this test then stays valid whatever the order of the merges */
-jest.mock("../../../src/core/utils/jwt", () => ({
-    generateJwt: jest.fn(),
-    renewJwt: jest.fn(),
-    verifyJwt: jest.fn(),
+vi.mock("../../../src/core/utils/jwt", () => ({
+    generateJwt: vi.fn(),
+    renewJwt: vi.fn(),
+    verifyJwt: vi.fn(),
 }));
 
-jest.mock("../../../src/modules/users/users.email", () => ({
-    sendEmailVerify: jest.fn(),
+vi.mock("../../../src/modules/users/users.email", () => ({
+    sendEmailVerify: vi.fn(),
 }));
 
-jest.mock("../../../src/core/dispatcher/login.dispatcher", () => ({
-    loginDispatcher: jest.fn(),
+vi.mock("../../../src/core/dispatcher/login.dispatcher", () => ({
+    loginDispatcher: vi.fn(),
 }));
 
-jest.mock("../../../src/core/email/get_email_template", () => ({
-    getEmailTemplate: jest.fn(),
+vi.mock("../../../src/core/email/get_email_template", () => ({
+    getEmailTemplate: vi.fn(),
 }));
 
-jest.mock("../../../src/core/utils/logger", () => ({
-    __esModule: true,
+vi.mock("../../../src/core/utils/logger", () => ({
     default: {
-        error: jest.fn(),
-        warning: jest.fn(),
-        success: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn(),
+        error: vi.fn(),
+        warning: vi.fn(),
+        success: vi.fn(),
+        info: vi.fn(),
+        debug: vi.fn(),
     },
 }));
 
@@ -67,20 +67,20 @@ jest.mock("../../../src/core/utils/logger", () => ({
  */
 describe('Change of the email address of a user', () => {
     beforeEach(() => {
-        const jwtFunctions = Jwt as unknown as Record<string, jest.Mock>;
+        const jwtFunctions = Jwt as unknown as Record<string, Mock>;
         jwtFunctions.verifyJwt.mockReturnValue(CurrentUser);
         jwtFunctions.generateJwt.mockResolvedValue(SignedJwt);
         jwtFunctions.renewJwt.mockResolvedValue(SignedJwt);
 
-        jest.mocked(Securities.generateApiToken).mockResolvedValue(EmailVerifyToken);
-        jest.mocked(Securities.hashString).mockImplementation(async (input: string) => `hash:${input}`);
-        jest.mocked(sendEmailVerify).mockResolvedValue();
+        vi.mocked(Securities.generateApiToken).mockResolvedValue(EmailVerifyToken);
+        vi.mocked(Securities.hashString).mockImplementation(async (input: string) => `hash:${input}`);
+        vi.mocked(sendEmailVerify).mockResolvedValue();
     });
 
 
     it('Keeps the email address verified when only the pseudo changes', async () => {
         const pseudoChange: UpdateUser = { email: CurrentUser.email, pseudo: "New pseudo" };
-        jest.mocked(UsersRepository.updateUser).mockResolvedValue(buildUser({ pseudo: pseudoChange.pseudo }));
+        vi.mocked(UsersRepository.updateUser).mockResolvedValue(buildUser({ pseudo: pseudoChange.pseudo }));
 
         await expect(updateUser(pseudoChange, "current-jwt")).resolves.toBe(SignedJwt);
 
@@ -92,7 +92,7 @@ describe('Change of the email address of a user', () => {
     it('Marks a new email address as not verified and sends it a verification email', async () => {
         const emailChange: UpdateUser = { email: "new-address@test.fr", pseudo: CurrentUser.pseudo };
         const userWithUnverifiedEmail: User = buildUser({ email: emailChange.email, is_verified_email: false });
-        jest.mocked(UsersRepository.updateUserWithUnverifiedEmail).mockResolvedValue(userWithUnverifiedEmail);
+        vi.mocked(UsersRepository.updateUserWithUnverifiedEmail).mockResolvedValue(userWithUnverifiedEmail);
 
         await expect(updateUser(emailChange, "current-jwt")).resolves.toBe(SignedJwt);
         await waitForPendingPromises();

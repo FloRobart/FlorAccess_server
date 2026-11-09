@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import escapeHtml from "../../../src/core/utils/parse_html";
 
 

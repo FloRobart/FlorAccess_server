@@ -1,5 +1,9 @@
-jest.mock("../../../src/config/AppConfig", () => ({
-    __esModule: true,
+import type { Mock } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+
+
+vi.mock("../../../src/config/AppConfig", () => ({
     default: {
         app_name: "Floraccess",
         mail_username: "admin@test.fr",
@@ -8,13 +12,12 @@ jest.mock("../../../src/config/AppConfig", () => ({
 }));
 
 /* No email is really sent, and the template is reduced to the error message it receives */
-jest.mock("../../../src/core/email/mailer", () => ({
-    __esModule: true,
-    default: jest.fn(),
+vi.mock("../../../src/core/email/mailer", () => ({
+    default: vi.fn(),
 }));
 
-jest.mock("../../../src/core/email/get_email_template", () => ({
-    getEmailTemplate: jest.fn(async (_templateName: string, variables: Record<string, string>) => variables.errorMessage),
+vi.mock("../../../src/core/email/get_email_template", () => ({
+    getEmailTemplate: vi.fn(async (_templateName: string, variables: Record<string, string>) => variables.errorMessage),
 }));
 
 
@@ -24,21 +27,21 @@ jest.mock("../../../src/core/email/get_email_template", () => ({
  */
 describe('Error email', () => {
     let sendErrorEmail: (...args: any[]) => Promise<boolean>;
-    let sendEmail: jest.Mock;
+    let sendEmail: Mock;
 
-    beforeEach(() => {
-        jest.useFakeTimers();
-        jest.setSystemTime(new Date("2026-01-01T10:00:00.000Z"));
+    beforeEach(async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2026-01-01T10:00:00.000Z"));
 
         /* The module remembers when it sent its last email : it is loaded again so that each test starts without cooldown */
-        jest.resetModules();
-        sendErrorEmail = require("../../../src/core/email/error.email").sendErrorEmail;
-        sendEmail = require("../../../src/core/email/mailer").default;
+        vi.resetModules();
+        sendErrorEmail = (await import("../../../src/core/email/error.email")).sendErrorEmail;
+        sendEmail = vi.mocked((await import("../../../src/core/email/mailer")).default);
         sendEmail.mockResolvedValue(undefined);
     });
 
     afterEach(() => {
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
 
@@ -49,10 +52,16 @@ describe('Error email', () => {
         expect(sendEmail).toHaveBeenCalledWith("admin@test.fr", expect.any(String), "Database unknown error");
     });
 
+    it('Writes the values which are not texts as JSON', async () => {
+        await sendErrorEmail("Error :", { code: 42 });
+
+        expect(sendEmail).toHaveBeenCalledWith("admin@test.fr", expect.any(String), `Error :\n${JSON.stringify({ code: 42 }, null, 2)}`);
+    });
+
     it('Does not send the errors which follow during the cooldown', async () => {
         await sendErrorEmail("First error");
 
-        jest.advanceTimersByTime(OneMinute);
+        vi.advanceTimersByTime(OneMinute);
         await expect(sendErrorEmail("Second error")).resolves.toBe(false);
         await expect(sendErrorEmail("Third error")).resolves.toBe(false);
 
@@ -64,7 +73,7 @@ describe('Error email', () => {
         await sendErrorEmail("Second error");
         await sendErrorEmail("Third error");
 
-        jest.advanceTimersByTime(16 * OneMinute);
+        vi.advanceTimersByTime(16 * OneMinute);
         await expect(sendErrorEmail("Fourth error")).resolves.toBe(true);
 
         expect(sendEmail).toHaveBeenCalledTimes(2);

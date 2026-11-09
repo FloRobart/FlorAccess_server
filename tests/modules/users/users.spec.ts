@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { ZodError } from "zod";
 import { AuthorizationHeaderSchema, IPAddressSchema, UserInsertSchema, UserLoginBlockSchema, UserLoginConfirmSchema, UserLoginRequestSchema, UserSafeSchema, UserSchema, UserUpdateSchema, UserEmailVerificationSchema } from "../../../src/modules/users/users.schema";
 import { AuthorizationHeader, InsertUser, IPAddress, UpdateUser, User, UserLoginConfirm, UserSafe, UserEmailVerification } from "../../../src/modules/users/users.types";
@@ -155,6 +156,12 @@ describe('Users Schemas tests', () => {
                 expect(() => UserLoginConfirmSchema.parse(data)).not.toThrow();
                 expect(UserLoginConfirmSchema.parse(data)).toStrictEqual(CorrectUserLoginConfirmSchema[0]);
             }
+        });
+
+        it('Sets the IP address to null when it is not given', () => {
+            const { ip: _ip, ...loginConfirmWithoutIp } = CorrectUserLoginConfirmSchema[0];
+
+            expect(UserLoginConfirmSchema.parse(loginConfirmWithoutIp)).toStrictEqual({ ...loginConfirmWithoutIp, ip: null });
         });
 
         it('Incorrect User Login Confirm schema', () => {

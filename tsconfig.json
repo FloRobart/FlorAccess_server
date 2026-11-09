@@ -1,6 +1,6 @@
 {
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "tests", "jest.config.ts"],
+  "exclude": ["node_modules", "dist", "tests", "vitest.config.mts"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 

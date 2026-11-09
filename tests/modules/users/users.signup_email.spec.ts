@@ -1,5 +1,6 @@
 import type { User } from "../../../src/modules/users/users.types";
 
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { insertUser } from "../../../src/modules/users/users.service";
 import * as UsersRepository from "../../../src/modules/users/users.repository";
 import * as Securities from "../../../src/core/utils/securities";
@@ -11,8 +12,7 @@ import { AppError } from "../../../src/core/models/AppError.model";
 
 
 /* The emails are only sent outside of the development environment */
-jest.mock("../../../src/config/AppConfig", () => ({
-    __esModule: true,
+vi.mock("../../../src/config/AppConfig", () => ({
     default: {
         app_env: "prod",
         app_name: "Floraccess",
@@ -21,41 +21,40 @@ jest.mock("../../../src/config/AppConfig", () => ({
 }));
 
 /* The database, the hashing, the emails and the JWT are replaced, only the rules of the service are tested */
-jest.mock("../../../src/modules/users/users.repository", () => ({
-    insertUser: jest.fn(),
+vi.mock("../../../src/modules/users/users.repository", () => ({
+    insertUser: vi.fn(),
 }));
 
-jest.mock("../../../src/core/utils/securities", () => ({
-    generateApiToken: jest.fn(),
-    hashString: jest.fn(),
-    verifyHash: jest.fn(),
+vi.mock("../../../src/core/utils/securities", () => ({
+    generateApiToken: vi.fn(),
+    hashString: vi.fn(),
+    verifyHash: vi.fn(),
 }));
 
-jest.mock("../../../src/modules/users/users.email", () => ({
-    sendEmailVerify: jest.fn(),
+vi.mock("../../../src/modules/users/users.email", () => ({
+    sendEmailVerify: vi.fn(),
 }));
 
-jest.mock("../../../src/core/utils/jwt", () => ({
-    generateJwt: jest.fn(),
-    verifyJwt: jest.fn(),
+vi.mock("../../../src/core/utils/jwt", () => ({
+    generateJwt: vi.fn(),
+    verifyJwt: vi.fn(),
 }));
 
-jest.mock("../../../src/core/dispatcher/login.dispatcher", () => ({
-    loginDispatcher: jest.fn(),
+vi.mock("../../../src/core/dispatcher/login.dispatcher", () => ({
+    loginDispatcher: vi.fn(),
 }));
 
-jest.mock("../../../src/core/email/get_email_template", () => ({
-    getEmailTemplate: jest.fn(),
+vi.mock("../../../src/core/email/get_email_template", () => ({
+    getEmailTemplate: vi.fn(),
 }));
 
-jest.mock("../../../src/core/utils/logger", () => ({
-    __esModule: true,
+vi.mock("../../../src/core/utils/logger", () => ({
     default: {
-        error: jest.fn(),
-        warning: jest.fn(),
-        success: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn(),
+        error: vi.fn(),
+        warning: vi.fn(),
+        success: vi.fn(),
+        info: vi.fn(),
+        debug: vi.fn(),
     },
 }));
 
@@ -66,15 +65,15 @@ jest.mock("../../../src/core/utils/logger", () => ({
  */
 describe('Verification email at registration', () => {
     beforeEach(() => {
-        jest.mocked(Securities.generateApiToken).mockResolvedValue("email-verify-token");
-        jest.mocked(Securities.hashString).mockResolvedValue("hashed-email-verify-token");
-        jest.mocked(UsersRepository.insertUser).mockResolvedValue(InsertedUser);
-        jest.mocked(generateJwt).mockResolvedValue(SignedJwt);
+        vi.mocked(Securities.generateApiToken).mockResolvedValue("email-verify-token");
+        vi.mocked(Securities.hashString).mockResolvedValue("hashed-email-verify-token");
+        vi.mocked(UsersRepository.insertUser).mockResolvedValue(InsertedUser);
+        vi.mocked(generateJwt).mockResolvedValue(SignedJwt);
     });
 
 
     it('Registers the user and sends the verification email', async () => {
-        jest.mocked(sendEmailVerify).mockResolvedValue();
+        vi.mocked(sendEmailVerify).mockResolvedValue();
 
         await expect(insertUser(UserToInsert, null, "MyApp", null)).resolves.toBe(SignedJwt);
         await waitForPendingPromises();
@@ -85,7 +84,7 @@ describe('Verification email at registration', () => {
 
     it('Still registers the user when the email can not be sent, and logs the failure', async () => {
         const emailFailure = new AppError("Email sending failed", 500);
-        jest.mocked(sendEmailVerify).mockRejectedValue(emailFailure);
+        vi.mocked(sendEmailVerify).mockRejectedValue(emailFailure);
 
         await expect(insertUser(UserToInsert, null, "MyApp", null)).resolves.toBe(SignedJwt);
         await waitForPendingPromises();

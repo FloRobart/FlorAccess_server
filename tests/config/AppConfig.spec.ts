@@ -1,3 +1,4 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -5,9 +6,8 @@ import path from 'node:path';
 
 
 /* The .env of the developer must not change the result of the tests: only the variables set here are read */
-jest.mock('dotenv', () => ({
-    __esModule: true,
-    default: { config: jest.fn() },
+vi.mock('dotenv', () => ({
+    default: { config: vi.fn() },
 }));
 
 
@@ -24,14 +24,11 @@ describe('AppConfig secrets tests', () => {
      * Loads a fresh copy of AppConfig, because it reads the environment when it is imported.
      * @returns The configuration built from the current environment
      */
-    function loadAppConfig() {
-        let appConfig;
+    async function loadAppConfig() {
+        vi.resetModules();
+        const appConfigModule = await import('../../src/config/AppConfig');
 
-        jest.isolateModules(() => {
-            appConfig = require('../../src/config/AppConfig').default;
-        });
-
-        return appConfig as any;
+        return appConfigModule.default;
     }
 
 
@@ -78,35 +75,35 @@ describe('AppConfig secrets tests', () => {
     /* Without any file */
     /*==================*/
     describe('Without any secret file', () => {
-        it('Reads the secrets from the variables', () => {
+        it('Reads the secrets from the variables', async () => {
             process.env.DB_PASSWORD = 'database-from-variable';
             process.env.MAIL_PASSWORD = 'mail-from-variable';
             process.env.JWT_SIGNING_KEY = 'jwt-from-variable';
 
-            const appConfig = loadAppConfig();
+            const appConfig = await loadAppConfig();
 
             expect(appConfig.db_uri).toBe('postgresql://floraccess:database-from-variable@floraccess-database:5432/floraccess');
             expect(appConfig.mail_password).toBe('mail-from-variable');
             expect(appConfig.jwt_signing_key).toBe('jwt-from-variable');
         });
 
-        it('Keeps the same values as before when the database and mail passwords are not set', () => {
+        it('Keeps the same values as before when the database and mail passwords are not set', async () => {
             process.env.JWT_SIGNING_KEY = 'jwt-from-variable';
 
-            const appConfig = loadAppConfig();
+            const appConfig = await loadAppConfig();
 
             expect(appConfig.db_uri).toBe('postgresql://floraccess:undefined@floraccess-database:5432/floraccess');
             expect(appConfig.mail_password).toBe('');
         });
 
-        it('Stops when no JWT signing key is set, instead of using a default one', () => {
-            expect(() => loadAppConfig()).toThrow('JWT_SIGNING_KEY or JWT_SIGNING_KEY_FILE must be set');
+        it('Stops when no JWT signing key is set, instead of using a default one', async () => {
+            await expect(loadAppConfig()).rejects.toThrow('JWT_SIGNING_KEY or JWT_SIGNING_KEY_FILE must be set');
         });
 
-        it('Stops when the JWT signing key is empty', () => {
+        it('Stops when the JWT signing key is empty', async () => {
             process.env.JWT_SIGNING_KEY = '';
 
-            expect(() => loadAppConfig()).toThrow('JWT_SIGNING_KEY or JWT_SIGNING_KEY_FILE must be set');
+            await expect(loadAppConfig()).rejects.toThrow('JWT_SIGNING_KEY or JWT_SIGNING_KEY_FILE must be set');
         });
     });
 
@@ -115,7 +112,7 @@ describe('AppConfig secrets tests', () => {
     /* With secret files */
     /*===================*/
     describe('With secret files', () => {
-        it('Prefers the files to the variables, without their line break', () => {
+        it('Prefers the files to the variables, without their line break', async () => {
             process.env.DB_PASSWORD = 'database-from-variable';
             process.env.MAIL_PASSWORD = 'mail-from-variable';
             process.env.JWT_SIGNING_KEY = 'jwt-from-variable';
@@ -123,24 +120,24 @@ describe('AppConfig secrets tests', () => {
             process.env.MAIL_PASSWORD_FILE = writeSecretFile('mail_password', 'mail-from-file\n');
             process.env.JWT_SIGNING_KEY_FILE = writeSecretFile('jwt_signing_key', 'jwt-from-file\n');
 
-            const appConfig = loadAppConfig();
+            const appConfig = await loadAppConfig();
 
             expect(appConfig.db_uri).toBe('postgresql://floraccess:database-from-file@floraccess-database:5432/floraccess');
             expect(appConfig.mail_password).toBe('mail-from-file');
             expect(appConfig.jwt_signing_key).toBe('jwt-from-file');
         });
 
-        it('Stops when a file cannot be read', () => {
+        it('Stops when a file cannot be read', async () => {
             process.env.JWT_SIGNING_KEY_FILE = path.join(temporaryDirectory, 'missing');
 
-            expect(() => loadAppConfig()).toThrow();
+            await expect(loadAppConfig()).rejects.toThrow();
         });
 
-        it('Stops when the JWT signing key file is empty', () => {
+        it('Stops when the JWT signing key file is empty', async () => {
             process.env.JWT_SIGNING_KEY = 'jwt-from-variable';
             process.env.JWT_SIGNING_KEY_FILE = writeSecretFile('jwt_signing_key', '\n');
 
-            expect(() => loadAppConfig()).toThrow('JWT_SIGNING_KEY or JWT_SIGNING_KEY_FILE must be set');
+            await expect(loadAppConfig()).rejects.toThrow('JWT_SIGNING_KEY or JWT_SIGNING_KEY_FILE must be set');
         });
     });
 });

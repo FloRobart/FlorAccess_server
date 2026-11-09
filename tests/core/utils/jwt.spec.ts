@@ -1,13 +1,13 @@
 import type { UserSafe } from "../../../src/modules/users/users.types";
 
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import JWT from "jsonwebtoken";
 import { generateJwt, isJwtFromClosedSession, renewJwt, verifyJwt } from "../../../src/core/utils/jwt";
 
 
 
 /* A JWT lasts 30 days and a session 90 days : a session can only reach its maximum duration if its JWT is regenerated */
-jest.mock("../../../src/config/AppConfig", () => ({
-    __esModule: true,
+vi.mock("../../../src/config/AppConfig", () => ({
     default: {
         jwt_signing_key: "test-signing-key",
         jwt_expiration: 30 * 24 * 60 * 60,
@@ -22,12 +22,12 @@ jest.mock("../../../src/config/AppConfig", () => ({
  */
 describe('JWT', () => {
     beforeEach(() => {
-        jest.useFakeTimers();
-        jest.setSystemTime(LoginDate);
+        vi.useFakeTimers();
+        vi.setSystemTime(LoginDate);
     });
 
     afterEach(() => {
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
 
@@ -39,6 +39,13 @@ describe('JWT', () => {
             const jwt = await generateJwt(UserPayload);
 
             expect(verifyJwt(jwt)).toMatchObject({ ...UserPayload, session_started_at: LoginDate.getTime() });
+        });
+
+        it('Fails with an application error when the JWT can not be signed', async () => {
+            /* A payload which already carries an expiration date can not receive the one of the configuration */
+            const payloadWithExpiration = { ...UserPayload, exp: 1 };
+
+            await expect(generateJwt(payloadWithExpiration)).rejects.toMatchObject({ message: "Failed to generate JWT", httpStatus: 500 });
         });
 
         it('Rejects a JWT signed with another key', () => {
@@ -56,10 +63,10 @@ describe('JWT', () => {
         it('Keeps the date of the original login through the renewals', async () => {
             const loginJwt = await generateJwt(UserPayload);
 
-            jest.advanceTimersByTime(29 * OneDay);
+            vi.advanceTimersByTime(29 * OneDay);
             const firstRenewedJwt = await renewJwt(loginJwt, UserPayload);
 
-            jest.advanceTimersByTime(29 * OneDay);
+            vi.advanceTimersByTime(29 * OneDay);
             const secondRenewedJwt = await renewJwt(firstRenewedJwt, UserPayload);
 
             expect(verifyJwt(secondRenewedJwt)).toMatchObject({ session_started_at: LoginDate.getTime() });
@@ -70,21 +77,27 @@ describe('JWT', () => {
 
             /* Renewed every 29 days, the JWT never expires : only the age of the session can stop the renewals */
             for (let renewalNumber = 1; renewalNumber <= 3; renewalNumber++) {
-                jest.advanceTimersByTime(29 * OneDay);
+                vi.advanceTimersByTime(29 * OneDay);
                 jwt = await renewJwt(jwt, UserPayload);
             }
 
-            jest.advanceTimersByTime(29 * OneDay);
+            vi.advanceTimersByTime(29 * OneDay);
             await expect(renewJwt(jwt, UserPayload)).rejects.toMatchObject({ httpStatus: 401 });
         });
 
         it('Starts the session of a JWT without login date when this JWT was issued', async () => {
             const jwtWithoutLoginDate = JWT.sign(UserPayload, "test-signing-key", { expiresIn: 30 * 24 * 60 * 60 });
 
-            jest.advanceTimersByTime(OneDay);
+            vi.advanceTimersByTime(OneDay);
             const renewedJwt = await renewJwt(jwtWithoutLoginDate, UserPayload);
 
             expect(verifyJwt(renewedJwt)).toMatchObject({ session_started_at: LoginDate.getTime() });
+        });
+
+        it('Rejects the renewal of a JWT which carries neither a login date nor an issue date', async () => {
+            const jwtWithoutAnyDate = JWT.sign(UserPayload, "test-signing-key", { noTimestamp: true });
+
+            await expect(renewJwt(jwtWithoutAnyDate, UserPayload)).rejects.toMatchObject({ httpStatus: 401 });
         });
 
         it('Rejects the renewal of an invalid JWT', async () => {

@@ -1,13 +1,13 @@
+import { describe, it, expect, vi } from "vitest";
 import fs from "fs/promises";
 import { getEmailTemplate } from "../../../src/core/email/get_email_template";
 
 
 
 /* The template is not read from the disk, each test gives its own template */
-jest.mock("fs/promises", () => ({
-    __esModule: true,
+vi.mock("fs/promises", () => ({
     default: {
-        readFile: jest.fn(),
+        readFile: vi.fn(),
     },
 }));
 
@@ -16,7 +16,7 @@ jest.mock("fs/promises", () => ({
  * @param template HTML content of the template
  */
 function useTemplate(template: string): void {
-    jest.mocked(fs.readFile).mockResolvedValue(template);
+    vi.mocked(fs.readFile).mockResolvedValue(template);
 }
 
 
