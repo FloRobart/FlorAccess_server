@@ -1,10 +1,44 @@
 import dotenv from 'dotenv';
+import fs from 'node:fs';
 import { type StringValue } from 'ms';
 import ms from 'ms';
 
 
 
 dotenv.config();
+
+
+
+/**
+ * Reads a secret from the file named by the variable <name>_FILE, otherwise from the variable <name>.
+ * Production uses a file, so that the secret does not appear in "docker inspect".
+ * A file that cannot be read stops the application: it must not start without its secrets.
+ * Without file, the value is exactly the one of the variable, so the default values stay the same as before.
+ * @param name The name of the variable holding the secret in development
+ * @returns The value of the secret, or undefined if neither the file nor the variable is set
+ */
+function readSecret(name: string): string | undefined {
+    const secretFile = process.env[`${name}_FILE`];
+    if (!secretFile) { return process.env[name]; }
+
+    return fs.readFileSync(secretFile, 'utf8').trim();
+}
+
+
+/**
+ * Reads a secret without which the application must not run, like readSecret.
+ * There is no default value: a key known in advance would let anyone forge valid JWT,
+ * so the application refuses to start instead.
+ * @param name The name of the variable holding the secret in development
+ * @returns The value of the secret
+ * @throws Error if neither the file nor the variable gives a value
+ */
+function readRequiredSecret(name: string): string {
+    const secret = readSecret(name);
+    if (!secret) { throw new Error(`${name} or ${name}_FILE must be set`); }
+
+    return secret;
+}
 
 
 
@@ -87,16 +121,16 @@ const AppConfig: AppConfigInterface = {
     log_format: process.env.LOG_FORMAT || 'combined',
 
     /* Database */
-    db_uri: `${process.env.DB_SCHEME}://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:5432/${process.env.DB_NAME}`,
+    db_uri: `${process.env.DB_SCHEME}://${process.env.DB_USER}:${readSecret('DB_PASSWORD')}@${process.env.DB_HOST}:5432/${process.env.DB_NAME}`,
 
     /* Email */
     mail_service: process.env.MAIL_SERVICE || 'gmail',
     mail_username: process.env.MAIL_USERNAME || '',
-    mail_password: process.env.MAIL_PASSWORD || '',
+    mail_password: readSecret('MAIL_PASSWORD') || '',
     error_email_cooldown: (ms((process.env.ERROR_EMAIL_COOLDOWN as StringValue) || "15min") || (15 * 60 * 1000)),
 
     /* JWT */
-    jwt_signing_key: process.env.JWT_SIGNING_KEY || 'ABCD',
+    jwt_signing_key: readRequiredSecret('JWT_SIGNING_KEY'),
     jwt_expiration: (ms((process.env.JWT_EXPIRATION as StringValue) || "1d") || (1 * 24 * 60 * 60 * 1000)) / 1000,
     session_max_duration: (ms((process.env.SESSION_MAX_DURATION as StringValue) || "90d") || (90 * 24 * 60 * 60 * 1000)),
 

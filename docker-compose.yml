@@ -1,57 +1,101 @@
-services:
-  floraccess-db:
-    image: florobart/floraccess-db:latest
-    restart: always
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - db_data:/var/lib/postgresql
-    networks:
-      - floraccess-net
-    security_opt:
-      - no-new-privileges:true
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} || exit 1"]
-      interval: 5s
-      timeout: 30s
-      retries: 5
+# Production only: no port is published, the API is only reachable through the Traefik reverse proxy.
 
-  floraccess-server:
-    image: florobart/floraccess-server:latest
-    working_dir: /app
-    restart: always
+services:
+  floraccess-api:
+    image: florobart/floraccess-api:${API_VERSION:-latest}
+    restart: unless-stopped
+
+    # Forwards stop signals to Node and reaps zombie processes, which Node does not do as PID 1
+    init: true
+
     env_file: .env
-    depends_on:
-      floraccess-db:
-        condition: service_healthy
+    environment:
+      # Forced so that a wrong value in .env cannot disable the production behaviours (trust proxy, error emails)
+      APP_ENV: prod
+
+      # Files rather than variables, so the secrets do not appear in docker inspect
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      MAIL_PASSWORD_FILE: /run/secrets/mail_password
+      JWT_SIGNING_KEY_FILE: /run/secrets/jwt_signing_key
+
+    secrets:
+      - source: api_db_password
+        target: db_password
+      - source: api_mail_password
+        target: mail_password
+      - source: api_jwt_signing_key
+        target: jwt_signing_key
+
     networks:
-      - flower-garden-net
-      - floraccess-net
-    ports:
-      - ${APP_PORT:-}:80
-    security_opt:
-      - no-new-privileges:true
+      # Requests get in through this network, which only Traefik shares
+      - floraccess-api-net
+      - floraccess-database-net
+      # Outgoing calls only: the mail server
+      - floraccess-api-egress-net
+
+    # Privileges
+    # NET_BIND_SERVICE is not needed: Docker allows unprivileged processes to bind port 80 inside a container
+    user: "1800:1800"
     cap_drop:
       - ALL
-    cap_add:
-      - NET_BIND_SERVICE
-    read_only: true
-    user: "1800:1800"
-    tmpfs:
-      - /tmp:exec,nosuid,nodev
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://floraccess-server:80/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    security_opt:
+      - no-new-privileges:true
 
-volumes:
-  db_data:
+    # Nothing is writable: the application only logs to stdout and never uses the filesystem.
+    # "ipc: none" also removes /dev/shm, the only writable location left by "read_only".
+    read_only: true
+    ipc: none
+
+    # Resource limits, to contain a denial of service or a memory leak.
+    # Each Argon2 hash uses 64 MiB, and at most 4 run at the same time (thread pool of Node).
+    pids_limit: 100
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: 1.0
+
+    # Core dumps would contain the secrets held in memory
+    ulimits:
+      core: 0
+
+    # Prevents the logs from filling up the disk of the host
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+    # Written in JavaScript because the image contains neither a shell nor wget
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:80/', { signal: AbortSignal.timeout(4000) }).then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1));"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+# The top-level names are unique to this repository: a wrapper assembles every repository
+# in one project, where two repositories using the same name would share a single secret.
+secrets:
+  api_db_password:
+    file: ./secrets/db_password
+  api_mail_password:
+    file: ./secrets/mail_password
+  api_jwt_signing_key:
+    file: ./secrets/jwt_signing_key
 
 networks:
-  flower-garden-net:
-    external: true
-  floraccess-net:
-    driver: bridge
+  floraccess-api-net:
+    name: floraccess-api-net
+    internal: true
+
+  # Same definition as in floraccess-database: "name" makes both repositories join one network
+  floraccess-database-net:
+    name: floraccess-database-net
+    internal: true
+
+  # The API needs the outside, but a network with a gateway must not be shared with anyone
+  floraccess-api-egress-net:
+    name: floraccess-api-egress-net
