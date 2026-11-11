@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterAll } from "vitest";
-import sendEmail, { ADMIN_EMAIL_LIMIT_REACHED_MESSAGE, assertAdminEmailsCanBeSent, assertEmailCanBeSent, sendAlertEmail, EMAIL_LIMIT_REACHED_MESSAGE } from "../../../src/core/email/mailer";
+import sendEmail, { ADMIN_EMAIL_LIMIT_REACHED_MESSAGE, assertAdminEmailsCanBeSent, assertEmailCanBeSent, EMAIL_LIMIT_REACHED_MESSAGE } from "../../../src/core/email/mailer";
 import logger from "../../../src/core/utils/logger";
 import { AppError } from "../../../src/core/models/AppError.model";
 
@@ -194,32 +194,6 @@ describe('Mailer', () => {
                 expect(() => assertAdminEmailsCanBeSent(1)).toThrow(ADMIN_EMAIL_LIMIT_REACHED_MESSAGE);
             }
             expect(() => assertEmailCanBeSent()).not.toThrow();
-        });
-    });
-
-
-    /*==============*/
-    /* Alert emails */
-    /*==============*/
-    describe('Alert emails of the administrator', () => {
-        it('Sends the alerts even when the daily limit is reached, and does not count them', async () => {
-            for (let alertNumber = 0; alertNumber < mockedAppConfig.email_daily_limit + 1; alertNumber++) {
-                await sendAlertEmail("admin@test.fr", "Error", "<p>Error</p>");
-            }
-            expect(() => assertEmailCanBeSent()).not.toThrow();
-
-            for (let emailNumber = 0; emailNumber < mockedAppConfig.email_daily_limit; emailNumber++) {
-                await sendEmail("recipient@test.fr", "Subject", "<p>Content</p>");
-            }
-
-            await expect(sendAlertEmail("admin@test.fr", "Error", "<p>Error</p>")).resolves.toBeUndefined();
-            expect(sendMail).toHaveBeenLastCalledWith(expect.objectContaining({ to: "admin@test.fr" }));
-        });
-
-        it('Throws an application error when the mail server fails to send an alert', async () => {
-            sendMail.mockRejectedValue(new Error("SMTP connection refused"));
-
-            await expect(sendAlertEmail("admin@test.fr", "Error", "<p>Error</p>")).rejects.toMatchObject({ message: "Email sending failed", httpStatus: 500 });
         });
     });
 });

@@ -304,3 +304,19 @@ export async function invalidateUserSessions(userId: number): Promise<User> {
         throw error;
     }
 }
+
+
+/**
+ * Deletes the users whose email address was never proven, and who were created more than a number of months ago.
+ * @param retentionInMonths Number of months during which an account keeps an email address which was never proven.
+ * @returns The number of deleted users.
+ * @throws Error if the query fails.
+ */
+export async function deleteUnverifiedUsersCreatedBefore(retentionInMonths: number): Promise<number> {
+    const query = "DELETE FROM users WHERE is_verified_email = false AND created_at < NOW() - make_interval(months => $1) RETURNING id";
+    const values = [retentionInMonths];
+
+    const rows = await Database.execute<Pick<User, 'id'>>({ text: query, values: values });
+
+    return rows.length;
+}

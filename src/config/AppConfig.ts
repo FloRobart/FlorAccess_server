@@ -13,7 +13,7 @@ dotenv.config();
 const MINIMUM_TOKEN_LENGTH = 32;
 const DEFAULT_TOKEN_LENGTH = 512;
 
-/* Below the 500 recipients per day of a Gmail account: the error emails of the administrator (one per cooldown at most) still fit */
+/* Below the 500 recipients per day of a Gmail account, so that the account is never blocked */
 const EMAIL_DAILY_LIMIT: number = Math.round(Number(process.env.EMAIL_DAILY_LIMIT)) || 400;
 
 
@@ -110,7 +110,6 @@ interface AppConfigInterface {
     readonly mail_service: string;
     readonly mail_username: string;
     readonly mail_password: string;
-    readonly error_email_cooldown: number;
     readonly email_daily_limit: number;
     readonly email_reserved_for_users: number;
     readonly new_account_daily_limit: number;
@@ -161,7 +160,6 @@ const AppConfig: AppConfigInterface = {
     mail_service: process.env.MAIL_SERVICE || 'gmail',
     mail_username: process.env.MAIL_USERNAME || '',
     mail_password: readSecret('MAIL_PASSWORD') || '',
-    error_email_cooldown: (ms((process.env.ERROR_EMAIL_COOLDOWN as StringValue) || "15min") || (15 * 60 * 1000)),
     email_daily_limit: EMAIL_DAILY_LIMIT,
     /* A quarter of the daily limit by default: the emails of the administrators can never use it, it stays for the login codes */
     email_reserved_for_users: Math.round(Number(process.env.EMAIL_RESERVED_FOR_USERS)) || Math.round(EMAIL_DAILY_LIMIT / 4),

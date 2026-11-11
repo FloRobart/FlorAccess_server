@@ -1,5 +1,4 @@
 import AppConfig from '../../config/AppConfig';
-import { sendErrorEmail } from '../email/error.email';
 
 
 
@@ -18,14 +17,6 @@ class Logger {
     error(...args: any[]) {
         if (!AppConfig.app_env.includes('silent')) {
             console.error(this.prefix('[❌]'), ...args);
-
-            if (AppConfig.app_env.includes('prod')) {
-                sendErrorEmail(...args).then((wasEmailSent: boolean) => {
-                    if (wasEmailSent) { this.success('Error email sent successfully !'); }
-                }).catch((err: Error) => {
-                    console.error(this.prefix('[❌]'), 'Failed to send error email :', err);
-                });
-            }
         }
     }
 

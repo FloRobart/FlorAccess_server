@@ -10,7 +10,7 @@ services:
 
     env_file: .env
     environment:
-      # Forced so that a wrong value in .env cannot disable the production behaviours (trust proxy, error emails)
+      # Forced so that a wrong value in .env cannot disable the production behaviours (trust proxy, cron jobs)
       APP_ENV: prod
 
       # Files rather than variables, so the secrets do not appear in docker inspect

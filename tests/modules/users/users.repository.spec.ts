@@ -259,6 +259,28 @@ describe('Users repository', () => {
     });
 
 
+    /*==========================*/
+    /* Unverified users removal */
+    /*==========================*/
+    describe('Deletion of the unverified users', () => {
+        it('Deletes only the users never verified and created before the retention, and returns how many were deleted', async () => {
+            vi.mocked(Database.execute).mockResolvedValue([{ id: 4 }, { id: 9 }]);
+
+            await expect(UsersRepository.deleteUnverifiedUsersCreatedBefore(3)).resolves.toBe(2);
+
+            expect(getLastQuery().text).toContain("is_verified_email = false");
+            expect(getLastQuery().text).toContain("created_at < NOW() - make_interval(months => $1)");
+            expect(getLastQuery().values).toStrictEqual([3]);
+        });
+
+        it('Returns 0 when no user has to be deleted', async () => {
+            vi.mocked(Database.execute).mockResolvedValue([]);
+
+            await expect(UsersRepository.deleteUnverifiedUsersCreatedBefore(3)).resolves.toBe(0);
+        });
+    });
+
+
     /*=================*/
     /* Database errors */
     /*=================*/
@@ -276,6 +298,7 @@ describe('Users repository', () => {
             ['_getUserById', () => UsersRepository._getUserById(1)],
             ['updateUserWithUnverifiedEmail', () => UsersRepository.updateUserWithUnverifiedEmail(UserUpdate, JwtUser, "email-verify-hash")],
             ['invalidateUserSessions', () => UsersRepository.invalidateUserSessions(1)],
+            ['deleteUnverifiedUsersCreatedBefore', () => UsersRepository.deleteUnverifiedUsersCreatedBefore(3)],
         ];
 
         it.each(queriesOfTheRepository)('%s gives the error of the database to the caller', async (_functionName, callRepository) => {

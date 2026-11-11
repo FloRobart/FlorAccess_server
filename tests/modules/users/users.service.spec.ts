@@ -2,7 +2,7 @@ import type { User, UserLoginBlock, UserLoginConfirm, UserSafe } from "../../../
 
 import { describe, it, expect, vi, beforeEach, afterAll } from "vitest";
 import AppConfig from "../../../src/config/AppConfig";
-import { blockUserLogin, deleteUser, getUserLoginBlockPage, insertUser, logoutUser, NEW_ACCOUNT_LIMIT_REACHED_MESSAGE, regenerateJwt, selectUser, sendVerificationEmail, updateUser, UserEmailVerify, userLoginConfirm, userLoginRequest } from "../../../src/modules/users/users.service";
+import { blockUserLogin, deleteExpiredUnverifiedUsers, deleteUser, getUserLoginBlockPage, insertUser, logoutUser, NEW_ACCOUNT_LIMIT_REACHED_MESSAGE, regenerateJwt, selectUser, sendVerificationEmail, UNVERIFIED_USER_RETENTION_IN_MONTHS, updateUser, UserEmailVerify, userLoginConfirm, userLoginRequest } from "../../../src/modules/users/users.service";
 import * as UsersRepository from "../../../src/modules/users/users.repository";
 import * as Securities from "../../../src/core/utils/securities";
 import * as Jwt from "../../../src/core/utils/jwt";
@@ -44,6 +44,7 @@ vi.mock("../../../src/modules/users/users.repository", () => ({
     deleteUser: vi.fn(),
     logoutUser: vi.fn(),
     UserEmailVerify: vi.fn(),
+    deleteUnverifiedUsersCreatedBefore: vi.fn(),
 }));
 
 vi.mock("../../../src/core/utils/securities", () => ({
@@ -464,6 +465,21 @@ describe('Users service', () => {
 
             await expect(UserEmailVerify({ userId: "1", token: EmailVerifyToken })).resolves.toBe("Erreur Inconnue");
             expect(logger.error).toHaveBeenCalledWith(expect.any(String), unexpectedError);
+        });
+    });
+
+
+    /*==========================*/
+    /* Unverified users removal */
+    /*==========================*/
+    describe('Deletion of the unverified users', () => {
+        it('Deletes the users whose email address was not proven within 3 months', async () => {
+            vi.mocked(UsersRepository.deleteUnverifiedUsersCreatedBefore).mockResolvedValue(2);
+
+            await expect(deleteExpiredUnverifiedUsers()).resolves.toBe(2);
+
+            expect(UNVERIFIED_USER_RETENTION_IN_MONTHS).toBe(3);
+            expect(UsersRepository.deleteUnverifiedUsersCreatedBefore).toHaveBeenCalledWith(3);
         });
     });
 });

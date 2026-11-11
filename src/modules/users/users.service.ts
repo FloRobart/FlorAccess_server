@@ -21,6 +21,13 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 export const NEW_ACCOUNT_LIMIT_REACHED_MESSAGE = "New accounts are temporarily unavailable, please try again later";
 
 /**
+ * Months during which an account keeps an email address which was never proven.
+ * Anyone can create an account for any address, by registering it or by asking a login code for it:
+ * an address which was not proven after this time will most likely never be, and belongs to someone who may never have asked for an account.
+ */
+export const UNVERIFIED_USER_RETENTION_IN_MONTHS = 3;
+
+/**
  * Accounts created by the public routes over the last 24 hours (registration, first login code of an address).
  * Each new account receives an email: this limit keeps a flood of fake accounts from using up the daily limit of emails,
  * which the login codes of the existing users also need.
@@ -284,6 +291,16 @@ export async function userLoginConfirm(userLoginConfirm: UserLoginConfirm): Prom
     } catch (error) {
         throw error;
     }
+}
+
+
+/**
+ * Deletes the users whose email address was not proven within UNVERIFIED_USER_RETENTION_IN_MONTHS months after their creation.
+ * @returns The number of deleted users.
+ * @throws Error if the deletion fails.
+ */
+export async function deleteExpiredUnverifiedUsers(): Promise<number> {
+    return await UsersRepository.deleteUnverifiedUsersCreatedBefore(UNVERIFIED_USER_RETENTION_IN_MONTHS);
 }
 
 

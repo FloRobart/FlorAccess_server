@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import logger from "../../../src/core/utils/logger";
-import { sendErrorEmail } from "../../../src/core/email/error.email";
 
 
 
@@ -11,10 +10,6 @@ const { mockedAppConfig } = vi.hoisted(() => ({
 
 vi.mock("../../../src/config/AppConfig", () => ({
     default: mockedAppConfig,
-}));
-
-vi.mock("../../../src/core/email/error.email", () => ({
-    sendErrorEmail: vi.fn(),
 }));
 
 
@@ -33,7 +28,6 @@ describe('Logger', () => {
 
     beforeEach(() => {
         mockedAppConfig.app_env = "dev";
-        vi.mocked(sendErrorEmail).mockResolvedValue(true);
     });
 
 
@@ -49,7 +43,6 @@ describe('Logger', () => {
         expect(consoleOutputs.log).toHaveBeenCalledWith(expect.stringContaining("Floraccess"), "success message");
         expect(consoleOutputs.info).toHaveBeenCalledWith(expect.stringContaining("Floraccess"), "info message");
         expect(consoleOutputs.debug).toHaveBeenCalledWith(expect.stringContaining("Floraccess"), "debug message");
-        expect(sendErrorEmail).not.toHaveBeenCalled();
     });
 
     it('Writes nothing in a silent environment', () => {
@@ -64,7 +57,6 @@ describe('Logger', () => {
         for (const consoleOutput of Object.values(consoleOutputs)) {
             expect(consoleOutput).not.toHaveBeenCalled();
         }
-        expect(sendErrorEmail).not.toHaveBeenCalled();
     });
 
     it('Does not write the debug logs in production', () => {
@@ -75,45 +67,11 @@ describe('Logger', () => {
         expect(consoleOutputs.debug).not.toHaveBeenCalled();
     });
 
-    it('Sends the errors by email in production, and logs that the email was sent', async () => {
+    it('Writes the errors in production', () => {
         mockedAppConfig.app_env = "prod";
 
         logger.error("error message", { code: 42 });
-        await waitForPendingPromises();
 
-        expect(sendErrorEmail).toHaveBeenCalledWith("error message", { code: 42 });
-        expect(consoleOutputs.log).toHaveBeenCalledWith(expect.any(String), 'Error email sent successfully !');
-    });
-
-    it('Does not log a sending when the email was skipped because of the cooldown', async () => {
-        mockedAppConfig.app_env = "prod";
-        vi.mocked(sendErrorEmail).mockResolvedValue(false);
-
-        logger.error("error message");
-        await waitForPendingPromises();
-
-        expect(consoleOutputs.log).not.toHaveBeenCalled();
-    });
-
-    it('Logs the failure of the error email instead of throwing it', async () => {
-        mockedAppConfig.app_env = "prod";
-        const emailFailure = new Error("Email sending failed");
-        vi.mocked(sendErrorEmail).mockRejectedValue(emailFailure);
-
-        logger.error("error message");
-        await waitForPendingPromises();
-
-        expect(consoleOutputs.error).toHaveBeenLastCalledWith(expect.any(String), 'Failed to send error email :', emailFailure);
+        expect(consoleOutputs.error).toHaveBeenCalledWith(expect.stringContaining("Floraccess"), "error message", { code: 42 });
     });
 });
-
-
-/*===========*/
-/* Test data */
-/*===========*/
-/**
- * Lets the promises which are not awaited by the logger finish, such as the sending of the error email.
- */
-function waitForPendingPromises(): Promise<void> {
-    return new Promise((resolve) => setImmediate(resolve));
-}

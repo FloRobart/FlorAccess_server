@@ -72,32 +72,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
         throw new AppError(EMAIL_LIMIT_REACHED_MESSAGE, 503);
     }
 
-    await deliverEmail(to, subject, html);
-}
-
-
-/**
- * Sends an alert email to the administrator, outside of the daily limit of emails.
- * The alerts are already limited by their own cooldown, and must still warn the administrator when the limit is reached.
- * @param to Email address of the administrator
- * @param subject Subject of the email
- * @param html HTML content of the email
- * @throws AppError 500 if the mail server fails
- */
-export async function sendAlertEmail(to: string, subject: string, html: string): Promise<void> {
-    await deliverEmail(to, subject, html);
-}
-
-
-/**
- * Gives an email to the mail server.
- * The options are built for each email: emails sent at the same time can never mix their recipients.
- * @param to Email address of the recipient
- * @param subject Subject of the email
- * @param html HTML content of the email
- * @throws AppError 500 if the mail server fails
- */
-async function deliverEmail(to: string, subject: string, html: string): Promise<void> {
+    /* The options are built for each email: emails sent at the same time can never mix their recipients */
     const mailOptions = {
         from: AppConfig.app_name + " <" + AppConfig.mail_username + ">",
         to: to,

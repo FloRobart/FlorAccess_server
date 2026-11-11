@@ -12,6 +12,7 @@
   - [Limites de requêtes et d'emails](#limites-de-requêtes-et-demails)
   - [Codes de connexion](#codes-de-connexion)
   - [Jetons et journaux](#jetons-et-journaux)
+- [Tâches planifiées et arrêt](#tâches-planifiées-et-arrêt)
 - [Écosystème](#écosystème)
 - [Installation](#installation)
   - [Pour le développement](#pour-le-développement)
@@ -72,7 +73,7 @@ N'importe qui peut faire envoyer un email par l'API. Sans limite, le quota du co
 
 Les autres routes sont limitées à `REQUEST_LIMIT_PER_SECOND` requêtes par seconde et par adresse IP, en moyenne sur `REQUEST_LIMIT_TIME`. Le `429` d'une limite de requêtes a le même format que les autres erreurs de l'API : une chaîne JSON (`"Too many requests, please try again later."`).
 
-Les emails d'erreur envoyés à l'administrateur ne comptent pas : ils ont leur propre délai (`ERROR_EMAIL_COOLDOWN`). Les compteurs sont en mémoire et repartent de zéro quand l'API redémarre.
+Les compteurs sont en mémoire et repartent de zéro quand l'API redémarre.
 
 ## Codes de connexion
 
@@ -94,6 +95,12 @@ Contrepartie : quelqu'un qui connaît l'adresse d'un compte peut en bloquer les 
 - Les jetons aléatoires font `TOKEN_LENGTH` caractères hexadécimaux (512 par défaut). L'API refuse de démarrer en dessous de 32 : un jeton plus court pourrait être deviné.
 - Les journaux d'accès nomment l'utilisateur par son identifiant (`user-42`), jamais par son adresse email, et remplacent le jeton des liens par `[REDACTED]`.
 - Sans `APP_ENV`, l'API démarre en production (codes envoyés par email, pas de Swagger).
+- Les erreurs sont seulement écrites dans les journaux du conteneur (`docker compose logs floraccess-api`) : aucun email n'est envoyé à l'administrateur.
+
+# Tâches planifiées et arrêt
+
+- **Suppression des comptes jamais vérifiés** : le 1er de chaque mois à 4 h (heure du serveur, UTC dans le conteneur), l'API supprime les comptes dont l'adresse email n'a jamais été prouvée (`is_verified_email = false`) et qui ont été créés il y a plus de 3 mois. N'importe qui peut créer un compte pour n'importe quelle adresse, en l'inscrivant ou en demandant un code pour elle : ces comptes ne gardent que l'adresse d'une personne qui n'a peut-être rien demandé. Uniquement en production : une base de développement garde ses comptes de test. Le nombre de comptes supprimés est écrit dans les journaux.
+- **Arrêt propre** : sur `SIGTERM` (arrêt ou redéploiement du conteneur) ou `SIGINT` (Ctrl+C), l'API arrête les tâches planifiées, refuse les nouvelles connexions, attend la fin des requêtes en cours (5 s au plus, puis leurs connexions sont fermées), puis ferme les connexions à la base. Le tout tient dans les 10 s que Docker laisse avant de tuer le conteneur.
 
 # Écosystème
 
