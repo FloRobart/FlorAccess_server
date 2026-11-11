@@ -7,6 +7,7 @@ import * as UsersRepository from "../../../src/modules/users/users.repository";
 import * as AuthMethodsRepository from "../../../src/modules/users/auth-methods/auth_methods.repository";
 import { usersLoginConfirm, usersLoginRequest } from "../../../src/modules/users/auth-methods/code/code.service";
 import { usersLoginConfirmPassword, usersLoginRequestPassword } from "../../../src/modules/users/auth-methods/password/password.service";
+import { AppError } from "../../../src/core/models/AppError.model";
 import { buildUser } from "../../modules/users/users.fixtures";
 
 
@@ -21,6 +22,7 @@ vi.mock("../../../src/modules/users/auth-methods/auth_methods.repository", () =>
 }));
 
 vi.mock("../../../src/modules/users/auth-methods/code/code.service", () => ({
+    INVALID_LOGIN_TOKEN_MESSAGE: "Invalid token",
     usersLoginRequest: vi.fn(),
     usersLoginConfirm: vi.fn(),
 }));
@@ -66,6 +68,15 @@ describe('Login dispatcher', () => {
 
             await expect(loginDispatcher(LoginRequest)).resolves.toBe(LoginToken);
         });
+
+        it('Does not tell that the logins are blocked to a confirmation, which fails like a wrong token since a block erases the pending code', async () => {
+            const blockedUser = buildUser({ login_blocked_until: new Date(Date.now() + OneHour) });
+            vi.mocked(UsersRepository._getUserByEmail).mockResolvedValue(blockedUser);
+            vi.mocked(usersLoginConfirm).mockRejectedValueOnce(new AppError("Invalid token", 401));
+
+            await expect(loginDispatcher(LoginConfirm)).rejects.toMatchObject({ message: "Invalid token", httpStatus: 401 });
+            expect(usersLoginConfirm).toHaveBeenCalledWith(blockedUser, LoginConfirm);
+        });
     });
 
 
@@ -73,11 +84,19 @@ describe('Login dispatcher', () => {
     /* Unknown user */
     /*==============*/
     describe('Unknown user', () => {
-        it('Rejects the login of an email which belongs to no user', async () => {
+        it('Rejects the login request of an email which belongs to no user', async () => {
             vi.mocked(UsersRepository._getUserByEmail).mockResolvedValue(null);
 
             await expect(loginDispatcher(LoginRequest)).rejects.toMatchObject({ httpStatus: 404 });
             expect(AuthMethodsRepository._getAuth_methodsById).not.toHaveBeenCalled();
+        });
+
+        it('Rejects the confirmation of an unknown email exactly like a wrong token, so that it does not reveal which accounts exist', async () => {
+            vi.mocked(UsersRepository._getUserByEmail).mockResolvedValue(null);
+
+            await expect(loginDispatcher(LoginConfirm)).rejects.toMatchObject({ message: "Invalid token", httpStatus: 401 });
+            expect(AuthMethodsRepository._getAuth_methodsById).not.toHaveBeenCalled();
+            expect(usersLoginConfirm).not.toHaveBeenCalled();
         });
     });
 

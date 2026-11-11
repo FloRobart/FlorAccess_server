@@ -61,6 +61,13 @@ describe('Administrators repository', () => {
 
             await expect(AdminsRepository.isAdmin(JwtUser)).rejects.toMatchObject({ message: 'Session closed, please log in again', httpStatus: 401 });
         });
+
+        it('Fails when the email address of the user was never proven, and reads it for this check', async () => {
+            vi.mocked(Database.execute).mockResolvedValue([buildUser({ is_verified_email: false, is_admin: true })]);
+
+            await expect(AdminsRepository.isAdmin(JwtUser)).rejects.toMatchObject({ message: 'Email address not verified, please log in with a code', httpStatus: 401 });
+            expect(getLastQuery().text).toContain("is_verified_email");
+        });
     });
 
 
@@ -116,6 +123,23 @@ describe('Administrators repository', () => {
         });
     });
 
+    describe('Unblock of the logins of a user', () => {
+        it('Lifts the block and starts again the count of the login codes, then returns the user', async () => {
+            await expect(AdminsRepository.unblockUserLogin(1)).resolves.toBe(StoredUser);
+
+            const query = getLastQuery();
+            expect(query.text).toContain("SET login_blocked_until = NULL, login_requests_without_login = 0 WHERE id = $1");
+            expect(query.text).not.toContain("login_block_token_hash");
+            expect(query.values).toStrictEqual([1]);
+        });
+
+        it('Fails when no user has the ID', async () => {
+            vi.mocked(Database.execute).mockResolvedValue([]);
+
+            await expect(AdminsRepository.unblockUserLogin(404)).rejects.toMatchObject({ httpStatus: 404 });
+        });
+    });
+
 
     /*========*/
     /* DELETE */
@@ -144,6 +168,7 @@ describe('Administrators repository', () => {
             ['selectUsers', () => AdminsRepository.selectUsers({ limit: null, offset: 0 })],
             ['countUsers', () => AdminsRepository.countUsers()],
             ['updateUser', () => AdminsRepository.updateUser({ pseudo: "New pseudo" }, StoredUser)],
+            ['unblockUserLogin', () => AdminsRepository.unblockUserLogin(1)],
             ['deleteUser', () => AdminsRepository.deleteUser(1)],
         ];
 

@@ -9,6 +9,15 @@ dotenv.config();
 
 
 
+/* 32 hexadecimal characters are 128 random bits: a shorter token could be guessed */
+const MINIMUM_TOKEN_LENGTH = 32;
+const DEFAULT_TOKEN_LENGTH = 512;
+
+/* Below the 500 recipients per day of a Gmail account: the error emails of the administrator (one per cooldown at most) still fit */
+const EMAIL_DAILY_LIMIT: number = Math.round(Number(process.env.EMAIL_DAILY_LIMIT)) || 400;
+
+
+
 /**
  * Reads a secret from the file named by the variable <name>_FILE, otherwise from the variable <name>.
  * Production uses a file, so that the secret does not appear in "docker inspect".
@@ -60,6 +69,25 @@ function parseDurationToMilliseconds(rawDuration: string | undefined, defaultDur
 }
 
 
+/**
+ * Reads the length of the random tokens (login requests, links of the verification and login block emails).
+ * The length is written in hexadecimal characters, and each random byte gives two of them.
+ * A length below the minimum stops the application: a value kept from an old configuration
+ * must not silently weaken every link sent by email.
+ * @param rawTokenLength Length as written in the environment, in hexadecimal characters
+ * @returns Number of random bytes of a token
+ * @throws Error if the length is below the minimum
+ */
+function readTokenLengthInBytes(rawTokenLength: string | undefined): number {
+    const tokenLength: number = Math.round(Number(rawTokenLength)) || DEFAULT_TOKEN_LENGTH;
+    if (tokenLength < MINIMUM_TOKEN_LENGTH) {
+        throw new Error(`TOKEN_LENGTH must be at least ${MINIMUM_TOKEN_LENGTH}`);
+    }
+
+    return Math.ceil(tokenLength / 2);
+}
+
+
 
 interface AppConfigInterface {
     /* Application configuration */
@@ -83,6 +111,9 @@ interface AppConfigInterface {
     readonly mail_username: string;
     readonly mail_password: string;
     readonly error_email_cooldown: number;
+    readonly email_daily_limit: number;
+    readonly email_reserved_for_users: number;
+    readonly new_account_daily_limit: number;
 
     /* Security */
     readonly hash_rounds: number;
@@ -94,6 +125,7 @@ interface AppConfigInterface {
     readonly code_data_set: string;
     readonly login_code_max_attempts: number;
     readonly login_request_cooldown: number;
+    readonly login_request_extended_cooldown: number;
     readonly login_block_duration: number;
 
     /* Rate Limiting */
@@ -101,12 +133,13 @@ interface AppConfigInterface {
     readonly request_limit_time: number;
     readonly auth_request_limit: number;
     readonly auth_request_limit_time: number;
+    readonly email_request_limit: number;
+    readonly email_request_limit_time: number;
 
     /* CORS */
     readonly corsOptions: {
         origin: string[];
         methods: string[];
-        credentials: boolean;
         allowedHeaders: string[];
     };
 }
@@ -117,7 +150,8 @@ const AppConfig: AppConfigInterface = {
     app_port: 80,
     host_name: process.env.HOST_NAME || 'localhost',
     base_url: process.env.BASE_URL || 'http://localhost:80',
-    app_env: process.env.APP_ENV?.toLowerCase() || 'dev',
+    /* Production by default: a forgotten variable must not log the login codes instead of sending them, nor expose Swagger */
+    app_env: process.env.APP_ENV?.toLowerCase() || 'prod',
     log_format: process.env.LOG_FORMAT || 'combined',
 
     /* Database */
@@ -128,6 +162,10 @@ const AppConfig: AppConfigInterface = {
     mail_username: process.env.MAIL_USERNAME || '',
     mail_password: readSecret('MAIL_PASSWORD') || '',
     error_email_cooldown: (ms((process.env.ERROR_EMAIL_COOLDOWN as StringValue) || "15min") || (15 * 60 * 1000)),
+    email_daily_limit: EMAIL_DAILY_LIMIT,
+    /* A quarter of the daily limit by default: the emails of the administrators can never use it, it stays for the login codes */
+    email_reserved_for_users: Math.round(Number(process.env.EMAIL_RESERVED_FOR_USERS)) || Math.round(EMAIL_DAILY_LIMIT / 4),
+    new_account_daily_limit: Math.round(Number(process.env.NEW_ACCOUNT_DAILY_LIMIT)) || 100,
 
     /* JWT */
     jwt_signing_key: readRequiredSecret('JWT_SIGNING_KEY'),
@@ -136,7 +174,7 @@ const AppConfig: AppConfigInterface = {
 
     /* Security */
     hash_rounds: Math.round(Number(process.env.HASH_ROUNDS)) || 10,
-    token_length: (Math.round(Number(process.env.TOKEN_LENGTH)) / 2) || (512/2),
+    token_length: readTokenLengthInBytes(process.env.TOKEN_LENGTH),
     token_expiration: parseDurationToMilliseconds(process.env.TOKEN_EXPIRATION, 30 * 60 * 1000),
 
     /* Authentication */
@@ -144,19 +182,23 @@ const AppConfig: AppConfigInterface = {
     code_data_set: process.env.CODE_DATA_SET || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
     login_code_max_attempts: Math.round(Number(process.env.LOGIN_CODE_MAX_ATTEMPTS)) || 5,
     login_request_cooldown: parseDurationToMilliseconds(process.env.LOGIN_REQUEST_COOLDOWN, 60 * 1000),
+    login_request_extended_cooldown: parseDurationToMilliseconds(process.env.LOGIN_REQUEST_EXTENDED_COOLDOWN, 10 * 60 * 1000),
+    /* Used by the block link of the login code emails, and by the block after too many codes sent without a successful login */
     login_block_duration: parseDurationToMilliseconds(process.env.LOGIN_BLOCK_DURATION, 24 * 60 * 60 * 1000),
 
     /* Rate Limiting */
     request_limit_per_second: Math.round(Number(process.env.REQUEST_LIMIT_PER_SECOND)) || 10,
     request_limit_time: (ms((process.env.REQUEST_LIMIT_TIME as StringValue) || "30min") || (30 * 60 * 1000)),
-    auth_request_limit: Math.round(Number(process.env.AUTH_REQUEST_LIMIT)) || 30,
-    auth_request_limit_time: (ms((process.env.AUTH_REQUEST_LIMIT_TIME as StringValue) || "15min") || (15 * 60 * 1000)),
+    auth_request_limit: Math.round(Number(process.env.AUTH_REQUEST_LIMIT)) || 120,
+    auth_request_limit_time: (ms((process.env.AUTH_REQUEST_LIMIT_TIME as StringValue) || "1h") || (60 * 60 * 1000)),
+    email_request_limit: Math.round(Number(process.env.EMAIL_REQUEST_LIMIT)) || 12,
+    email_request_limit_time: parseDurationToMilliseconds(process.env.EMAIL_REQUEST_LIMIT_TIME, 60 * 60 * 1000),
 
     /* CORS */
+    /* No credentials: the clients send their JWT in the Authorization header, never in a cookie */
     corsOptions: {
         origin: (process.env.CORS_ALLOWED_ORIGINS || '').split(',').map(origin => origin.trim()),
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        credentials: true,
         allowedHeaders: ['Content-Type', 'Authorization'],
     },
 };

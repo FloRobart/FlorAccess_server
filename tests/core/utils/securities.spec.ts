@@ -1,15 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import argon2 from "argon2";
-import { getRandomValues, randomBytes } from "node:crypto";
-import { generateApiToken, generateSecureRandomDelay, hashString, verifyHash } from "../../../src/core/utils/securities";
+import { createHash, getRandomValues, randomBytes } from "node:crypto";
+import { generateApiToken, generateSecureRandomDelay, hashString, hashToken, verifyHash, verifyToken } from "../../../src/core/utils/securities";
 
 
 
-vi.mock("../../../src/config/AppConfig", () => ({
-    default: {
+/* The configuration is shared with the tests, so that a test can load the module again with another JWT signing key */
+const { mockedAppConfig } = vi.hoisted(() => ({
+    mockedAppConfig: {
         token_length: 4,
         hash_rounds: 3,
+        jwt_signing_key: "test-signing-key",
     },
+}));
+
+vi.mock("../../../src/config/AppConfig", () => ({
+    default: mockedAppConfig,
 }));
 
 /* Argon2 is slow on purpose : it is replaced, only the options given to it are tested */
@@ -150,6 +156,70 @@ describe('Securities', () => {
             vi.mocked(argon2.verify).mockRejectedValue(new Error("pchstr must contain a $ as first char"));
 
             await expect(verifyHash("secret", "not-a-hash")).rejects.toThrow("pchstr must contain a $ as first char");
+        });
+    });
+
+
+    /*===============*/
+    /* Token hashing */
+    /*===============*/
+    describe('Token hashing', () => {
+        it('Hashes a token into 64 hexadecimal characters, always the same for the same token', () => {
+            const tokenHash = hashToken("random-token");
+
+            expect(tokenHash).toMatch(/^[0-9a-f]{64}$/);
+            expect(hashToken("random-token")).toBe(tokenHash);
+            expect(hashToken("other-token")).not.toBe(tokenHash);
+        });
+
+        it('Uses a key: the hash is not the plain SHA-256 of the token', () => {
+            const plainHash = createHash("sha256").update("random-token").digest("hex");
+
+            expect(hashToken("random-token")).not.toBe(plainHash);
+        });
+
+        it('Derives its key from the JWT signing key: another signing key gives other hashes', async () => {
+            const tokenHash = hashToken("random-token");
+
+            mockedAppConfig.jwt_signing_key = "other-signing-key";
+            vi.resetModules();
+            const reloadedSecurities = await import("../../../src/core/utils/securities");
+            mockedAppConfig.jwt_signing_key = "test-signing-key";
+
+            expect(reloadedSecurities.hashToken("random-token")).not.toBe(tokenHash);
+        });
+
+        it('Does not use Argon2, which costs a lot of processor time', () => {
+            hashToken("random-token");
+
+            expect(argon2.hash).not.toHaveBeenCalled();
+        });
+
+        it('Accepts the token whose hash is stored', async () => {
+            await expect(verifyToken("random-token", hashToken("random-token"))).resolves.toBe(true);
+            expect(argon2.verify).not.toHaveBeenCalled();
+        });
+
+        it('Rejects another token', async () => {
+            await expect(verifyToken("other-token", hashToken("random-token"))).resolves.toBe(false);
+        });
+
+        it('Rejects a stored hash which does not have the length of a hash', async () => {
+            await expect(verifyToken("random-token", "abc123")).resolves.toBe(false);
+        });
+
+        it('Checks the Argon2 hashes stored before the use of HMAC with Argon2, so that the links already sent keep working', async () => {
+            const argon2Hash = "$argon2id$v=19$m=65536,t=3,p=1$c2FsdA$aGFzaA";
+            vi.mocked(argon2.verify).mockResolvedValue(true);
+
+            await expect(verifyToken("random-token", argon2Hash)).resolves.toBe(true);
+            expect(argon2.verify).toHaveBeenCalledWith(argon2Hash, "random-token");
+        });
+
+        it('Rejects a wrong token against an Argon2 hash', async () => {
+            vi.mocked(argon2.verify).mockResolvedValue(false);
+
+            await expect(verifyToken("other-token", "$argon2id$v=19$m=65536,t=3,p=1$c2FsdA$aGFzaA")).resolves.toBe(false);
         });
     });
 });

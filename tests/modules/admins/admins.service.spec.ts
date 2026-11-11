@@ -6,10 +6,10 @@ import * as AdminsRepository from "../../../src/modules/admins/admins.repository
 import * as UsersService from "../../../src/modules/users/users.service";
 import * as UsersRepository from "../../../src/modules/users/users.repository";
 import * as Securities from "../../../src/core/utils/securities";
-import { verifyJwt } from "../../../src/core/utils/jwt";
-import sendEmail from "../../../src/core/email/mailer";
+import sendEmail, { assertAdminEmailsCanBeSent, assertEmailCanBeSent } from "../../../src/core/email/mailer";
 import { getEmailTemplate } from "../../../src/core/email/get_email_template";
 import { AppError } from "../../../src/core/models/AppError.model";
+import logger from "../../../src/core/utils/logger";
 import { buildUser } from "../users/users.fixtures";
 
 
@@ -29,31 +29,30 @@ vi.mock("../../../src/modules/admins/admins.repository", () => ({
     selectUsers: vi.fn(),
     countUsers: vi.fn(),
     updateUser: vi.fn(),
+    unblockUserLogin: vi.fn(),
     deleteUser: vi.fn(),
 }));
 
 vi.mock("../../../src/modules/users/users.service", () => ({
-    insertUser: vi.fn(),
+    createUserAndSendVerificationEmail: vi.fn(),
     sendVerificationEmail: vi.fn(),
 }));
 
 vi.mock("../../../src/modules/users/users.repository", () => ({
-    getUser: vi.fn(),
     _getUserById: vi.fn(),
     updateUserEmailVerifyTokenHash: vi.fn(),
 }));
 
-vi.mock("../../../src/core/utils/jwt", () => ({
-    verifyJwt: vi.fn(),
-}));
-
 vi.mock("../../../src/core/utils/securities", () => ({
     generateApiToken: vi.fn(),
-    hashString: vi.fn(),
+    hashToken: vi.fn(),
 }));
 
+/* The daily limit of emails is tested with the mailer, each test here chooses if it is reached */
 vi.mock("../../../src/core/email/mailer", () => ({
     default: vi.fn(),
+    assertEmailCanBeSent: vi.fn(),
+    assertAdminEmailsCanBeSent: vi.fn(),
 }));
 
 vi.mock("../../../src/core/email/get_email_template", () => ({
@@ -109,9 +108,7 @@ describe('Administrators service', () => {
     /*========*/
     describe('Registration of a user', () => {
         beforeEach(() => {
-            vi.mocked(UsersService.insertUser).mockResolvedValue(SignedJwt);
-            vi.mocked(verifyJwt).mockReturnValue(JwtUser);
-            vi.mocked(UsersRepository.getUser).mockResolvedValue(StoredUser);
+            vi.mocked(UsersService.createUserAndSendVerificationEmail).mockResolvedValue(StoredUser);
             vi.mocked(AdminsRepository.updateUser).mockResolvedValue(LoggedOutUser);
         });
 
@@ -119,10 +116,25 @@ describe('Administrators service', () => {
         it('Registers the user like a registration from the API, then logs him out', async () => {
             const userAdmin = await AdminsService.insertUser(UserToInsert, "Floraccess");
 
-            expect(UsersService.insertUser).toHaveBeenCalledWith(UserToInsert, null, "Floraccess", null);
+            expect(UsersService.createUserAndSendVerificationEmail).toHaveBeenCalledWith(UserToInsert, null, "Floraccess", null);
             expect(AdminsRepository.updateUser).toHaveBeenCalledWith({ is_connected: false }, StoredUser);
             expect(userAdmin).toMatchObject({ id: LoggedOutUser.id, is_connected: false });
             expect(userAdmin).not.toHaveProperty("secret_hash");
+        });
+
+        it('Fails with a 409 error when the email address is already used', async () => {
+            vi.mocked(UsersService.createUserAndSendVerificationEmail).mockResolvedValue(null);
+
+            await expect(AdminsService.insertUser(UserToInsert, "Floraccess")).rejects.toMatchObject({ message: 'A user with this email already exists', httpStatus: 409 });
+            expect(AdminsRepository.updateUser).not.toHaveBeenCalled();
+        });
+
+        it('Creates nothing when the emails left for the administrators are used up', async () => {
+            vi.mocked(assertAdminEmailsCanBeSent).mockImplementationOnce(() => { throw new AppError("Not enough emails left for this sending", 503); });
+
+            await expect(AdminsService.insertUser(UserToInsert, "Floraccess")).rejects.toMatchObject({ httpStatus: 503 });
+            expect(assertAdminEmailsCanBeSent).toHaveBeenCalledWith(1);
+            expect(UsersService.createUserAndSendVerificationEmail).not.toHaveBeenCalled();
         });
 
         it('Fails with a 500 error when the stored user is not valid', async () => {
@@ -132,14 +144,14 @@ describe('Administrators service', () => {
         });
 
         it('Gives an application error to the caller', async () => {
-            const conflictError = new AppError("Failed to create user", 500);
-            vi.mocked(UsersService.insertUser).mockRejectedValue(conflictError);
+            const databaseError = new AppError("Database unknown error", 500);
+            vi.mocked(UsersService.createUserAndSendVerificationEmail).mockRejectedValue(databaseError);
 
-            await expect(AdminsService.insertUser(UserToInsert, "Floraccess")).rejects.toBe(conflictError);
+            await expect(AdminsService.insertUser(UserToInsert, "Floraccess")).rejects.toBe(databaseError);
         });
 
         it('Hides an unknown error behind a 500 error', async () => {
-            vi.mocked(UsersService.insertUser).mockRejectedValue(new Error("Unknown"));
+            vi.mocked(UsersService.createUserAndSendVerificationEmail).mockRejectedValue(new Error("Unknown"));
 
             await expect(AdminsService.insertUser(UserToInsert, "Floraccess")).rejects.toMatchObject({ message: 'Unknown error in admin insertUser', httpStatus: 500 });
         });
@@ -235,6 +247,42 @@ describe('Administrators service', () => {
         });
     });
 
+    describe('Unblock of the logins of a user', () => {
+        it('Unblocks the logins of the user and returns him without his secrets', async () => {
+            vi.mocked(AdminsRepository.unblockUserLogin).mockResolvedValue(LoggedOutUser);
+
+            const userAdmin = await AdminsService.unblockUserLogin(1);
+
+            expect(AdminsRepository.unblockUserLogin).toHaveBeenCalledWith(1);
+            expect(userAdmin).toMatchObject({ id: LoggedOutUser.id, login_blocked_until: null });
+            expect(userAdmin).not.toHaveProperty("secret_hash");
+        });
+
+        it('Writes the unblock in the logs with the identifier of the user, never with his email address', async () => {
+            vi.mocked(AdminsRepository.unblockUserLogin).mockResolvedValue(LoggedOutUser);
+
+            await AdminsService.unblockUserLogin(1);
+
+            expect(logger.info).toHaveBeenCalledWith(expect.stringContaining("user-1"));
+            expect(logger.info).not.toHaveBeenCalledWith(expect.stringContaining(LoggedOutUser.email));
+        });
+
+        it('Fails with a 500 error when the unblocked user is not valid', async () => {
+            vi.mocked(AdminsRepository.unblockUserLogin).mockResolvedValue(buildUser());
+
+            await expect(AdminsService.unblockUserLogin(1)).rejects.toMatchObject({ message: 'Data validation error', httpStatus: 500 });
+        });
+
+        it('Gives an application error to the caller, and hides an unknown one', async () => {
+            const notFoundError = new AppError("User not found", 404);
+            vi.mocked(AdminsRepository.unblockUserLogin).mockRejectedValueOnce(notFoundError);
+            await expect(AdminsService.unblockUserLogin(404)).rejects.toBe(notFoundError);
+
+            vi.mocked(AdminsRepository.unblockUserLogin).mockRejectedValueOnce(new Error("Unknown"));
+            await expect(AdminsService.unblockUserLogin(1)).rejects.toMatchObject({ message: 'Unknown error in admin unblockUserLogin', httpStatus: 500 });
+        });
+    });
+
 
     /*========*/
     /* DELETE */
@@ -265,7 +313,7 @@ describe('Administrators service', () => {
         beforeEach(() => {
             vi.mocked(UsersRepository._getUserById).mockImplementation(async (userId: number) => buildUser({ id: userId, email: `user${userId}@test.fr` }));
             vi.mocked(Securities.generateApiToken).mockResolvedValue(EmailVerifyToken);
-            vi.mocked(Securities.hashString).mockImplementation(async (input: string) => `hash:${input}`);
+            vi.mocked(Securities.hashToken).mockImplementation((input: string) => `hash:${input}`);
         });
 
 
@@ -274,6 +322,32 @@ describe('Administrators service', () => {
 
             expect(UsersRepository.updateUserEmailVerifyTokenHash).toHaveBeenCalledWith(1, `hash:${EmailVerifyToken}`);
             expect(UsersService.sendVerificationEmail).toHaveBeenCalledWith(2, "user2@test.fr", EmailVerifyToken);
+        });
+
+        it('Keeps the current link of the user when the daily limit of emails is reached', async () => {
+            vi.mocked(assertEmailCanBeSent).mockImplementationOnce(() => { throw new AppError("Emails are temporarily unavailable", 503); });
+
+            await expect(AdminsService.sendVerifyEmail([1])).rejects.toMatchObject({ httpStatus: 503 });
+            expect(UsersRepository.updateUserEmailVerifyTokenHash).not.toHaveBeenCalled();
+        });
+
+        it('Checks the emails left for the whole list before the first email, and sends none when they are not enough', async () => {
+            vi.mocked(assertAdminEmailsCanBeSent).mockImplementationOnce(() => { throw new AppError("Not enough emails left for this sending", 503); });
+
+            await expect(AdminsService.sendVerifyEmail([1, 2])).rejects.toMatchObject({ httpStatus: 503 });
+            expect(assertAdminEmailsCanBeSent).toHaveBeenCalledWith(2);
+            expect(UsersRepository.updateUserEmailVerifyTokenHash).not.toHaveBeenCalled();
+            expect(UsersService.sendVerificationEmail).not.toHaveBeenCalled();
+        });
+
+        it('Sends nothing when one of the users does not exist', async () => {
+            vi.mocked(UsersRepository._getUserById).mockImplementation(async (userId: number) => {
+                if (userId === 404) { throw new AppError("User not found", 404); }
+                return buildUser({ id: userId });
+            });
+
+            await expect(AdminsService.sendVerifyEmail([1, 404])).rejects.toMatchObject({ httpStatus: 404 });
+            expect(UsersService.sendVerificationEmail).not.toHaveBeenCalled();
         });
 
         it('Gives an application error to the caller', async () => {
@@ -317,6 +391,26 @@ describe('Administrators service', () => {
             expect(sendEmail).not.toHaveBeenCalled();
         });
 
+        it('Checks the emails left for the whole list before the first email, and sends none when they are not enough', async () => {
+            mockedAppConfig.app_env = "prod";
+            vi.mocked(assertAdminEmailsCanBeSent).mockImplementationOnce(() => { throw new AppError("Not enough emails left for this sending", 503); });
+
+            await expect(AdminsService.sendEmailAdmin(EmailAdmin)).rejects.toMatchObject({ httpStatus: 503 });
+            expect(assertAdminEmailsCanBeSent).toHaveBeenCalledWith(EmailAdmin.userIdList.length);
+            expect(sendEmail).not.toHaveBeenCalled();
+        });
+
+        it('Sends nothing when one of the users does not exist', async () => {
+            mockedAppConfig.app_env = "prod";
+            vi.mocked(UsersRepository._getUserById).mockImplementation(async (userId: number) => {
+                if (userId === 2) { throw new AppError("User not found", 404); }
+                return buildUser({ id: userId });
+            });
+
+            await expect(AdminsService.sendEmailAdmin(EmailAdmin)).rejects.toMatchObject({ httpStatus: 404 });
+            expect(sendEmail).not.toHaveBeenCalled();
+        });
+
         it('Gives an application error to the caller, and hides an unknown one', async () => {
             const notFoundError = new AppError("User not found", 404);
             vi.mocked(UsersRepository._getUserById).mockRejectedValueOnce(notFoundError);
@@ -332,7 +426,6 @@ describe('Administrators service', () => {
 /*===========*/
 /* Test data */
 /*===========*/
-const SignedJwt: string = "signed-jwt";
 const EmailVerifyToken: string = "abcdef0123456789";
 const EmailHtml: string = "<html>email</html>";
 const QueryParams = { limit: 10, offset: 0 };

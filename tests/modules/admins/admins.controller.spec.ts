@@ -20,6 +20,7 @@ vi.mock("../../../src/modules/admins/admins.service", () => ({
     selectUsers: vi.fn(),
     countUsers: vi.fn(),
     updateUser: vi.fn(),
+    unblockUserLogin: vi.fn(),
     deleteUser: vi.fn(),
     sendVerifyEmail: vi.fn(),
     sendEmailAdmin: vi.fn(),
@@ -78,6 +79,17 @@ describe('Administrators controller', () => {
             expect(response.json).toHaveBeenCalledWith(UserAdmin);
         });
 
+        it('Unblocks the logins of the user of the URL and sends him', async () => {
+            vi.mocked(AdminsService.unblockUserLogin).mockResolvedValue(UserAdmin);
+            const response = buildResponse();
+
+            await AdminsController.unblockUserLogin(buildRequest({ body: { validatedData: { userId: "1" } } }), response, buildNext());
+
+            expect(AdminsService.unblockUserLogin).toHaveBeenCalledWith(1);
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalledWith(UserAdmin);
+        });
+
         it('Deletes the user of the URL and answers with an empty 200 response', async () => {
             vi.mocked(AdminsService.deleteUser).mockResolvedValue();
             const response = buildResponse();
@@ -120,6 +132,7 @@ describe('Administrators controller', () => {
             { name: 'selectUsers', handler: AdminsController.selectUsers, serviceFunction: AdminsService.selectUsers, validatedData: {} },
             { name: 'countUsers', handler: AdminsController.countUsers, serviceFunction: AdminsService.countUsers, validatedData: {} },
             { name: 'updateUser', handler: AdminsController.updateUser, serviceFunction: AdminsService.updateUser, validatedData: { userId: "1" } },
+            { name: 'unblockUserLogin', handler: AdminsController.unblockUserLogin, serviceFunction: AdminsService.unblockUserLogin, validatedData: { userId: "1" } },
             { name: 'deleteUser', handler: AdminsController.deleteUser, serviceFunction: AdminsService.deleteUser, validatedData: { userId: "1" } },
             { name: 'sendVerifyEmail', handler: AdminsController.sendVerifyEmail, serviceFunction: AdminsService.sendVerifyEmail, validatedData: { userIdList: [1] } },
             { name: 'sendEmailAdmin', handler: AdminsController.sendEmailAdmin, serviceFunction: AdminsService.sendEmailAdmin, validatedData: EmailAdmin },

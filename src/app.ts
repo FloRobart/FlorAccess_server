@@ -1,17 +1,16 @@
 import express from 'express';
-import { Request } from 'express';
 import userRoutes from './modules/users/users.routes';
 import { errorHandler } from './core/middlewares/error.middleware';
 import fs from 'node:fs';
 import AppConfig from './config/AppConfig';
-import { authLimiter, limiter } from './core/middlewares/rate_limiter.middleware';
+import { authLimiter, emailLimiter, limiter } from './core/middlewares/rate_limiter.middleware';
 import cors from 'cors';
 import { defaultRouteHandler } from './core/middlewares/default_route.middleware';
 import path from 'node:path';
 import helmet from 'helmet';
 import { helmetOptions } from './core/middlewares/helmet_http_headers.middleware';
 import morgan from 'morgan';
-import { verifyJwt } from './core/utils/jwt';
+import { requestLogger } from './core/middlewares/request_logger.middleware';
 import { adminsAuthorizationValidator } from './core/middlewares/validators/admins_auth_validator.middleware';
 import { AuthorizationHeaderSchema } from './modules/users/users.schema';
 import adminsRoutes from './modules/admins/admins.routes';
@@ -47,8 +46,9 @@ app.get("/favicon.ico", (_req, res) => {
     res.sendFile(path.join(process.cwd(), "public", "icons", "favicon.ico"));
 });
 
-/* Static public files */
-app.use(express.static(path.join(process.cwd(), "public")));
+/* Static public files: only the styles and the icons of the HTML pages, the templates of the emails and pages stay private */
+app.use('/css', express.static(path.join(process.cwd(), "public", "css")));
+app.use('/icons', express.static(path.join(process.cwd(), "public", "icons")));
 
 /* Swagger setup for API documentation in development environment */
 if (AppConfig.app_env.includes('dev')) {
@@ -88,24 +88,22 @@ if (AppConfig.app_env.includes('dev')) {
 }
 
 
-/* Logger */
-morgan.token("remote-user", (req: Request) => {
-    const defaultUser = "Unknown User";
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return defaultUser;
-    try {
-        return verifyJwt(token)?.email || defaultUser;
-    } catch (err) {
-        return defaultUser;
-    }
-});
-app.use(morgan(AppConfig.log_format));
+/* Logger (without the email addresses of the users nor the tokens of the links sent by email) */
+app.use(requestLogger);
 
 
 /* Stricter rate limit on the routes which send emails or check secrets (registration, login, email verification) */
 app.post('/users', authLimiter);
 app.use('/users/login', authLimiter);
 app.use('/users/email', authLimiter);
+
+/* Even stricter rate limit on the routes which send emails */
+app.post('/users', emailLimiter);
+app.put('/users', emailLimiter);
+app.post('/users/login/request', emailLimiter);
+app.post('/admins/user', emailLimiter);
+app.post('/admins/users/send/verify-email', emailLimiter);
+app.post('/admins/users/send/email', emailLimiter);
 
 /* Users routes */
 app.use('/users', userRoutes);

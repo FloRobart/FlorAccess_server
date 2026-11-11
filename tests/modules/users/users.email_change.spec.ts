@@ -7,6 +7,8 @@ import * as UsersRepository from "../../../src/modules/users/users.repository";
 import * as Securities from "../../../src/core/utils/securities";
 import * as Jwt from "../../../src/core/utils/jwt";
 import { sendEmailVerify } from "../../../src/modules/users/users.email";
+import { assertEmailCanBeSent } from "../../../src/core/email/mailer";
+import { AppError } from "../../../src/core/models/AppError.model";
 
 
 
@@ -21,14 +23,24 @@ vi.mock("../../../src/config/AppConfig", () => ({
 
 /* The database, the hashing, the emails and the JWT are replaced, only the rules of the service are tested */
 vi.mock("../../../src/modules/users/users.repository", () => ({
+    getUser: vi.fn(),
     updateUser: vi.fn(),
     updateUserWithUnverifiedEmail: vi.fn(),
+    _getUserByEmail: vi.fn(),
+    logoutUser: vi.fn(),
 }));
 
 vi.mock("../../../src/core/utils/securities", () => ({
     generateApiToken: vi.fn(),
     hashString: vi.fn(),
     verifyHash: vi.fn(),
+    hashToken: vi.fn(),
+    verifyToken: vi.fn(),
+}));
+
+/* The daily limit of emails is tested with the mailer, each test here chooses if it is reached */
+vi.mock("../../../src/core/email/mailer", () => ({
+    assertEmailCanBeSent: vi.fn(),
 }));
 
 /* renewJwt is the function which generates the JWT on the branch fix/logout-revocation : this test then stays valid whatever the order of the merges */
@@ -73,7 +85,8 @@ describe('Change of the email address of a user', () => {
         jwtFunctions.renewJwt.mockResolvedValue(SignedJwt);
 
         vi.mocked(Securities.generateApiToken).mockResolvedValue(EmailVerifyToken);
-        vi.mocked(Securities.hashString).mockImplementation(async (input: string) => `hash:${input}`);
+        vi.mocked(Securities.hashToken).mockImplementation((input: string) => `hash:${input}`);
+        vi.mocked(UsersRepository._getUserByEmail).mockResolvedValue(null);
         vi.mocked(sendEmailVerify).mockResolvedValue();
     });
 
@@ -82,24 +95,60 @@ describe('Change of the email address of a user', () => {
         const pseudoChange: UpdateUser = { email: CurrentUser.email, pseudo: "New pseudo" };
         vi.mocked(UsersRepository.updateUser).mockResolvedValue(buildUser({ pseudo: pseudoChange.pseudo }));
 
-        await expect(updateUser(pseudoChange, "current-jwt")).resolves.toBe(SignedJwt);
+        await expect(updateUser(pseudoChange, "current-jwt")).resolves.toStrictEqual({ isEmailChanged: false, jwt: SignedJwt });
 
         expect(UsersRepository.updateUser).toHaveBeenCalledWith(pseudoChange, CurrentUser);
         expect(UsersRepository.updateUserWithUnverifiedEmail).not.toHaveBeenCalled();
         expect(sendEmailVerify).not.toHaveBeenCalled();
     });
 
-    it('Marks a new email address as not verified and sends it a verification email', async () => {
+    it('Marks a new email address as not verified and sends it a verification email, without giving a JWT for it', async () => {
         const emailChange: UpdateUser = { email: "new-address@test.fr", pseudo: CurrentUser.pseudo };
-        const userWithUnverifiedEmail: User = buildUser({ email: emailChange.email, is_verified_email: false });
+        const userWithUnverifiedEmail: User = buildUser({ email: emailChange.email, is_verified_email: false, is_connected: false });
         vi.mocked(UsersRepository.updateUserWithUnverifiedEmail).mockResolvedValue(userWithUnverifiedEmail);
 
-        await expect(updateUser(emailChange, "current-jwt")).resolves.toBe(SignedJwt);
+        await expect(updateUser(emailChange, "current-jwt")).resolves.toStrictEqual({ isEmailChanged: true });
         await waitForPendingPromises();
 
         expect(UsersRepository.updateUser).not.toHaveBeenCalled();
         expect(UsersRepository.updateUserWithUnverifiedEmail).toHaveBeenCalledWith(emailChange, CurrentUser, `hash:${EmailVerifyToken}`);
-        expect(sendEmailVerify).toHaveBeenCalledWith(emailChange.email, expect.any(String), expect.stringContaining(EmailVerifyToken));
+        expect(sendEmailVerify).toHaveBeenCalledWith(emailChange.email, expect.stringContaining(EmailVerifyToken));
+        expect(Jwt.renewJwt).not.toHaveBeenCalled();
+        expect(Jwt.generateJwt).not.toHaveBeenCalled();
+    });
+
+    it('Closes the sessions without any change when the new address belongs to another account, so that the answer reveals no account', async () => {
+        const emailChange: UpdateUser = { email: "address-of-another-account@test.fr", pseudo: CurrentUser.pseudo };
+        vi.mocked(UsersRepository._getUserByEmail).mockResolvedValue(buildUser({ id: 2, email: emailChange.email }));
+
+        await expect(updateUser(emailChange, "current-jwt")).resolves.toStrictEqual({ isEmailChanged: true });
+        await waitForPendingPromises();
+
+        expect(UsersRepository.logoutUser).toHaveBeenCalledWith(CurrentUser);
+        expect(UsersRepository.updateUserWithUnverifiedEmail).not.toHaveBeenCalled();
+        expect(sendEmailVerify).not.toHaveBeenCalled();
+    });
+
+    it('Changes nothing when the daily limit of emails is reached', async () => {
+        const emailChange: UpdateUser = { email: "new-address@test.fr", pseudo: CurrentUser.pseudo };
+        vi.mocked(assertEmailCanBeSent).mockImplementationOnce(() => { throw new AppError("Emails are temporarily unavailable", 503); });
+
+        await expect(updateUser(emailChange, "current-jwt")).rejects.toMatchObject({ httpStatus: 503 });
+
+        expect(UsersRepository.updateUserWithUnverifiedEmail).not.toHaveBeenCalled();
+        expect(UsersRepository.logoutUser).not.toHaveBeenCalled();
+    });
+
+    it('Refuses a closed session before looking at the new address, so that it can not tell which addresses are used', async () => {
+        const closedSessionError = new AppError("Email address not verified, please log in with a code", 401);
+        vi.mocked(UsersRepository.getUser).mockRejectedValueOnce(closedSessionError);
+
+        await expect(updateUser({ email: "new-address@test.fr", pseudo: CurrentUser.pseudo }, "current-jwt")).rejects.toBe(closedSessionError);
+
+        expect(UsersRepository._getUserByEmail).not.toHaveBeenCalled();
+        expect(UsersRepository.updateUserWithUnverifiedEmail).not.toHaveBeenCalled();
+        expect(UsersRepository.logoutUser).not.toHaveBeenCalled();
+        expect(sendEmailVerify).not.toHaveBeenCalled();
     });
 });
 

@@ -30,20 +30,14 @@ describe('Email verification email', () => {
     });
 
 
-    it('Sends the verification link with the name of the application', async () => {
-        await sendEmailVerify("test1@test.fr", "Econoris", VerificationUrl);
+    it('Sends the verification link with the name of the API, never a name chosen by the client', async () => {
+        await sendEmailVerify("test1@test.fr", VerificationUrl);
 
         expect(getEmailTemplate).toHaveBeenCalledWith('email_verification_email', {
-            appName: "Econoris",
+            appName: "Floraccess",
             url: VerificationUrl,
             currentYear: String(new Date().getFullYear()),
         });
-        expect(sendEmail).toHaveBeenCalledWith("test1@test.fr", "Econoris : Verification de votre email", EmailHtml);
-    });
-
-    it('Uses the name of the API when no application is given', async () => {
-        await sendEmailVerify("test1@test.fr", "", VerificationUrl);
-
         expect(sendEmail).toHaveBeenCalledWith("test1@test.fr", "Floraccess : Verification de votre email", EmailHtml);
     });
 
@@ -51,7 +45,7 @@ describe('Email verification email', () => {
         const sendingError = new Error("Email sending failed");
         vi.mocked(sendEmail).mockRejectedValue(sendingError);
 
-        await expect(sendEmailVerify("test1@test.fr", "Econoris", VerificationUrl)).rejects.toBe(sendingError);
+        await expect(sendEmailVerify("test1@test.fr", VerificationUrl)).rejects.toBe(sendingError);
     });
 });
 

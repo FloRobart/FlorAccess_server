@@ -38,20 +38,20 @@ describe('Users controller', () => {
     /* Registration */
     /*==============*/
     describe('Registration', () => {
-        it('Registers the user from the application and the IP address of the request', async () => {
-            vi.mocked(UsersService.insertUser).mockResolvedValue(SignedJwt);
+        it('Registers the user from the application and the IP address of the request, and answers 202 without any JWT', async () => {
+            vi.mocked(UsersService.insertUser).mockResolvedValue();
             const request = buildRequest({ ip: "127.0.0.1", body: { validatedData: { ...UserToInsert, application: "Econoris", domain: "econoris.fr" } } });
             const response = buildResponse();
 
             await UsersController.insertUser(request, response, buildNext());
 
             expect(UsersService.insertUser).toHaveBeenCalledWith(UserToInsert, "127.0.0.1", "Econoris", "econoris.fr");
-            expect(response.status).toHaveBeenCalledWith(201);
-            expect(response.json).toHaveBeenCalledWith({ jwt: SignedJwt });
+            expect(response.status).toHaveBeenCalledWith(202);
+            expect(response.json).toHaveBeenCalledWith({ message: UsersController.REGISTRATION_MESSAGE });
         });
 
         it('Registers the user from the API itself when no application and no valid IP address are given', async () => {
-            vi.mocked(UsersService.insertUser).mockResolvedValue(SignedJwt);
+            vi.mocked(UsersService.insertUser).mockResolvedValue();
             const request = buildRequest({ ip: undefined, body: { validatedData: UserToInsert } });
 
             await UsersController.insertUser(request, buildResponse(), buildNext());
@@ -110,7 +110,7 @@ describe('Users controller', () => {
             },{
                 name: 'updateUser',
                 handler: UsersController.updateUser,
-                mockService: () => vi.mocked(UsersService.updateUser).mockResolvedValue(SignedJwt),
+                mockService: () => vi.mocked(UsersService.updateUser).mockResolvedValue({ isEmailChanged: false, jwt: SignedJwt }),
                 request: buildRequest({ headers: { authorization: `Bearer ${Jwt}` }, body: { validatedData: UserToInsert } }),
                 expectedServiceArguments: [UserToInsert, Jwt],
                 expectedBody: { jwt: SignedJwt },
@@ -154,6 +154,17 @@ describe('Users controller', () => {
             expect(serviceFunction).toHaveBeenCalledWith(...expectedServiceArguments);
             expect(response.status).toHaveBeenCalledWith(200);
             expect(response.json).toHaveBeenCalledWith(expectedBody);
+        });
+
+        it('updateUser answers 202 with a message and no JWT when the email address changed', async () => {
+            vi.mocked(UsersService.updateUser).mockResolvedValue({ isEmailChanged: true });
+            const request = buildRequest({ headers: { authorization: `Bearer ${Jwt}` }, body: { validatedData: UserToInsert } });
+            const response = buildResponse();
+
+            await UsersController.updateUser(request, response, buildNext());
+
+            expect(response.status).toHaveBeenCalledWith(202);
+            expect(response.json).toHaveBeenCalledWith({ message: UsersController.EMAIL_CHANGE_MESSAGE });
         });
     });
 

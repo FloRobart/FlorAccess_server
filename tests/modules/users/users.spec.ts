@@ -391,6 +391,7 @@ const BaseUserSchema: User = {
     token_hash: "hashed_token",
     login_requested_at: new Date(),
     login_code_attempts: 0,
+    login_requests_without_login: 0,
     login_block_token_hash: "hashed_block_token",
     login_blocked_until: new Date(),
     is_admin: false,
@@ -438,6 +439,9 @@ const IncorrectUserSchema: any[] = [
     },{
         ...BaseUserSafeSchema,
         token_hash: 123456, // should be string or null
+    },{
+        ...BaseUserSchema,
+        login_requests_without_login: -1, // should be positive
     },
 ];
 

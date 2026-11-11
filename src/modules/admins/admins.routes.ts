@@ -39,6 +39,10 @@ const router = Router();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/error400'
+ *       409:
+ *         description: A user with this email already exists
+ *       503:
+ *         description: The daily limit of emails is reached. Try again later
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -179,6 +183,49 @@ router.get('/users/count', AdminsController.countUsers);
  *               $ref: '#/components/schemas/error500'
  */
 router.put('/user/:userId', requestValidator(AdminsSchema.UserIdSchema), requestValidator(AdminsSchema.UserAdminUpdateSchema), AdminsController.updateUser);
+
+
+/**
+ * @swagger
+ * /admins/user/{userId}/login/unblock:
+ *   post:
+ *     tags:
+ *       - Admins
+ *     summary: Unblock the logins of a user
+ *     description: Lifts the block of the logins of a user, set by the block link of a login code email or after 10 login codes sent without a successful login. The count of these codes starts again from zero. Nothing changes for a user whose logins are not blocked.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: The ID of the user to unblock
+ *         schema:
+ *           type: string
+ *           example: "1"
+ *     responses:
+ *       200:
+ *         description: Logins of the user unblocked
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserAdmin'
+ *       400:
+ *         description: Bad request. Change your request to fix this error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error400'
+ *       404:
+ *         description: No user has this ID
+ *       500:
+ *         description: Internal server error. Please create an issue on Github
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/error500'
+ */
+router.post('/user/:userId/login/unblock', requestValidator(AdminsSchema.UserIdSchema), AdminsController.unblockUserLogin);
 
 
 /**

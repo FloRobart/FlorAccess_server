@@ -17,7 +17,7 @@ const router = Router();
  *     tags:
  *       - Users
  *     summary: Register a new user
- *     description: Register a new user by providing an email address and pseudo.
+ *     description: Register a new user by providing an email address and pseudo, and send him the link which verifies his address. No JWT is given before the address is proven, the user logs in with a code once registered. The answer is the same when the address is already used, so that this route does not reveal which accounts exist.
  *     requestBody:
  *       required: true
  *       content:
@@ -27,29 +27,33 @@ const router = Router();
  *     parameters:
  *       - in: query
  *         name: application
- *         description: Name of the application where the user is being registered
+ *         description: Name of the application where the user is being registered, displayed on the button of the verification page (never in the email)
  *         schema:
  *           type: string
  *           example: "MyApp"
  *       - in: query
  *         name: domain
- *         description: Domain name of the application where the user is being registered
+ *         description: Domain name of the application where the user is being registered, target of the button of the verification page if it is one of the allowed applications
  *         schema:
  *           type: string
  *           example: "example.com"
  *     responses:
- *       201:
- *         description: User registered successfully
+ *       202:
+ *         description: Registration taken into account. A verification link was sent if the address can be used
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/JWTResponse'
+ *               $ref: '#/components/schemas/messageResponse'
  *       400:
  *         description: Bad request. Change your request to fix this error
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/error400'
+ *       429:
+ *         description: Too many requests from this IP address
+ *       503:
+ *         description: The daily limit of new accounts or of emails is reached. Try again later
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:
@@ -129,7 +133,7 @@ router.get('/jwt', authorizationValidator(UsersSchema.AuthorizationHeaderSchema)
  *     tags:
  *       - Users
  *     summary: Update user information
- *     description: Update the information of an existing user.
+ *     description: Update the information of an existing user. A change of email address gives no JWT, it sends a verification link to the new address and closes all the sessions of the account; the user logs in again with a code sent to the new address. The answer is the same when the new address is already used by another account.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -140,11 +144,21 @@ router.get('/jwt', authorizationValidator(UsersSchema.AuthorizationHeaderSchema)
  *             $ref: '#/components/schemas/UpdateUser'
  *     responses:
  *       200:
- *         description: User updated successfully
+ *         description: User updated successfully, without change of email address
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/JWTResponse'
+ *       202:
+ *         description: Email address change taken into account, all the sessions are closed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/messageResponse'
+ *       429:
+ *         description: Too many requests from this IP address
+ *       503:
+ *         description: The daily limit of emails is reached. Try again later
  *       400:
  *         description: Bad request. Change your request to fix this error
  *         content:
@@ -235,9 +249,11 @@ router.delete('/', authorizationValidator(UsersSchema.AuthorizationHeaderSchema)
  *             schema:
  *               $ref: '#/components/schemas/error404'
  *       403:
- *         description: The logins are temporarily blocked for this account
+ *         description: The logins are temporarily blocked for this account, by its block link or because 10 login codes were sent without a successful login
  *       429:
- *         description: A login code was sent recently. Wait before requesting a new one
+ *         description: A login code was sent recently, or too many requests came from this IP address. Wait before requesting a new one. After 5 codes without a successful login, the delay between two codes is extended (10 minutes by default)
+ *       503:
+ *         description: The daily limit of new accounts or of emails is reached. Try again later
  *       500:
  *         description: Internal server error. Please create an issue on Github
  *         content:

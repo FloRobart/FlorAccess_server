@@ -43,10 +43,10 @@ describe('Users repository', () => {
             expect(getLastQuery().values).toStrictEqual([UserToInsert.email, UserToInsert.pseudo, "EMAIL_CODE", "127.0.0.1", "email-verify-hash"]);
         });
 
-        it('Fails when the user was not inserted', async () => {
+        it('Returns null when the email address is already used, so that the caller chooses the answer', async () => {
             vi.mocked(Database.execute).mockResolvedValue([]);
 
-            await expect(UsersRepository.insertUser(UserToInsert, null, "email-verify-hash")).rejects.toMatchObject({ httpStatus: 500 });
+            await expect(UsersRepository.insertUser(UserToInsert, null, "email-verify-hash")).resolves.toBeNull();
         });
     });
 
@@ -77,6 +77,31 @@ describe('Users repository', () => {
             vi.mocked(isJwtFromClosedSession).mockReturnValue(true);
 
             await expect(UsersRepository.getUser(JwtUser)).rejects.toMatchObject({ message: 'Session closed, please log in again', httpStatus: 401 });
+        });
+
+        it('Fails when the email address of the user was never proven, even with an open session', async () => {
+            vi.mocked(Database.execute).mockResolvedValue([buildUser({ is_verified_email: false })]);
+
+            await expect(UsersRepository.getUser(JwtUser)).rejects.toMatchObject({ message: UsersRepository.UNVERIFIED_EMAIL_MESSAGE, httpStatus: 401 });
+        });
+
+        it('Compares the dates of the JWT with their time zone, whatever the time zone of the database', async () => {
+            await UsersRepository.getUser(JwtUser);
+
+            expect(getLastQuery().text).toContain("$4::timestamptz");
+            expect(getLastQuery().text).not.toMatch(/::timestamp\)/);
+        });
+    });
+
+    describe('Check of an open session', () => {
+        it('Accepts the session of a connected user whose email address is proven', () => {
+            expect(() => UsersRepository.assertSessionIsOpen(JwtUser, buildUser())).not.toThrow();
+        });
+
+        it('Refuses a logged out user before the other checks', () => {
+            vi.mocked(isJwtFromClosedSession).mockReturnValue(true);
+
+            expect(() => UsersRepository.assertSessionIsOpen(JwtUser, buildUser({ is_connected: false, is_verified_email: false }))).toThrow('User is not connected');
         });
     });
 
@@ -222,6 +247,14 @@ describe('Users repository', () => {
             vi.mocked(Database.execute).mockResolvedValue([]);
 
             await expect(UsersRepository.blockUserLogin(1, "block-token-hash", 3600000, false)).resolves.toBe(false);
+        });
+
+        it('Starts again from zero the count of the codes sent without a successful login, like the block made by the API', async () => {
+            vi.mocked(Database.execute).mockResolvedValue([{ id: 1 }]);
+
+            await UsersRepository.blockUserLogin(1, "block-token-hash", 3600000, false);
+
+            expect(getLastQuery().text).toContain("login_requests_without_login = 0");
         });
     });
 

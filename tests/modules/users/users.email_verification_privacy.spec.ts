@@ -5,6 +5,7 @@ import { UserEmailVerify } from "../../../src/modules/users/users.service";
 import * as UsersRepository from "../../../src/modules/users/users.repository";
 import * as Securities from "../../../src/core/utils/securities";
 import { getEmailTemplate } from "../../../src/core/email/get_email_template";
+import { AppError } from "../../../src/core/models/AppError.model";
 
 
 
@@ -18,6 +19,8 @@ vi.mock("../../../src/core/utils/securities", () => ({
     generateApiToken: vi.fn(),
     hashString: vi.fn(),
     verifyHash: vi.fn(),
+    hashToken: vi.fn(),
+    verifyToken: vi.fn(),
 }));
 
 vi.mock("../../../src/core/email/get_email_template", () => ({
@@ -54,7 +57,7 @@ vi.mock("../../../src/core/utils/logger", () => ({
  */
 describe('Email address on the email verification page', () => {
     beforeEach(() => {
-        vi.mocked(Securities.verifyHash).mockImplementation(async (input: string, hash: string) => hash === `hash:${input}`);
+        vi.mocked(Securities.verifyToken).mockImplementation(async (input: string, hash: string) => hash === `hash:${input}`);
         vi.mocked(getEmailTemplate).mockResolvedValue("<html></html>");
     });
 
@@ -83,6 +86,28 @@ describe('Email address on the email verification page', () => {
 
         expect(getTextGivenToThePage()).toContain(UserEmail);
         expect(UsersRepository.UserEmailVerify).toHaveBeenCalledWith(1);
+    });
+
+    it('Displays the same page for an unknown user, an address already verified and a wrong token, so that the links reveal no account', async () => {
+        vi.mocked(UsersRepository._getUserById).mockRejectedValueOnce(new AppError("User not found", 404));
+        await UserEmailVerify(LinkWithWrongToken);
+
+        vi.mocked(UsersRepository._getUserById).mockResolvedValueOnce(buildUser({ is_verified_email: true, email_verify_token_hash: `hash:${ValidToken}` }));
+        await UserEmailVerify({ userId: "1", token: ValidToken });
+
+        vi.mocked(UsersRepository._getUserById).mockResolvedValueOnce(buildUser({ is_verified_email: false, email_verify_token_hash: `hash:${ValidToken}` }));
+        await UserEmailVerify(LinkWithWrongToken);
+
+        vi.mocked(UsersRepository._getUserById).mockResolvedValueOnce(buildUser({ is_verified_email: false, email_verify_token_hash: null }));
+        await UserEmailVerify(LinkWithWrongToken);
+
+        const pages = vi.mocked(getEmailTemplate).mock.calls;
+        expect(pages).toHaveLength(4);
+        expect(pages[0]).toStrictEqual(['verification_email_error', { status: "Lien invalide", message: expect.any(String) }, { button: "" }]);
+        expect(pages[1]).toStrictEqual(pages[0]);
+        expect(pages[2]).toStrictEqual(pages[0]);
+        expect(pages[3]).toStrictEqual(pages[0]);
+        expect(UsersRepository.UserEmailVerify).not.toHaveBeenCalled();
     });
 });
 

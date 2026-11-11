@@ -1,5 +1,5 @@
 import AppConfig from '../../config/AppConfig';
-import sendEmail from './mailer';
+import { sendAlertEmail } from './mailer';
 import { getEmailTemplate } from '../email/get_email_template';
 
 
@@ -31,7 +31,7 @@ export async function sendErrorEmail(...args: any[]): Promise<boolean> {
     lastErrorEmailSentAt = Date.now();
     skippedErrorCount = 0;
 
-    const errorMessage = args.map(arg => typeof arg === 'string' ? arg : JSON.stringify(arg, null, 2)).join('\n');
+    const errorMessage = args.map(formatErrorEmailValue).join('\n');
     const skippedErrorsNotice = skippedErrorCountSinceLastEmail > 0 ? `${skippedErrorCountSinceLastEmail} autre(s) erreur(s) n'ont pas été envoyées par email depuis le dernier envoi, consultez les logs du serveur.\n\n` : '';
     const courrentYear: string = String(new Date().getFullYear());
 
@@ -42,9 +42,29 @@ export async function sendErrorEmail(...args: any[]): Promise<boolean> {
     });
 
     try {
-        await sendEmail(AppConfig.mail_username, `Erreur dans ${AppConfig.app_name}`, html);
+        await sendAlertEmail(AppConfig.mail_username, `Erreur dans ${AppConfig.app_name}`, html);
         return true;
     } catch (error) {
         throw error;
+    }
+}
+
+
+/**
+ * Writes one of the values given to the logger as text for the error email.
+ *
+ * An error is written with its stack: its message and its stack are not enumerable, so JSON would only give "{}".
+ * A value which JSON can not write (circular object, undefined) is written as a plain text.
+ * @param value Value given to the logger
+ * @returns Text of the value
+ */
+function formatErrorEmailValue(value: unknown): string {
+    if (typeof value === 'string') { return value; }
+    if (value instanceof Error) { return value.stack || `${value.name}: ${value.message}`; }
+
+    try {
+        return JSON.stringify(value, null, 2) ?? String(value);
+    } catch (error) {
+        return String(value);
     }
 }

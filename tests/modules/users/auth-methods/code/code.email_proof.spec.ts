@@ -30,6 +30,8 @@ vi.mock("../../../../../src/core/utils/securities", () => ({
     generateSecureRandomDelay: vi.fn(),
     hashString: vi.fn(),
     verifyHash: vi.fn(),
+    hashToken: vi.fn(),
+    verifyToken: vi.fn(),
 }));
 
 vi.mock("../../../../../src/core/utils/jwt", () => ({
@@ -54,6 +56,7 @@ vi.mock("../../../../../src/core/utils/logger", () => ({
 describe('Sessions opened before the proof of the email address', () => {
     beforeEach(() => {
         vi.mocked(Securities.verifyHash).mockImplementation(async (input: string, hash: string) => hash === fakeHash(input));
+        vi.mocked(Securities.verifyToken).mockImplementation(async (input: string, hash: string) => hash === fakeHash(input));
         vi.mocked(generateJwt).mockImplementation(async (payload) => `jwt-of-logout-${payload.last_logout_at.getTime()}`);
     });
 

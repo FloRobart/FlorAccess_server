@@ -1,8 +1,8 @@
 import type { User, UserLoginBlock, UserLoginConfirm, UserSafe } from "../../../src/modules/users/users.types";
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterAll } from "vitest";
 import AppConfig from "../../../src/config/AppConfig";
-import { blockUserLogin, deleteUser, getUserLoginBlockPage, insertUser, logoutUser, regenerateJwt, selectUser, sendVerificationEmail, updateUser, UserEmailVerify, userLoginConfirm, userLoginRequest } from "../../../src/modules/users/users.service";
+import { blockUserLogin, deleteUser, getUserLoginBlockPage, insertUser, logoutUser, NEW_ACCOUNT_LIMIT_REACHED_MESSAGE, regenerateJwt, selectUser, sendVerificationEmail, updateUser, UserEmailVerify, userLoginConfirm, userLoginRequest } from "../../../src/modules/users/users.service";
 import * as UsersRepository from "../../../src/modules/users/users.repository";
 import * as Securities from "../../../src/core/utils/securities";
 import * as Jwt from "../../../src/core/utils/jwt";
@@ -11,6 +11,7 @@ import { sendEmailVerify } from "../../../src/modules/users/users.email";
 import { getEmailTemplate } from "../../../src/core/email/get_email_template";
 import logger from "../../../src/core/utils/logger";
 import { AppError } from "../../../src/core/models/AppError.model";
+import { assertEmailCanBeSent } from "../../../src/core/email/mailer";
 import { buildUser } from "./users.fixtures";
 
 
@@ -22,6 +23,7 @@ const { mockedAppConfig } = vi.hoisted(() => ({
         app_name: "Floraccess",
         base_url: "http://localhost",
         login_block_duration: 24 * 60 * 60 * 1000,
+        new_account_daily_limit: 2,
         corsOptions: { origin: ["https://econoris.fr"] },
     },
 }));
@@ -48,6 +50,13 @@ vi.mock("../../../src/core/utils/securities", () => ({
     generateApiToken: vi.fn(),
     hashString: vi.fn(),
     verifyHash: vi.fn(),
+    hashToken: vi.fn(),
+    verifyToken: vi.fn(),
+}));
+
+/* The daily limit of emails is tested with the mailer, each test here chooses if it is reached */
+vi.mock("../../../src/core/email/mailer", () => ({
+    assertEmailCanBeSent: vi.fn(),
 }));
 
 vi.mock("../../../src/core/email/get_email_template", () => ({
@@ -84,13 +93,24 @@ vi.mock("../../../src/core/utils/logger", () => ({
  * Users service tests
  */
 describe('Users service', () => {
+    /* Only the date is faked: the daily limit counts the accounts created during the last 24 hours */
+    vi.useFakeTimers({ toFake: ['Date'] });
+
     beforeEach(() => {
         mockedAppConfig.app_env = "dev";
-        vi.mocked(Securities.verifyHash).mockImplementation(async (input: string, hash: string) => hash === fakeHash(input));
+        vi.mocked(Securities.hashToken).mockImplementation((input: string) => fakeHash(input));
+        vi.mocked(Securities.verifyToken).mockImplementation(async (input: string, hash: string) => hash === fakeHash(input));
         vi.mocked(UsersRepository.blockUserLogin).mockResolvedValue(true);
+
+        /* Each test starts one day after the previous one, so that the accounts of the other tests do not count anymore */
+        vi.setSystemTime(Date.now() + OneDay);
 
         /* The page is reduced to its status, which is enough to know which page was returned */
         vi.mocked(getEmailTemplate).mockImplementation(async (_templateName: string, variables: Record<string, string>) => variables.status);
+    });
+
+    afterAll(() => {
+        vi.useRealTimers();
     });
 
 
@@ -215,6 +235,19 @@ describe('Users service', () => {
         });
 
         it.each([
+            ['updateUser', () => updateUser({ email: "test1@test.fr", pseudo: "New pseudo" }, CurrentJwt), UsersRepository.updateUser],
+            ['deleteUser', () => deleteUser(CurrentJwt), UsersRepository.deleteUser],
+            ['logoutUser', () => logoutUser(CurrentJwt), UsersRepository.logoutUser],
+        ])('%s refuses a closed session, or the session of an address never proven, before changing anything', async (_functionName, callService, repositoryFunction) => {
+            const closedSessionError = new AppError("Email address not verified, please log in with a code", 401);
+            vi.mocked(UsersRepository.getUser).mockRejectedValueOnce(closedSessionError);
+
+            await expect(callService()).rejects.toBe(closedSessionError);
+            expect(UsersRepository.getUser).toHaveBeenCalledWith(JwtUser);
+            expect(repositoryFunction).not.toHaveBeenCalled();
+        });
+
+        it.each([
             ['selectUser', () => selectUser(CurrentJwt)],
             ['regenerateJwt', () => regenerateJwt(CurrentJwt)],
             ['updateUser', () => updateUser({ email: "test1@test.fr", pseudo: "Pseudo" }, CurrentJwt)],
@@ -235,7 +268,6 @@ describe('Users service', () => {
     describe('Registration and update', () => {
         beforeEach(() => {
             vi.mocked(Securities.generateApiToken).mockResolvedValue(EmailVerifyToken);
-            vi.mocked(Securities.hashString).mockImplementation(async (input: string) => fakeHash(input));
         });
 
 
@@ -250,11 +282,11 @@ describe('Users service', () => {
             mockedAppConfig.app_env = "prod";
             const emailFailure = new AppError("Email sending failed", 500);
             vi.mocked(Jwt.verifyJwt).mockReturnValue(JwtUser);
-            vi.mocked(Jwt.renewJwt).mockResolvedValue(SignedJwt);
+            vi.mocked(UsersRepository._getUserByEmail).mockResolvedValue(null);
             vi.mocked(UsersRepository.updateUserWithUnverifiedEmail).mockResolvedValue(buildUser({ email: "new-address@test.fr", is_verified_email: false }));
             vi.mocked(sendEmailVerify).mockRejectedValueOnce(emailFailure);
 
-            await expect(updateUser({ email: "new-address@test.fr", pseudo: "Pseudo" }, CurrentJwt)).resolves.toBe(SignedJwt);
+            await expect(updateUser({ email: "new-address@test.fr", pseudo: "Pseudo" }, CurrentJwt)).resolves.toStrictEqual({ isEmailChanged: true });
             await waitForPendingPromises();
 
             expect(logger.error).toHaveBeenCalledWith(expect.any(String), emailFailure);
@@ -268,7 +300,6 @@ describe('Users service', () => {
     describe('Login', () => {
         beforeEach(() => {
             vi.mocked(Securities.generateApiToken).mockResolvedValue(EmailVerifyToken);
-            vi.mocked(Securities.hashString).mockImplementation(async (input: string) => fakeHash(input));
             vi.mocked(loginDispatcher).mockResolvedValue(LoginToken);
         });
 
@@ -282,12 +313,54 @@ describe('Users service', () => {
             expect(loginDispatcher).toHaveBeenCalledWith({ email: "new-user@test.fr" });
         });
 
+        it('Completes with "_" an email address whose start is shorter than a pseudo, so that the account can log in', async () => {
+            vi.mocked(UsersRepository._getUserByEmail).mockResolvedValue(null);
+
+            await userLoginRequest({ email: "jo@test.fr" }, null);
+
+            expect(UsersRepository.insertUser).toHaveBeenCalledWith({ email: "jo@test.fr", pseudo: "jo_" }, null, expect.any(String));
+        });
+
         it('Does not register again the email of an existing user', async () => {
             vi.mocked(UsersRepository._getUserByEmail).mockResolvedValue(buildUser());
 
             await expect(userLoginRequest({ email: "test1@test.fr" }, null)).resolves.toBe(LoginToken);
 
             expect(UsersRepository.insertUser).not.toHaveBeenCalled();
+        });
+
+        it('Refuses to create accounts beyond the daily limit, before creating anything, but still logs in the existing users', async () => {
+            vi.mocked(UsersRepository._getUserByEmail).mockResolvedValue(null);
+            vi.mocked(UsersRepository.insertUser).mockResolvedValue(buildUser());
+            await userLoginRequest({ email: "first@test.fr" }, null);
+            await userLoginRequest({ email: "second@test.fr" }, null);
+
+            await expect(userLoginRequest({ email: "third@test.fr" }, null)).rejects.toMatchObject({ message: NEW_ACCOUNT_LIMIT_REACHED_MESSAGE, httpStatus: 503 });
+            expect(UsersRepository.insertUser).toHaveBeenCalledTimes(2);
+            expect(loginDispatcher).toHaveBeenCalledTimes(2);
+
+            vi.mocked(UsersRepository._getUserByEmail).mockResolvedValue(buildUser());
+            await expect(userLoginRequest({ email: "test1@test.fr" }, null)).resolves.toBe(LoginToken);
+        });
+
+        it('Does not count an account that a simultaneous request already created, and logs in with it', async () => {
+            vi.mocked(UsersRepository._getUserByEmail).mockResolvedValue(null);
+            vi.mocked(UsersRepository.insertUser).mockResolvedValue(null);
+            await userLoginRequest({ email: "first@test.fr" }, null);
+            await userLoginRequest({ email: "first@test.fr" }, null);
+
+            vi.mocked(UsersRepository.insertUser).mockResolvedValue(buildUser());
+            await expect(userLoginRequest({ email: "second@test.fr" }, null)).resolves.toBe(LoginToken);
+            expect(loginDispatcher).toHaveBeenCalledTimes(3);
+        });
+
+        it('Refuses to create the account when the daily limit of emails is reached', async () => {
+            vi.mocked(UsersRepository._getUserByEmail).mockResolvedValue(null);
+            vi.mocked(assertEmailCanBeSent).mockImplementationOnce(() => { throw new AppError("Emails are temporarily unavailable", 503); });
+
+            await expect(userLoginRequest({ email: "new-user@test.fr" }, null)).rejects.toMatchObject({ httpStatus: 503 });
+            expect(UsersRepository.insertUser).not.toHaveBeenCalled();
+            expect(loginDispatcher).not.toHaveBeenCalled();
         });
 
         it('Gives the failure of the login request to the caller', async () => {
@@ -332,7 +405,6 @@ describe('Users service', () => {
 
             expect(sendEmailVerify).toHaveBeenCalledWith(
                 "test1@test.fr",
-                "Mon appli",
                 `http://localhost/users/email/verify/1?token=${EmailVerifyToken}&application=Mon%20appli&domain=econoris.fr`,
             );
         });
@@ -342,7 +414,7 @@ describe('Users service', () => {
 
             await sendVerificationEmail(1, "test1@test.fr", EmailVerifyToken);
 
-            expect(sendEmailVerify).toHaveBeenCalledWith("test1@test.fr", "Floraccess", expect.stringContaining("&application=Floraccess&domain=null"));
+            expect(sendEmailVerify).toHaveBeenCalledWith("test1@test.fr", expect.stringContaining("&application=Floraccess&domain=null"));
         });
 
         it('Gives the failure of the sending to the caller', async () => {
@@ -366,16 +438,23 @@ describe('Users service', () => {
             expect(UsersRepository.UserEmailVerify).toHaveBeenCalledWith(1);
         });
 
-        it('Displays a 404 error page for a user who does not exist', async () => {
-            vi.mocked(UsersRepository._getUserById).mockResolvedValue(null as unknown as User);
+        it('Displays the invalid link page for a user who does not exist', async () => {
+            vi.mocked(UsersRepository._getUserById).mockRejectedValue(new AppError("User not found", 404));
 
-            await expect(UserEmailVerify({ userId: "404", token: EmailVerifyToken })).resolves.toBe("Erreur 404");
+            await expect(UserEmailVerify({ userId: "404", token: EmailVerifyToken })).resolves.toBe(InvalidLinkPageStatus);
         });
 
-        it('Displays a 400 error page for a user who has no verification token', async () => {
+        it('Displays the invalid link page for a user who has no verification token', async () => {
             vi.mocked(UsersRepository._getUserById).mockResolvedValue(buildUser({ is_verified_email: false, email_verify_token_hash: null }));
 
-            await expect(UserEmailVerify({ userId: "1", token: EmailVerifyToken })).resolves.toBe("Erreur 400");
+            await expect(UserEmailVerify({ userId: "1", token: EmailVerifyToken })).resolves.toBe(InvalidLinkPageStatus);
+            expect(UsersRepository.UserEmailVerify).not.toHaveBeenCalled();
+        });
+
+        it('Displays the invalid link page for an address already verified, even with its former token', async () => {
+            vi.mocked(UsersRepository._getUserById).mockResolvedValue(buildUser({ is_verified_email: true, email_verify_token_hash: fakeHash(EmailVerifyToken) }));
+
+            await expect(UserEmailVerify({ userId: "1", token: EmailVerifyToken })).resolves.toBe(InvalidLinkPageStatus);
             expect(UsersRepository.UserEmailVerify).not.toHaveBeenCalled();
         });
 
@@ -394,6 +473,7 @@ describe('Users service', () => {
 /* Test data */
 /*===========*/
 const OneMinute: number = 60 * 1000;
+const OneDay: number = 24 * 60 * OneMinute;
 const BlockToken: string = "abcdef0123456789";
 
 const BlockedPageStatus: string = "Connexions bloquées";

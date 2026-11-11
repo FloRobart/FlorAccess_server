@@ -53,6 +53,18 @@ describe('JWT', () => {
 
             expect(() => verifyJwt(forgedJwt)).toThrow(expect.objectContaining({ httpStatus: 401 }));
         });
+
+        it('Signs the JWT with HS256', async () => {
+            const jwt = await generateJwt(UserPayload);
+
+            expect(JWT.decode(jwt, { complete: true })?.header.alg).toBe("HS256");
+        });
+
+        it('Rejects a JWT signed with another algorithm, even with the right key', () => {
+            const jwtWithAnotherAlgorithm = JWT.sign(UserPayload, "test-signing-key", { algorithm: "HS512" });
+
+            expect(() => verifyJwt(jwtWithAnotherAlgorithm)).toThrow(expect.objectContaining({ httpStatus: 401 }));
+        });
     });
 
 
@@ -83,6 +95,21 @@ describe('JWT', () => {
 
             vi.advanceTimersByTime(29 * OneDay);
             await expect(renewJwt(jwt, UserPayload)).rejects.toMatchObject({ httpStatus: 401 });
+        });
+
+        it('Gives a renewed JWT which expires with its session, never after it', async () => {
+            const jwt = await renewJwtEvery29DaysUntilDay87();
+
+            const sessionEndInSeconds: number = (LoginDate.getTime() + 90 * OneDay) / 1000;
+            expect(JWT.decode(jwt)).toMatchObject({ exp: sessionEndInSeconds });
+        });
+
+        it('Refuses the renewal when less than one second of the session is left, while the JWT itself is still valid', async () => {
+            const jwt = await renewJwtEvery29DaysUntilDay87();
+
+            vi.advanceTimersByTime(3 * OneDay - 500);
+            expect(() => verifyJwt(jwt)).not.toThrow();
+            await expect(renewJwt(jwt, UserPayload)).rejects.toMatchObject({ message: "Session expired, please log in again", httpStatus: 401 });
         });
 
         it('Starts the session of a JWT without login date when this JWT was issued', async () => {
@@ -144,6 +171,21 @@ const UserPayload = {
     email: "test1@test.fr",
     pseudo: "Pseudo",
 };
+
+/**
+ * Logs in, then renews the JWT every 29 days, until 87 days after the login: 3 days before the end of the session.
+ * @returns The JWT of the last renewal
+ */
+async function renewJwtEvery29DaysUntilDay87(): Promise<string> {
+    let jwt: string = await generateJwt(UserPayload);
+
+    for (let renewalNumber = 1; renewalNumber <= 3; renewalNumber++) {
+        vi.advanceTimersByTime(29 * OneDay);
+        jwt = await renewJwt(jwt, UserPayload);
+    }
+
+    return jwt;
+}
 
 /**
  * Generates then decodes the JWT of a user, as the API receives it : the dates of the user are written as text in a JWT.

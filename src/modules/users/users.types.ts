@@ -14,6 +14,8 @@ export type AuthorizationHeader = z.infer<typeof UserSchema.AuthorizationHeaderS
 
 /* UPDATE */
 export type UpdateUser = z.infer<typeof UserSchema.UserUpdateSchema>;
+/* A change of email address closes the sessions instead of giving a new JWT: the new address is not proven yet */
+export type UserUpdateResult = { isEmailChanged: true } | { isEmailChanged: false, jwt: string };
 /* LOGIN */
 export type UserLoginRequest = z.infer<typeof UserSchema.UserLoginRequestSchema>;
 export type UserLoginConfirm = z.infer<typeof UserSchema.UserLoginConfirmSchema>;

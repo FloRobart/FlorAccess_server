@@ -3,11 +3,14 @@ import type { User, UserLoginConfirm } from "../../../../../src/modules/users/us
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { getRandomValues } from "node:crypto";
 import AppConfig from "../../../../../src/config/AppConfig";
-import { usersLoginConfirm, usersLoginRequest } from "../../../../../src/modules/users/auth-methods/code/code.service";
+import { getLoginRequestCooldown, INVALID_LOGIN_TOKEN_MESSAGE, usersLoginConfirm, usersLoginRequest } from "../../../../../src/modules/users/auth-methods/code/code.service";
 import * as CodeRepository from "../../../../../src/modules/users/auth-methods/code/code.repository";
 import * as Securities from "../../../../../src/core/utils/securities";
 import { sendEmailCode } from "../../../../../src/modules/users/auth-methods/code/code.email";
 import { generateJwt } from "../../../../../src/core/utils/jwt";
+import { assertEmailCanBeSent } from "../../../../../src/core/email/mailer";
+import { AppError } from "../../../../../src/core/models/AppError.model";
+import logger from "../../../../../src/core/utils/logger";
 import { buildUser } from "../../users.fixtures";
 
 
@@ -20,6 +23,8 @@ const { mockedAppConfig } = vi.hoisted(() => ({
         base_url: "http://localhost",
         code_data_set: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
         login_request_cooldown: 60 * 1000,
+        login_request_extended_cooldown: 10 * 60 * 1000,
+        login_block_duration: 24 * 60 * 60 * 1000,
         login_code_max_attempts: 5,
         token_expiration: 30 * 60 * 1000,
     },
@@ -42,6 +47,7 @@ vi.mock("node:crypto", async (importOriginal) => {
 /* The database, the hashing, the emails and the JWT are replaced, only the rules of the login code are tested */
 vi.mock("../../../../../src/modules/users/auth-methods/code/code.repository", () => ({
     userLoginRequest: vi.fn(),
+    blockLoginsAfterTooManyCodes: vi.fn(),
     consumeLoginCodeAttempt: vi.fn(),
     userLoginConfirm: vi.fn(),
 }));
@@ -55,6 +61,13 @@ vi.mock("../../../../../src/core/utils/securities", () => ({
     generateSecureRandomDelay: vi.fn(),
     hashString: vi.fn(),
     verifyHash: vi.fn(),
+    hashToken: vi.fn(),
+    verifyToken: vi.fn(),
+}));
+
+/* The daily limit of emails is tested with the mailer, each test here chooses if it is reached */
+vi.mock("../../../../../src/core/email/mailer", () => ({
+    assertEmailCanBeSent: vi.fn(),
 }));
 
 vi.mock("../../../../../src/core/utils/jwt", () => ({
@@ -88,7 +101,10 @@ describe('Auth methods code module', () => {
             vi.mocked(Securities.generateApiToken).mockReset().mockResolvedValueOnce(ValidToken).mockResolvedValueOnce(BlockToken);
             vi.mocked(Securities.hashString).mockImplementation(async (input: string) => fakeHash(input));
             vi.mocked(Securities.verifyHash).mockImplementation(async (input: string, hash: string) => hash === fakeHash(input));
+            vi.mocked(Securities.hashToken).mockImplementation((input: string) => fakeHash(input));
+            vi.mocked(Securities.verifyToken).mockImplementation(async (input: string, hash: string) => hash === fakeHash(input));
             vi.mocked(CodeRepository.userLoginRequest).mockResolvedValue(true);
+            vi.mocked(CodeRepository.blockLoginsAfterTooManyCodes).mockResolvedValue();
             vi.mocked(CodeRepository.consumeLoginCodeAttempt).mockResolvedValue(true);
             vi.mocked(CodeRepository.userLoginConfirm).mockResolvedValue(UserWithPendingLoginCode);
             vi.mocked(generateJwt).mockResolvedValue(SignedJwt);
@@ -180,6 +196,93 @@ describe('Auth methods code module', () => {
                 await expect(usersLoginRequest(buildUser())).rejects.toBe(entropyError);
                 expect(CodeRepository.userLoginRequest).not.toHaveBeenCalled();
             });
+
+            it('Hashes the short code with Argon2, and the long random tokens with the fast keyed hash', async () => {
+                await usersLoginRequest(buildUser());
+
+                expect(Securities.hashString).toHaveBeenCalledTimes(1);
+                expect(Securities.hashString).toHaveBeenCalledWith(expect.stringMatching(/^[A-Z0-9]{6}$/));
+                expect(Securities.hashToken).toHaveBeenCalledWith(ValidToken);
+                expect(Securities.hashToken).toHaveBeenCalledWith(BlockToken);
+            });
+
+            it('Refuses a new code without storing it when the daily limit of emails is reached', async () => {
+                vi.mocked(assertEmailCanBeSent).mockImplementationOnce(() => { throw new AppError("Emails are temporarily unavailable", 503); });
+
+                await expect(usersLoginRequest(buildUser())).rejects.toMatchObject({ httpStatus: 503 });
+                expect(Securities.generateApiToken).not.toHaveBeenCalled();
+                expect(CodeRepository.userLoginRequest).not.toHaveBeenCalled();
+            });
+        });
+
+
+        /*==========================*/
+        /* Codes sent without login */
+        /*==========================*/
+        describe('Login codes sent without a successful login', () => {
+            it('Keeps the base cooldown for the first 5 codes sent without a successful login', () => {
+                for (let codesSentWithoutLogin = 0; codesSentWithoutLogin < 5; codesSentWithoutLogin++) {
+                    expect(getLoginRequestCooldown(codesSentWithoutLogin)).toBe(AppConfig.login_request_cooldown);
+                }
+            });
+
+            it('Waits the extended cooldown between two codes once 5 codes were sent without a successful login', () => {
+                for (let codesSentWithoutLogin = 5; codesSentWithoutLogin <= 10; codesSentWithoutLogin++) {
+                    expect(getLoginRequestCooldown(codesSentWithoutLogin)).toBe(AppConfig.login_request_extended_cooldown);
+                }
+            });
+
+            it('Rejects a new code during the extended cooldown, even after the base cooldown', async () => {
+                const userAfterFiveCodes: User = buildUserAfterCodesWithoutLogin(5, 3 * OneMinute);
+
+                await expect(usersLoginRequest(userAfterFiveCodes)).rejects.toMatchObject({ httpStatus: 429 });
+                expect(CodeRepository.userLoginRequest).not.toHaveBeenCalled();
+            });
+
+            it('Accepts a new code after the extended cooldown, and gives this cooldown to the query which stores the code', async () => {
+                const userAfterFiveCodes: User = buildUserAfterCodesWithoutLogin(5, AfterExtendedCooldown);
+
+                await expect(usersLoginRequest(userAfterFiveCodes)).resolves.toBe(ValidToken);
+                expect(CodeRepository.userLoginRequest).toHaveBeenCalledWith(userAfterFiveCodes, expect.any(String), expect.any(String), expect.any(String), AppConfig.login_request_extended_cooldown);
+            });
+
+            it('Still sends the 10th code: only the request which follows it blocks the logins', async () => {
+                const userAfterNineCodes: User = buildUserAfterCodesWithoutLogin(9, AfterExtendedCooldown);
+
+                await expect(usersLoginRequest(userAfterNineCodes)).resolves.toBe(ValidToken);
+                expect(CodeRepository.blockLoginsAfterTooManyCodes).not.toHaveBeenCalled();
+            });
+
+            it('Keeps the 10th code usable until the extended cooldown is over', async () => {
+                const userAfterTenCodes: User = buildUserAfterCodesWithoutLogin(10, 3 * OneMinute);
+
+                await expect(usersLoginRequest(userAfterTenCodes)).rejects.toMatchObject({ httpStatus: 429 });
+                expect(CodeRepository.blockLoginsAfterTooManyCodes).not.toHaveBeenCalled();
+            });
+
+            it('Blocks the logins for the duration of the block link instead of sending an 11th code', async () => {
+                mockedAppConfig.app_env = "prod";
+                const userAfterTenCodes: User = buildUserAfterCodesWithoutLogin(10, AfterExtendedCooldown);
+
+                await expect(usersLoginRequest(userAfterTenCodes)).rejects.toMatchObject({ httpStatus: 403 });
+                expect(CodeRepository.blockLoginsAfterTooManyCodes).toHaveBeenCalledWith(userAfterTenCodes, AppConfig.login_block_duration);
+                expect(CodeRepository.userLoginRequest).not.toHaveBeenCalled();
+                expect(sendEmailCode).not.toHaveBeenCalled();
+            });
+
+            it('Writes the block in the logs with the identifier of the user, never with his email address', async () => {
+                const userAfterTenCodes: User = buildUserAfterCodesWithoutLogin(10, AfterExtendedCooldown);
+
+                await expect(usersLoginRequest(userAfterTenCodes)).rejects.toMatchObject({ httpStatus: 403 });
+                expect(logger.warning).toHaveBeenCalledWith(expect.stringContaining(`user-${userAfterTenCodes.id}`));
+                expect(logger.warning).not.toHaveBeenCalledWith(expect.stringContaining(userAfterTenCodes.email));
+            });
+
+            it('Does not make a user wait after a successful login, whatever the number of codes he received before', async () => {
+                const userJustLoggedIn: User = buildUser({ login_requests_without_login: 0, login_requested_at: new Date(), last_login: new Date() });
+
+                await expect(usersLoginRequest(userJustLoggedIn)).resolves.toBe(ValidToken);
+            });
         });
 
 
@@ -210,8 +313,18 @@ describe('Auth methods code module', () => {
                     login_requested_at: new Date(Date.now() - AppConfig.token_expiration - OneSecond),
                 };
 
-                await expect(usersLoginConfirm(userWithExpiredLoginCode, CorrectLoginConfirm)).rejects.toMatchObject({ httpStatus: 401 });
+                await expect(usersLoginConfirm(userWithExpiredLoginCode, CorrectLoginConfirm)).rejects.toMatchObject({ message: "Token has expired", httpStatus: 401 });
                 expect(CodeRepository.userLoginConfirm).not.toHaveBeenCalled();
+            });
+
+            it('Tells that a code expired only to the device which requested it, any other confirmation gets the refusal of a wrong token', async () => {
+                const userWithExpiredLoginCode: User = {
+                    ...UserWithPendingLoginCode,
+                    login_requested_at: new Date(Date.now() - AppConfig.token_expiration - OneSecond),
+                };
+                const loginConfirmWithWrongToken: UserLoginConfirm = { ...CorrectLoginConfirm, token: "wrong-token" };
+
+                await expect(usersLoginConfirm(userWithExpiredLoginCode, loginConfirmWithWrongToken)).rejects.toMatchObject({ message: INVALID_LOGIN_TOKEN_MESSAGE, httpStatus: 401 });
             });
 
             it('Rejects a wrong token without counting an attempt', async () => {
@@ -230,6 +343,13 @@ describe('Auth methods code module', () => {
                 expect(CodeRepository.userLoginConfirm).not.toHaveBeenCalled();
             });
 
+            it('Checks the login token with the fast keyed hash and the code with Argon2', async () => {
+                await usersLoginConfirm(UserWithPendingLoginCode, CorrectLoginConfirm);
+
+                expect(Securities.verifyToken).toHaveBeenCalledWith(ValidToken, UserWithPendingLoginCode.token_hash);
+                expect(Securities.verifyHash).toHaveBeenCalledWith(ValidCode, UserWithPendingLoginCode.secret_hash);
+            });
+
             it('Rejects the correct code when all the attempts are used', async () => {
                 vi.mocked(CodeRepository.consumeLoginCodeAttempt).mockResolvedValue(false);
 
@@ -245,6 +365,7 @@ describe('Auth methods code module', () => {
 /* Test data */
 /*===========*/
 const OneSecond: number = 1000;
+const OneMinute: number = 60 * OneSecond;
 const ValidToken: string = "valid-token";
 const BlockToken: string = "block-token";
 const ValidCode: string = "123456";
@@ -272,3 +393,20 @@ const CorrectLoginConfirm: UserLoginConfirm = {
     secret: ValidCode,
     ip: null,
 };
+
+/* Time since the last code which is just beyond the extended cooldown */
+const AfterExtendedCooldown: number = AppConfig.login_request_extended_cooldown + OneSecond;
+
+/**
+ * Builds a user who already received some login codes without a successful login, the last one still pending.
+ * @param codesSentWithoutLogin Number of codes sent since the last successful login.
+ * @param timeSinceLastCode Time since the last code was sent, in milliseconds.
+ * @returns The user who requests a new code.
+ */
+function buildUserAfterCodesWithoutLogin(codesSentWithoutLogin: number, timeSinceLastCode: number): User {
+    return {
+        ...UserWithPendingLoginCode,
+        login_requests_without_login: codesSentWithoutLogin,
+        login_requested_at: new Date(Date.now() - timeSinceLastCode),
+    };
+}

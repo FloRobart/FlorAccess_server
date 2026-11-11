@@ -13,9 +13,9 @@ vi.mock('dotenv', () => ({
 
 
 /**
- * AppConfig secrets tests
+ * AppConfig tests
  */
-describe('AppConfig secrets tests', () => {
+describe('AppConfig tests', () => {
     const originalEnvironment = process.env;
     let temporaryDirectory: string;
 
@@ -138,6 +138,76 @@ describe('AppConfig secrets tests', () => {
             process.env.JWT_SIGNING_KEY_FILE = writeSecretFile('jwt_signing_key', '\n');
 
             await expect(loadAppConfig()).rejects.toThrow('JWT_SIGNING_KEY or JWT_SIGNING_KEY_FILE must be set');
+        });
+    });
+
+
+    /*======================*/
+    /* Length of the tokens */
+    /*======================*/
+    describe('Length of the random tokens', () => {
+        beforeEach(() => {
+            process.env.JWT_SIGNING_KEY = 'jwt-from-variable';
+            delete process.env.TOKEN_LENGTH;
+        });
+
+
+        it('Uses 512 hexadecimal characters by default, so 256 random bytes', async () => {
+            const appConfig = await loadAppConfig();
+
+            expect(appConfig.token_length).toBe(256);
+        });
+
+        it('Accepts the minimum of 32 characters, and rounds an odd length up to whole bytes', async () => {
+            process.env.TOKEN_LENGTH = '32';
+            expect((await loadAppConfig()).token_length).toBe(16);
+
+            process.env.TOKEN_LENGTH = '65';
+            expect((await loadAppConfig()).token_length).toBe(33);
+        });
+
+        it('Stops below 32 characters, instead of running with tokens that could be guessed', async () => {
+            process.env.TOKEN_LENGTH = '8';
+
+            await expect(loadAppConfig()).rejects.toThrow('TOKEN_LENGTH must be at least 32');
+        });
+    });
+
+
+    /*============================*/
+    /* Limits of requests, emails */
+    /*============================*/
+    describe('Limits of the requests and of the emails', () => {
+        beforeEach(() => {
+            process.env.JWT_SIGNING_KEY = 'jwt-from-variable';
+
+            for (const variableName of ['AUTH_REQUEST_LIMIT', 'AUTH_REQUEST_LIMIT_TIME', 'EMAIL_REQUEST_LIMIT', 'EMAIL_DAILY_LIMIT', 'EMAIL_RESERVED_FOR_USERS']) {
+                delete process.env[variableName];
+            }
+        });
+
+
+        it('Allows 120 requests per hour on the authentication routes and 12 per hour on the routes which send emails, by default', async () => {
+            const appConfig = await loadAppConfig();
+
+            expect(appConfig.auth_request_limit).toBe(120);
+            expect(appConfig.auth_request_limit_time).toBe(60 * 60 * 1000);
+            expect(appConfig.email_request_limit).toBe(12);
+        });
+
+        it('Keeps a quarter of the daily limit of emails for the users by default', async () => {
+            process.env.EMAIL_DAILY_LIMIT = '200';
+
+            const appConfig = await loadAppConfig();
+
+            expect(appConfig.email_daily_limit).toBe(200);
+            expect(appConfig.email_reserved_for_users).toBe(50);
+        });
+
+        it('Reads the reserve of the users from its own variable', async () => {
+            process.env.EMAIL_RESERVED_FOR_USERS = '30';
+
+            expect((await loadAppConfig()).email_reserved_for_users).toBe(30);
         });
     });
 });

@@ -18,6 +18,7 @@ describe('Administrators schemas', () => {
 
             expect(userAdmin).toHaveProperty("is_admin");
             expect(userAdmin).toHaveProperty("last_ip");
+            expect(userAdmin).toHaveProperty("login_blocked_until");
             expect(userAdmin).not.toHaveProperty("secret_hash");
             expect(userAdmin).not.toHaveProperty("token_hash");
         });
@@ -67,6 +68,10 @@ describe('Administrators schemas', () => {
 
         it('Ignores the fields an administrator can not change', () => {
             expect(UserAdminUpdateSchema.parse({ id: 2, is_admin: true, created_at: new Date() })).toStrictEqual({});
+        });
+
+        it('Ignores the block of the logins, which is lifted by its own route', () => {
+            expect(UserAdminUpdateSchema.parse({ login_blocked_until: null })).toStrictEqual({});
         });
 
         it('Refuses an invalid value', () => {

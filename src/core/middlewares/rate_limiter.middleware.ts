@@ -3,13 +3,17 @@ import AppConfig from "../../config/AppConfig";
 
 
 
+export const TOO_MANY_REQUESTS_MESSAGE = "Too many requests, please try again later.";
+
+
+
 /**
  * Options shared by all the rate limiters of the API.
  */
 const sharedOptions: Partial<Options> = {
-    // Return JSON response for 429 so clients (like the swagger UI) can handle it cleanly
+    /* A JSON string, like every other error of the API: the clients read all the errors the same way */
     handler: (_req, res) => {
-        res.status(429).json({ error: "Too many requests, please try again later." });
+        res.status(429).json(TOO_MANY_REQUESTS_MESSAGE);
     },
     // Enable standard rate limit headers and disable legacy ones
     standardHeaders: true,
@@ -41,4 +45,19 @@ export const authLimiter = rateLimit({
     ...sharedOptions,
     windowMs: AppConfig.auth_request_limit_time,
     max: AppConfig.auth_request_limit,
+});
+
+
+/**
+ * Rate limiter for the routes which make the API send emails
+ * (registration, login code, change of email address, emails of the administrators).
+ * Each of these requests costs at least one email of the daily quota of the mail account : a single IP address
+ * must not be able to use up this quota, which would stop the login codes of every user.
+ *
+ * @module middlewares/emailLimiter
+ */
+export const emailLimiter = rateLimit({
+    ...sharedOptions,
+    windowMs: AppConfig.email_request_limit_time,
+    max: AppConfig.email_request_limit,
 });
