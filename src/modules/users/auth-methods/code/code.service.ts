@@ -4,15 +4,26 @@ import { sendEmailCode } from "./code.email";
 import * as CodeRepository from "./code.repository";
 import * as UsersRepository from "../../users.repository";
 import { getRandomValues } from "node:crypto";
-import { generateApiToken, generateSecureRandomDelay, hashString, verifyHash } from "../../../../core/utils/securities";
+import { generateApiToken, generateSecureRandomDelay, hashString, hashToken, verifyHash, verifyToken } from "../../../../core/utils/securities";
 import { generateJwt } from "../../../../core/utils/jwt";
 import { UserSafeSchema } from "../../users.schema";
 import logger from "../../../../core/utils/logger";
 import { AppError } from "../../../../core/models/AppError.model";
+import { assertEmailCanBeSent } from "../../../../core/email/mailer";
 
 
+
+/* Refusal of a confirmation without the right token or code: the same for every account, known or not */
+export const INVALID_LOGIN_TOKEN_MESSAGE = "Invalid token";
 
 const LOGIN_REQUEST_COOLDOWN_MESSAGE = "A login code was sent recently. Please wait before requesting a new one";
+const TOO_MANY_LOGIN_CODES_MESSAGE = "Too many login codes were sent without a successful login, the logins of this account are temporarily blocked";
+
+/* Number of login codes which can be sent without a successful login before the extended cooldown applies */
+const LOGIN_CODES_BEFORE_EXTENDED_COOLDOWN = 5;
+
+/* Number of login codes sent without a successful login after which the logins of the account are blocked */
+const LOGIN_CODES_BEFORE_LOGIN_BLOCK = 10;
 
 
 
@@ -23,16 +34,31 @@ const LOGIN_REQUEST_COOLDOWN_MESSAGE = "A login code was sent recently. Please w
  */
 export async function usersLoginRequest(user: User): Promise<string> {
     try {
+        const cooldown: number = getLoginRequestCooldown(user.login_requests_without_login);
+
         /* Early refusal which avoids the cost of the hashes, the query below is the one which enforces the cooldown. */
-        if (isLoginRequestInCooldown(user)) {
+        if (isLoginRequestInCooldown(user, cooldown)) {
             throw new AppError(LOGIN_REQUEST_COOLDOWN_MESSAGE, 429);
         }
 
-        /* Generated and hashed together, because each of these steps is slow on purpose */
-        const [token, blockToken, code] = await Promise.all([generateApiToken(), generateApiToken(), generateCode(6)]);
-        const [tokenHash, blockTokenHash, codeHash] = await Promise.all([hashString(token), hashString(blockToken), hashString(code)]);
+        /* Checked after the cooldown, so that the last code stays usable until the time between two codes is over. */
+        /* The block lasts as long as the one of the block link, then the count of the codes starts again from zero. */
+        if (hasTooManyLoginCodesWithoutLogin(user)) {
+            await CodeRepository.blockLoginsAfterTooManyCodes(user, AppConfig.login_block_duration);
+            logger.warning(`Logins of user-${user.id} blocked: ${user.login_requests_without_login} login codes were sent without a successful login`);
+            throw new AppError(TOO_MANY_LOGIN_CODES_MESSAGE, 403);
+        }
 
-        const isLoginCodeStored = await CodeRepository.userLoginRequest(user, tokenHash, codeHash, blockTokenHash, AppConfig.login_request_cooldown);
+        /* Checked before the code is stored: a code which can not be sent must not count, nor start a cooldown */
+        assertEmailCanBeSent();
+
+        /* Generated together, because each of these steps waits a random delay on purpose */
+        const [token, blockToken, code] = await Promise.all([generateApiToken(), generateApiToken(), generateCode(6)]);
+
+        /* Only the short code needs the slow Argon2 hash, the long random tokens use a fast keyed hash */
+        const codeHash: string = await hashString(code);
+
+        const isLoginCodeStored = await CodeRepository.userLoginRequest(user, hashToken(token), codeHash, hashToken(blockToken), cooldown);
         if (!isLoginCodeStored) {
             throw new AppError(LOGIN_REQUEST_COOLDOWN_MESSAGE, 429);
         }
@@ -62,17 +88,18 @@ export async function usersLoginRequest(user: User): Promise<string> {
 export async function usersLoginConfirm(user: User, userLoginConfirm: UserLoginConfirm): Promise<string> {
     try {
         if (user.secret_hash === null || user.token_hash === null || user.login_requested_at === null) {
-            throw new AppError("Invalid token", 401);
+            throw new AppError(INVALID_LOGIN_TOKEN_MESSAGE, 401);
+        }
+
+        /* The token proves that the confirmation comes from the device which requested the code. */
+        /* Until it is checked, every refusal is the same: a confirmation must not tell anything about the account of an address. */
+        /* It is also checked before an attempt is counted, so that a third party can not use up the attempts of the user. */
+        if (!(await verifyToken(userLoginConfirm.token, user.token_hash))) {
+            throw new AppError(INVALID_LOGIN_TOKEN_MESSAGE, 401);
         }
 
         if (isLoginCodeExpired(user.login_requested_at)) {
             throw new AppError("Token has expired", 401);
-        }
-
-        /* The token proves that the confirmation comes from the device which requested the code. */
-        /* It is checked before an attempt is counted, so that a third party can not use up the attempts of the user. */
-        if (!(await verifyHash(userLoginConfirm.token, user.token_hash))) {
-            throw new AppError("Invalid token", 401);
         }
 
         const hasAttemptLeft = await CodeRepository.consumeLoginCodeAttempt(user.id, user.token_hash, AppConfig.login_code_max_attempts);
@@ -81,7 +108,7 @@ export async function usersLoginConfirm(user: User, userLoginConfirm: UserLoginC
         }
 
         if (!(await verifyHash(userLoginConfirm.secret, user.secret_hash))) {
-            throw new AppError("Invalid token", 401);
+            throw new AppError(INVALID_LOGIN_TOKEN_MESSAGE, 401);
         }
 
 
@@ -97,18 +124,48 @@ export async function usersLoginConfirm(user: User, userLoginConfirm: UserLoginC
 
 
 /**
+ * Computes the minimum time between the last login code of a user and the next one.
+ *
+ * The first codes are only separated by the base cooldown. Once LOGIN_CODES_BEFORE_EXTENDED_COOLDOWN codes were sent
+ * without a successful login, each new code needs the extended cooldown: someone who tries to guess the codes of an account
+ * is slowed down, while a user who logs in normally never waits more than the base cooldown.
+ * A successful login starts the count again.
+ * @param codesSentWithoutLogin Number of login codes sent since the last successful login.
+ * @returns The cooldown in milliseconds.
+ */
+export function getLoginRequestCooldown(codesSentWithoutLogin: number): number {
+    if (codesSentWithoutLogin < LOGIN_CODES_BEFORE_EXTENDED_COOLDOWN) { return AppConfig.login_request_cooldown; }
+
+    return AppConfig.login_request_extended_cooldown;
+}
+
+
+/**
+ * Checks if a user received so many login codes without a successful login that his logins must be blocked.
+ *
+ * Nobody who owns the email address fails so many codes in a row: someone is trying to guess the codes of this account.
+ * @param user The user who requests a new login code.
+ * @returns True if the logins of the user must be blocked instead of sending him a new code.
+ */
+function hasTooManyLoginCodesWithoutLogin(user: User): boolean {
+    return user.login_requests_without_login >= LOGIN_CODES_BEFORE_LOGIN_BLOCK;
+}
+
+
+/**
  * Checks if a login code is pending and was sent too recently to send another one.
  *
  * Without this delay, the limit of attempts per code could be bypassed by requesting new codes in a loop.
  * A code which was already used does not start a cooldown, so that a user can log in again right after a logout.
  * @param user The user who requests a new login code.
+ * @param cooldown The minimum time between two login codes for this user, in milliseconds.
  * @returns True if the user has to wait before requesting a new code.
  */
-function isLoginRequestInCooldown(user: User): boolean {
+function isLoginRequestInCooldown(user: User, cooldown: number): boolean {
     if (user.secret_hash === null || user.login_requested_at === null) { return false; }
 
     const timeSinceLastRequest = Date.now() - user.login_requested_at.getTime();
-    return timeSinceLastRequest < AppConfig.login_request_cooldown;
+    return timeSinceLastRequest < cooldown;
 }
 
 

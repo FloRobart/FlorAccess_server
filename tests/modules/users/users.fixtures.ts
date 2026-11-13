@@ -28,6 +28,7 @@ export function buildUser(overrides: Partial<User> = {}): User {
         token_hash: null,
         login_requested_at: null,
         login_code_attempts: 0,
+        login_requests_without_login: 0,
         login_block_token_hash: null,
         login_blocked_until: null,
 

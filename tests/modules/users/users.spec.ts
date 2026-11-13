@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { ZodError } from "zod";
 import { AuthorizationHeaderSchema, IPAddressSchema, UserInsertSchema, UserLoginBlockSchema, UserLoginConfirmSchema, UserLoginRequestSchema, UserSafeSchema, UserSchema, UserUpdateSchema, UserEmailVerificationSchema } from "../../../src/modules/users/users.schema";
 import { AuthorizationHeader, InsertUser, IPAddress, UpdateUser, User, UserLoginConfirm, UserSafe, UserEmailVerification } from "../../../src/modules/users/users.types";
@@ -155,6 +156,12 @@ describe('Users Schemas tests', () => {
                 expect(() => UserLoginConfirmSchema.parse(data)).not.toThrow();
                 expect(UserLoginConfirmSchema.parse(data)).toStrictEqual(CorrectUserLoginConfirmSchema[0]);
             }
+        });
+
+        it('Sets the IP address to null when it is not given', () => {
+            const { ip: _ip, ...loginConfirmWithoutIp } = CorrectUserLoginConfirmSchema[0];
+
+            expect(UserLoginConfirmSchema.parse(loginConfirmWithoutIp)).toStrictEqual({ ...loginConfirmWithoutIp, ip: null });
         });
 
         it('Incorrect User Login Confirm schema', () => {
@@ -384,6 +391,7 @@ const BaseUserSchema: User = {
     token_hash: "hashed_token",
     login_requested_at: new Date(),
     login_code_attempts: 0,
+    login_requests_without_login: 0,
     login_block_token_hash: "hashed_block_token",
     login_blocked_until: new Date(),
     is_admin: false,
@@ -431,6 +439,9 @@ const IncorrectUserSchema: any[] = [
     },{
         ...BaseUserSafeSchema,
         token_hash: 123456, // should be string or null
+    },{
+        ...BaseUserSchema,
+        login_requests_without_login: -1, // should be positive
     },
 ];
 

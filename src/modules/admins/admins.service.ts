@@ -5,13 +5,12 @@ import * as AdminsRepository from "./admins.repository";
 import { ZodError } from "zod";
 import { AppError } from "../../core/models/AppError.model";
 import { UserAdminSchema } from "./admins.schema";
-import { insertUser as UsersService_InsertUser, sendVerificationEmail as UsersService_sendVerificationEmail } from "../users/users.service";
-import { getUser as UsersRepository_SelectUser, _getUserById, updateUserEmailVerifyTokenHash } from "../users/users.repository";
-import { verifyJwt } from "../../core/utils/jwt";
-import { generateApiToken, hashString } from "../../core/utils/securities";
+import { createUserAndSendVerificationEmail as UsersService_CreateUser, sendVerificationEmail as UsersService_sendVerificationEmail } from "../users/users.service";
+import { _getUserById, updateUserEmailVerifyTokenHash } from "../users/users.repository";
+import { generateApiToken, hashToken } from "../../core/utils/securities";
 import logger from "../../core/utils/logger";
 import AppConfig from "../../config/AppConfig";
-import sendEmail from "../../core/email/mailer";
+import sendEmail, { assertAdminEmailsCanBeSent, assertEmailCanBeSent } from "../../core/email/mailer";
 import { getEmailTemplate } from "../../core/email/get_email_template";
 
 
@@ -43,15 +42,15 @@ export async function isAdmin(userSafe: UserSafe): Promise<boolean> {
  */
 export async function insertUser(user: InsertUser, application: string): Promise<UserAdmin> {
     try {
-        /* Insert user and get JWT */
-        const jwt: string = await UsersService_InsertUser(user, null, application, null);
-        const decodedUserSafe = verifyJwt(jwt);
+        /* The new user receives a verification email: nothing is created if it can not be sent */
+        assertAdminEmailsCanBeSent(1);
 
-        /* Retrieve full user info */
-        const selectedUser: User = await UsersRepository_SelectUser(decodedUserSafe);
+        /* Insert user */
+        const insertedUser: User | null = await UsersService_CreateUser(user, null, application, null);
+        if (insertedUser === null) { throw new AppError('A user with this email already exists', 409); }
 
         /* Set is_connected to false for admin insertion */
-        const finalUser: User = await AdminsRepository.updateUser({ is_connected: false }, selectedUser);
+        const finalUser: User = await AdminsRepository.updateUser({ is_connected: false }, insertedUser);
         const finalUserAdmin: UserAdmin = UserAdminSchema.parse(finalUser);
 
         /* Return final user admin */
@@ -77,7 +76,6 @@ export async function selectUsers(queryParams: AuthorizedQueryParams): Promise<U
         const users: User[] = await AdminsRepository.selectUsers(queryParams);
         return UserAdminSchema.array().parse(users);
     } catch (error) {
-        console.debug("AdminsService.selectUsers - error:", error);
         if (error instanceof ZodError) { throw new AppError('Data validation error', 500); }
         if (error instanceof AppError) { throw error; }
         throw new AppError('Unknown error in admin selectUsers', 500);
@@ -105,7 +103,6 @@ export async function updateUser(userId: number, updateUserData: UserAdminUpdate
     try {
         /* Retrieve current user data */
         const currentUser: User = await _getUserById(userId);
-        console.debug("AdminsService.updateUser - currentUser:", currentUser);
 
         /* Update user data */
         const updatedUser: User = await AdminsRepository.updateUser(updateUserData, currentUser);
@@ -117,6 +114,26 @@ export async function updateUser(userId: number, updateUserData: UserAdminUpdate
         if (error instanceof ZodError) { throw new AppError('Data validation error', 500); }
         if (error instanceof AppError) { throw error; }
         throw new AppError('Unknown error in admin updateUser', 500);
+    }
+}
+
+
+/**
+ * Unblocks the logins of a user, blocked by his block link or after too many login codes sent without a successful login.
+ * @param userId The ID of the user to unblock.
+ * @returns The unblocked UserAdmin object.
+ * @throws AppError 404 if no user has this ID, 500 if the stored user is not valid.
+ */
+export async function unblockUserLogin(userId: number): Promise<UserAdmin> {
+    try {
+        const unblockedUser: User = await AdminsRepository.unblockUserLogin(userId);
+        logger.info(`Logins of user-${userId} unblocked by an administrator`);
+
+        return UserAdminSchema.parse(unblockedUser);
+    } catch (error) {
+        if (error instanceof ZodError) { throw new AppError('Data validation error', 500); }
+        if (error instanceof AppError) { throw error; }
+        throw new AppError('Unknown error in admin unblockUserLogin', 500);
     }
 }
 
@@ -145,26 +162,30 @@ export async function deleteUser(userId: number): Promise<void> {
  * Sends verification emails to a list of users.
  * @param userIdList The list of user IDs to send verification emails to.
  * @returns List of user IDs for whom the email was sent.
- * @throws AppError if email sending fails.
+ * @throws AppError 404 if an ID belongs to no user, 503 if the emails left today are not enough, or if email sending fails.
  */
 export async function sendVerifyEmail(userIdList: number[]): Promise<UserIdList> {
     try {
+        /* Checked for the whole list before the first email: the sending reaches every user or none of them */
+        const users: User[] = await getUsersById(userIdList);
+        assertAdminEmailsCanBeSent(users.length);
+
         const userIdListSuccess: UserIdList = [];
-        for (const userId of userIdList) {
-            /* Retrieve user info */
-            const user: User = await _getUserById(userId);
+        for (const user of users) {
+            /* The current link of the user must stay valid if the new one can not be sent */
+            assertEmailCanBeSent();
 
             /* Generate email verification token */
             const email_verify_token = await generateApiToken();
 
             /* Update email_verify_token_hash in database */
-            await updateUserEmailVerifyTokenHash(userId, await hashString(email_verify_token));
+            await updateUserEmailVerifyTokenHash(user.id, hashToken(email_verify_token));
 
             /* Send verification email */
-            await UsersService_sendVerificationEmail(userId, user.email, email_verify_token);
+            await UsersService_sendVerificationEmail(user.id, user.email, email_verify_token);
 
             /* Add userId to success list */
-            userIdListSuccess.push(userId);
+            userIdListSuccess.push(user.id);
         }
 
         /* Return list of userIds for whom the email was sent */
@@ -179,14 +200,16 @@ export async function sendVerifyEmail(userIdList: number[]): Promise<UserIdList>
  * Sends emails to a list of users.
  * @param emailData The email data containing userIdList, object, and message.
  * @returns List of user IDs for whom the email was sent.
+ * @throws AppError 404 if an ID belongs to no user, 503 if the emails left today are not enough, or if email sending fails.
  */
 export async function sendEmailAdmin(emailData: EmailAdmin): Promise<UserIdList> {
     try {
-        const userIdListSuccess: UserIdList = [];
-        for (const userId of emailData.userIdList) {
-            /* Retrieve user info */
-            const user: User = await _getUserById(userId);
+        /* Checked for the whole list before the first email: the sending reaches every user or none of them */
+        const users: User[] = await getUsersById(emailData.userIdList);
+        assertAdminEmailsCanBeSent(users.length);
 
+        const userIdListSuccess: UserIdList = [];
+        for (const user of users) {
             /* Send email */
             logger.debug(`Sending email to ${user.email} with object "${emailData.object}" and message "${emailData.message}"`);
             if (!AppConfig.app_env.includes('dev')) {
@@ -198,7 +221,7 @@ export async function sendEmailAdmin(emailData: EmailAdmin): Promise<UserIdList>
             }
 
             /* Add userId to success list */
-            userIdListSuccess.push(userId);
+            userIdListSuccess.push(user.id);
         }
 
         /* Return list of userIds for whom the email was sent */
@@ -207,4 +230,15 @@ export async function sendEmailAdmin(emailData: EmailAdmin): Promise<UserIdList>
         if (error instanceof AppError) { throw error; }
         throw new AppError('Unknown error in sendEmailAdmin', 500);
     }
+}
+
+
+/**
+ * Reads the users targeted by a sending of the administrators.
+ * @param userIdList The IDs of the users.
+ * @returns The users, in the order of their IDs.
+ * @throws AppError 404 if an ID belongs to no user.
+ */
+async function getUsersById(userIdList: number[]): Promise<User[]> {
+    return await Promise.all(userIdList.map((userId: number) => _getUserById(userId)));
 }

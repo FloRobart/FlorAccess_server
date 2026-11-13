@@ -91,6 +91,24 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
     }
 };
 
+/**
+ * Unblocks the logins of a user.
+ * @param req Request object containing the user ID to unblock
+ * @param res Response object
+ * @param next NextFunction for error handling
+ * @returns Unblocked UserAdmin object or error response
+ */
+export const unblockUserLogin = async (req: Request, res: Response, next: NextFunction) => {
+    const userId: number = UserIdSchema.parse(req.body.validatedData).userId;
+
+    try {
+        const unblockedUser: UserAdmin = await AdminsService.unblockUserLogin(userId);
+        res.status(200).json(unblockedUser);
+    } catch (error) {
+        next(error);
+    }
+};
+
 
 /*========*/
 /* DELETE */

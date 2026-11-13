@@ -19,6 +19,8 @@
  *         - last_ip
  *         - created_at
  *         - updated_at
+ *         - is_admin
+ *         - login_blocked_until
  *       properties:
  *         id:
  *           type: number
@@ -53,6 +55,14 @@
  *         updated_at:
  *           type: Date
  *           example: "2025-10-10T20:16:25.183Z"
+ *         is_admin:
+ *           type: boolean
+ *           example: false
+ *         login_blocked_until:
+ *           type: Date
+ *           nullable: true
+ *           description: End of the block of the logins. The logins are not blocked when it is null or in the past
+ *           example: "2025-10-11T20:16:25.183Z"
  */
 
 
