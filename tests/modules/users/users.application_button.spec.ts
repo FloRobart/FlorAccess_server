@@ -1,5 +1,6 @@
 import type { User, UserEmailVerification } from "../../../src/modules/users/users.types";
 
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { UserEmailVerify } from "../../../src/modules/users/users.service";
 import * as UsersRepository from "../../../src/modules/users/users.repository";
 import { getEmailTemplate } from "../../../src/core/email/get_email_template";
@@ -7,8 +8,7 @@ import { getEmailTemplate } from "../../../src/core/email/get_email_template";
 
 
 /* The applications allowed to use the API are the origins of the CORS configuration */
-jest.mock("../../../src/config/AppConfig", () => ({
-    __esModule: true,
+vi.mock("../../../src/config/AppConfig", () => ({
     default: {
         app_env: "dev",
         app_name: "Floraccess",
@@ -20,42 +20,41 @@ jest.mock("../../../src/config/AppConfig", () => ({
 }));
 
 /* The database, the hashing, the emails and the HTML pages are replaced, only the rules of the service are tested */
-jest.mock("../../../src/modules/users/users.repository", () => ({
-    _getUserById: jest.fn(),
-    UserEmailVerify: jest.fn(),
+vi.mock("../../../src/modules/users/users.repository", () => ({
+    _getUserById: vi.fn(),
+    UserEmailVerify: vi.fn(),
 }));
 
-jest.mock("../../../src/core/utils/securities", () => ({
-    generateApiToken: jest.fn(),
-    hashString: jest.fn(),
-    verifyHash: jest.fn(),
+vi.mock("../../../src/core/utils/securities", () => ({
+    generateApiToken: vi.fn(),
+    hashString: vi.fn(),
+    verifyHash: vi.fn(),
 }));
 
-jest.mock("../../../src/core/email/get_email_template", () => ({
-    getEmailTemplate: jest.fn(),
+vi.mock("../../../src/core/email/get_email_template", () => ({
+    getEmailTemplate: vi.fn(),
 }));
 
-jest.mock("../../../src/modules/users/users.email", () => ({
-    sendEmailVerify: jest.fn(),
+vi.mock("../../../src/modules/users/users.email", () => ({
+    sendEmailVerify: vi.fn(),
 }));
 
-jest.mock("../../../src/core/utils/jwt", () => ({
-    generateJwt: jest.fn(),
-    verifyJwt: jest.fn(),
+vi.mock("../../../src/core/utils/jwt", () => ({
+    generateJwt: vi.fn(),
+    verifyJwt: vi.fn(),
 }));
 
-jest.mock("../../../src/core/dispatcher/login.dispatcher", () => ({
-    loginDispatcher: jest.fn(),
+vi.mock("../../../src/core/dispatcher/login.dispatcher", () => ({
+    loginDispatcher: vi.fn(),
 }));
 
-jest.mock("../../../src/core/utils/logger", () => ({
-    __esModule: true,
+vi.mock("../../../src/core/utils/logger", () => ({
     default: {
-        error: jest.fn(),
-        warning: jest.fn(),
-        success: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn(),
+        error: vi.fn(),
+        warning: vi.fn(),
+        success: vi.fn(),
+        info: vi.fn(),
+        debug: vi.fn(),
     },
 }));
 
@@ -66,10 +65,10 @@ jest.mock("../../../src/core/utils/logger", () => ({
  */
 describe('Application button of the email verification page', () => {
     beforeEach(() => {
-        jest.mocked(UsersRepository._getUserById).mockResolvedValue(VerifiedUser);
+        vi.mocked(UsersRepository._getUserById).mockResolvedValue(VerifiedUser);
 
         /* The page is reduced to its button, which is the only part tested here */
-        jest.mocked(getEmailTemplate).mockImplementation(async (_templateName, _variables, rawHtmlVariables) => rawHtmlVariables?.button ?? "");
+        vi.mocked(getEmailTemplate).mockImplementation(async (_templateName, _variables, rawHtmlVariables) => rawHtmlVariables?.button ?? "");
     });
 
 

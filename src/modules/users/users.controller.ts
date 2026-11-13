@@ -1,4 +1,4 @@
-import type { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm, UserLoginBlock, UserEmailVerification } from './users.types';
+import type { InsertUser, IPAddress, UserLoginRequest, UpdateUser, UserSafe, UserLoginConfirm, UserLoginBlock, UserEmailVerification, UserUpdateResult } from './users.types';
 
 import { Request, Response, NextFunction } from 'express';
 import * as UsersService from './users.service';
@@ -8,13 +8,20 @@ import AppConfig from '../../config/AppConfig';
 
 
 
+/* Same answer whether the address was free or already used: these routes must not reveal which accounts exist */
+export const REGISTRATION_MESSAGE = "If this email address can be used, a verification link has been sent to it. Confirm the address, then log in with a code.";
+export const EMAIL_CHANGE_MESSAGE = "If this email address can be used, a verification link has been sent to it. All the sessions of the account are closed: log in again with a code sent to the new address.";
+
+
+
 /**
  * Registers a new user with the provided information.
+ * No JWT is given before the email address is proven: the user logs in with a code once registered.
  * @param req.body.validated insertUser object containing the information of the user to create
  * @param req.ip IP address of the user
  * @param req.query.application Application name from which the user is being created
  * @param req.query.domain Domain associated with the user
- * @returns JWT for the newly created user or error response
+ * @returns 202 with a message, or error response
  */
 export const insertUser = async (req: Request, res: Response, next: NextFunction) => {
     const insertUser: InsertUser = UsersSchema.UserInsertSchema.parse(req.body.validatedData);
@@ -24,8 +31,8 @@ export const insertUser = async (req: Request, res: Response, next: NextFunction
     const domain: string | null = userApplication.domain || null;
 
     try {
-        const jwt: string = await UsersService.insertUser(insertUser, ip, application, domain);
-        res.status(201).json({ jwt: jwt });
+        await UsersService.insertUser(insertUser, ip, application, domain);
+        res.status(202).json({ message: REGISTRATION_MESSAGE });
     } catch (error) {
         next(error);
     }
@@ -68,17 +75,23 @@ export const regenerateJwt = async (req: Request, res: Response, next: NextFunct
 
 /**
  * Updates a user's information
+ * A change of email address gives no JWT: the sessions are closed until the new address is proven.
  * @param req.headers.authorization Authorization header containing the JWT
  * @param req.body.validated updateUser object with the updated user information
- * @returns Updated JWT or error response
+ * @returns Updated JWT, 202 with a message if the email address changed, or error response
  */
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     const updateUser: UpdateUser = UsersSchema.UserUpdateSchema.parse(req.body.validatedData);
     const jwt: string = req.headers.authorization!.split(' ')[1];
 
     try {
-        const newJwt: string = await UsersService.updateUser(updateUser, jwt);
-        res.status(200).json({ jwt: newJwt });
+        const updateResult: UserUpdateResult = await UsersService.updateUser(updateUser, jwt);
+        if (updateResult.isEmailChanged) {
+            res.status(202).json({ message: EMAIL_CHANGE_MESSAGE });
+            return;
+        }
+
+        res.status(200).json({ jwt: updateResult.jwt });
     } catch (error) {
         next(error);
     }

@@ -1,12 +1,22 @@
 import AppConfig from '../../config/AppConfig';
-import JWT from 'jsonwebtoken';
+import JWT, { type Algorithm } from 'jsonwebtoken';
 import { UserSafe } from '../../modules/users/users.types';
 import { AppError } from '../models/AppError.model';
 
 
 
+/* The only algorithm of the JWT of this API: a JWT signed with another one is refused, whatever its header says */
+const JWT_ALGORITHM: Algorithm = 'HS256';
+
+const MILLISECONDS_PER_SECOND = 1000;
+
+
+
 /**
  * Generates a JWT for a user.
+ *
+ * The JWT never outlives its session: a JWT regenerated just before the maximum session duration
+ * expires with the session, instead of extending it by a whole JWT duration.
  * @param payload User object to generate JWT for
  * @param sessionStartedAt Date of the login which opened the session, in milliseconds. A regenerated JWT must keep the date of its original login.
  * @returns JWT as a string
@@ -14,7 +24,9 @@ import { AppError } from '../models/AppError.model';
 export async function generateJwt(payload: { [key: string|number]: any }, sessionStartedAt: number = Date.now()): Promise<string> {
     try {
         const validatedPayload = { ...payload, session_started_at: sessionStartedAt };
-        return JWT.sign(validatedPayload, AppConfig.jwt_signing_key, { expiresIn: AppConfig.jwt_expiration });
+        const jwtDurationInSeconds: number = Math.min(AppConfig.jwt_expiration, getSecondsLeftInSession(sessionStartedAt));
+
+        return JWT.sign(validatedPayload, AppConfig.jwt_signing_key, { algorithm: JWT_ALGORITHM, expiresIn: jwtDurationInSeconds });
     } catch (error) {
         throw new AppError("Failed to generate JWT", 500);
     }
@@ -34,8 +46,8 @@ export async function generateJwt(payload: { [key: string|number]: any }, sessio
 export async function renewJwt(currentToken: string, payload: { [key: string|number]: any }): Promise<string> {
     const sessionStartedAt = getSessionStartDate(currentToken);
 
-    const sessionAge = Date.now() - sessionStartedAt;
-    if (sessionAge > AppConfig.session_max_duration) {
+    /* Less than one second left: the new JWT would already be expired when the client receives it */
+    if (getSecondsLeftInSession(sessionStartedAt) < 1) {
         throw new AppError("Session expired, please log in again", 401);
     }
 
@@ -50,7 +62,7 @@ export async function renewJwt(currentToken: string, payload: { [key: string|num
  */
 export function verifyJwt(token: string): UserSafe {
     try {
-        const decoded = JWT.verify(token, AppConfig.jwt_signing_key);
+        const decoded = JWT.verify(token, AppConfig.jwt_signing_key, { algorithms: [JWT_ALGORITHM] });
         return decoded as UserSafe;
     } catch (error) {
         throw new AppError("Invalid JWT", 401);
@@ -69,9 +81,8 @@ export function verifyJwt(token: string): UserSafe {
  * @returns True if the user logged out since the JWT was issued
  */
 export function isJwtFromClosedSession(jwtUser: UserSafe, lastLogoutAt: Date): boolean {
-    const millisecondsPerSecond = 1000;
-    const jwtLastLogoutInSeconds = Math.floor(new Date(jwtUser.last_logout_at).getTime() / millisecondsPerSecond);
-    const lastLogoutInSeconds = Math.floor(lastLogoutAt.getTime() / millisecondsPerSecond);
+    const jwtLastLogoutInSeconds = Math.floor(new Date(jwtUser.last_logout_at).getTime() / MILLISECONDS_PER_SECOND);
+    const lastLogoutInSeconds = Math.floor(lastLogoutAt.getTime() / MILLISECONDS_PER_SECOND);
 
     return jwtLastLogoutInSeconds !== lastLogoutInSeconds;
 }
@@ -88,6 +99,17 @@ function getSessionStartDate(token: string): number {
     if (typeof decoded.session_started_at === "number") { return decoded.session_started_at; }
 
     /* The JWT issued before this date existed do not carry it : their session is considered to start when they were issued */
-    const millisecondsPerSecond = 1000;
-    return (decoded.iat ?? 0) * millisecondsPerSecond;
+    return (decoded.iat ?? 0) * MILLISECONDS_PER_SECOND;
+}
+
+
+/**
+ * Computes the time left before the end of a session: no JWT of this session can be valid after it.
+ * @param sessionStartedAt Date of the login which opened the session, in milliseconds
+ * @returns Whole seconds left before the maximum session duration is reached, zero or negative once it is reached
+ */
+function getSecondsLeftInSession(sessionStartedAt: number): number {
+    const sessionEnd: number = sessionStartedAt + AppConfig.session_max_duration;
+
+    return Math.floor((sessionEnd - Date.now()) / MILLISECONDS_PER_SECOND);
 }

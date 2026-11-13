@@ -5,15 +5,16 @@ import { getEmailTemplate } from '../../core/email/get_email_template';
 
 
 /**
- * Sends an email for user connection verification.
- * This function sends an email to the user with a link to verify their connection.
+ * Sends the email which verifies the email address of a user.
+ *
+ * The name written in the email is always the one of this API: a name chosen by the client
+ * would let anyone send emails with the text of his choice from the address of the API.
  * @param to Email address of the recipient
- * @param app_name Name of the application to be used in the email subject
  * @param url Verification URL to be included in the email body
  */
-export async function sendEmailVerify(to: string, app_name: string, url: string): Promise<void> {
+export async function sendEmailVerify(to: string, url: string): Promise<void> {
     try {
-        const appName = app_name || AppConfig.app_name;
+        const appName = AppConfig.app_name;
         const html = await getEmailTemplate('email_verification_email', {
             appName: appName,
             url: url,

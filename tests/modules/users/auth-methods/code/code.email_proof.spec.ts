@@ -1,5 +1,6 @@
 import type { User, UserLoginConfirm } from "../../../../../src/modules/users/users.types";
 
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { usersLoginConfirm } from "../../../../../src/modules/users/auth-methods/code/code.service";
 import * as CodeRepository from "../../../../../src/modules/users/auth-methods/code/code.repository";
 import * as UsersRepository from "../../../../../src/modules/users/users.repository";
@@ -10,39 +11,40 @@ import { generateJwt } from "../../../../../src/core/utils/jwt";
 
 /* The database, the hashing, the emails and the JWT are replaced, only the rules of the service are tested. */
 /* consumeLoginCodeAttempt only exists on the branch fix/login-code-bruteforce : this test then stays valid whatever the order of the merges */
-jest.mock("../../../../../src/modules/users/auth-methods/code/code.repository", () => ({
-    userLoginRequest: jest.fn(),
-    userLoginConfirm: jest.fn(),
-    consumeLoginCodeAttempt: jest.fn(async () => true),
+vi.mock("../../../../../src/modules/users/auth-methods/code/code.repository", () => ({
+    userLoginRequest: vi.fn(),
+    userLoginConfirm: vi.fn(),
+    consumeLoginCodeAttempt: vi.fn(async () => true),
 }));
 
-jest.mock("../../../../../src/modules/users/users.repository", () => ({
-    invalidateUserSessions: jest.fn(),
+vi.mock("../../../../../src/modules/users/users.repository", () => ({
+    invalidateUserSessions: vi.fn(),
 }));
 
-jest.mock("../../../../../src/modules/users/auth-methods/code/code.email", () => ({
-    sendEmailCode: jest.fn(),
+vi.mock("../../../../../src/modules/users/auth-methods/code/code.email", () => ({
+    sendEmailCode: vi.fn(),
 }));
 
-jest.mock("../../../../../src/core/utils/securities", () => ({
-    generateApiToken: jest.fn(),
-    generateSecureRandomDelay: jest.fn(),
-    hashString: jest.fn(),
-    verifyHash: jest.fn(),
+vi.mock("../../../../../src/core/utils/securities", () => ({
+    generateApiToken: vi.fn(),
+    generateSecureRandomDelay: vi.fn(),
+    hashString: vi.fn(),
+    verifyHash: vi.fn(),
+    hashToken: vi.fn(),
+    verifyToken: vi.fn(),
 }));
 
-jest.mock("../../../../../src/core/utils/jwt", () => ({
-    generateJwt: jest.fn(),
+vi.mock("../../../../../src/core/utils/jwt", () => ({
+    generateJwt: vi.fn(),
 }));
 
-jest.mock("../../../../../src/core/utils/logger", () => ({
-    __esModule: true,
+vi.mock("../../../../../src/core/utils/logger", () => ({
     default: {
-        error: jest.fn(),
-        warning: jest.fn(),
-        success: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn(),
+        error: vi.fn(),
+        warning: vi.fn(),
+        success: vi.fn(),
+        info: vi.fn(),
+        debug: vi.fn(),
     },
 }));
 
@@ -53,8 +55,9 @@ jest.mock("../../../../../src/core/utils/logger", () => ({
  */
 describe('Sessions opened before the proof of the email address', () => {
     beforeEach(() => {
-        jest.mocked(Securities.verifyHash).mockImplementation(async (input: string, hash: string) => hash === fakeHash(input));
-        jest.mocked(generateJwt).mockImplementation(async (payload) => `jwt-of-logout-${payload.last_logout_at.getTime()}`);
+        vi.mocked(Securities.verifyHash).mockImplementation(async (input: string, hash: string) => hash === fakeHash(input));
+        vi.mocked(Securities.verifyToken).mockImplementation(async (input: string, hash: string) => hash === fakeHash(input));
+        vi.mocked(generateJwt).mockImplementation(async (payload) => `jwt-of-logout-${payload.last_logout_at.getTime()}`);
     });
 
 
@@ -62,8 +65,8 @@ describe('Sessions opened before the proof of the email address', () => {
         const unverifiedUser: User = buildUserWithLoginCode({ is_verified_email: false });
         const loggedInUser: User = { ...unverifiedUser, is_verified_email: true };
         const userWithNewSessions: User = { ...loggedInUser, last_logout_at: new Date() };
-        jest.mocked(CodeRepository.userLoginConfirm).mockResolvedValue(loggedInUser);
-        jest.mocked(UsersRepository.invalidateUserSessions).mockResolvedValue(userWithNewSessions);
+        vi.mocked(CodeRepository.userLoginConfirm).mockResolvedValue(loggedInUser);
+        vi.mocked(UsersRepository.invalidateUserSessions).mockResolvedValue(userWithNewSessions);
 
         const jwt = await usersLoginConfirm(unverifiedUser, LoginConfirm);
 
@@ -73,7 +76,7 @@ describe('Sessions opened before the proof of the email address', () => {
 
     it('Keeps the other sessions of a user whose email address was already proven', async () => {
         const verifiedUser: User = buildUserWithLoginCode({ is_verified_email: true });
-        jest.mocked(CodeRepository.userLoginConfirm).mockResolvedValue(verifiedUser);
+        vi.mocked(CodeRepository.userLoginConfirm).mockResolvedValue(verifiedUser);
 
         const jwt = await usersLoginConfirm(verifiedUser, LoginConfirm);
 

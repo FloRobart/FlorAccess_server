@@ -1,7 +1,19 @@
 import argon2 from 'argon2';
 import AppConfig from '../../config/AppConfig';
-import { getRandomValues, randomBytes } from "node:crypto";
+import { createHmac, getRandomValues, hkdfSync, randomBytes, timingSafeEqual } from "node:crypto";
 import { AppError } from '../models/AppError.model';
+
+
+
+/* The hashes made by Argon2 start with this prefix, the HMAC hashes are only hexadecimal */
+const ARGON2_HASH_PREFIX = "$argon2";
+
+/**
+ * Key of the token hashes, derived from the JWT signing key so that no other secret has to be managed.
+ * The derivation keeps the two uses apart: the JWT signing key itself never hashes a token.
+ * Changing the JWT signing key also invalidates the links and codes waiting to be used.
+ */
+const TOKEN_HASH_KEY: Buffer = Buffer.from(hkdfSync('sha256', AppConfig.jwt_signing_key, '', 'floraccess token hash', 32));
 
 
 
@@ -72,4 +84,39 @@ export async function verifyHash(input: string, hash: string): Promise<boolean> 
     } catch (error) {
         throw error;
     }
+}
+
+
+/**
+ * Hashes a random token (email verification, login request, login block) to store it in the database.
+ *
+ * These tokens are long and random: unlike a password or a short code, they can not be guessed,
+ * so a fast keyed hash (HMAC-SHA256) protects them as well as Argon2 would.
+ * Argon2 made each request cost a lot of processor time, which anyone could use to overload the server.
+ * The key keeps a stolen database from being enough to try to guess the tokens.
+ * @param token Token to hash
+ * @returns The hash of the token, in hexadecimal
+ */
+export function hashToken(token: string): string {
+    return createHmac('sha256', TOKEN_HASH_KEY).update(token).digest('hex');
+}
+
+
+/**
+ * Checks a token against the hash stored in the database, in constant time.
+ *
+ * The tokens stored before the use of HMAC have an Argon2 hash: they are still checked with Argon2,
+ * so that the links and the codes sent before this change keep working.
+ * @param token Token to check
+ * @param storedHash Hash stored in the database
+ * @returns True if the token matches the hash
+ */
+export async function verifyToken(token: string, storedHash: string): Promise<boolean> {
+    if (storedHash.startsWith(ARGON2_HASH_PREFIX)) { return await verifyHash(token, storedHash); }
+
+    const tokenHash = Buffer.from(hashToken(token), 'hex');
+    const expectedHash = Buffer.from(storedHash, 'hex');
+    if (tokenHash.length !== expectedHash.length) { return false; }
+
+    return timingSafeEqual(tokenHash, expectedHash);
 }

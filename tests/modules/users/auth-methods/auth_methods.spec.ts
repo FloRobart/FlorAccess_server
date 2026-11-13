@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { ZodError } from "zod";
 import { AuthMethodSchema } from "../../../../src/modules/users/auth-methods/auth_methods.schema";
 import { AuthMethod } from "../../../../src/modules/users/auth-methods/auth_methods.types";

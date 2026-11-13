@@ -11,9 +11,14 @@ export const EmailSchema = z.preprocess(
 );
 
 /**
+ * Minimum length of a pseudo.
+ */
+export const MINIMUM_PSEUDO_LENGTH = 3;
+
+/**
  * Schéma de validation pour un pseudo.
  */
-export const PseudoSchema = z.string().trim().min(3).max(255);
+export const PseudoSchema = z.string().trim().min(MINIMUM_PSEUDO_LENGTH).max(255);
 
 /**
  * Validation schema for the user ID and the token carried by the links sent by email.
@@ -85,6 +90,7 @@ export const UserSchema = UserSafeSchema.extend({
     token_hash: z.string().trim().nullable(),
     login_requested_at: z.date().nullable(),
     login_code_attempts: z.int().min(0),
+    login_requests_without_login: z.int().min(0),
     login_block_token_hash: z.string().trim().nullable(),
     login_blocked_until: z.date().nullable(),
 

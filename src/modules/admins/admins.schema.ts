@@ -14,6 +14,7 @@ export const UserAdminSchema = UserSafeSchema.extend({
     last_ip: z.ipv4().or(z.ipv6()).nullable(),
     updated_at: z.date(),
     is_admin: z.boolean(),
+    login_blocked_until: z.date().nullable(),
 });
 
 /**
@@ -37,6 +38,7 @@ export const UserIdSchema = z.object({
 
 /**
  * Schéma de validation pour la mise à jour d'un utilisateur par un administrateur.
+ * The block of the logins is lifted by its own route, which also starts again the count of the login codes.
  */
 export const UserAdminUpdateSchema = UserAdminSchema.omit({
     id: true,
@@ -46,6 +48,7 @@ export const UserAdminUpdateSchema = UserAdminSchema.omit({
     last_login: true,
     last_logout_at: true,
     is_admin: true,
+    login_blocked_until: true,
 }).partial();
 
 
